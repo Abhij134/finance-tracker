@@ -1,0 +1,78 @@
+﻿[dotenv@17.3.1] injecting env (25) from .env.local -- tip: ΓÜÖ∩╕Å  specify custom .env file path with { path: '/custom/path/.env' }
+node.exe : Loaded Prisma 
+config from prisma.config.ts.
+At line:1 char:1
++ & "P:\/node.exe" "P:\/node_
+modules/npm/bin/npx-cli.js" 
+prisma validat ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~
+    + CategoryInfo           
+   : NotSpecified: (Loaded   
+  Prisma c...isma.config.t   
+ s.:String) [], RemoteExc    
+eption
+    + FullyQualifiedErrorId  
+   : NativeCommandError
+ 
+
+Prisma schema loaded from 
+prisma\schema.prisma.
+
+Prisma schema warning:
+- Preview feature 
+"driverAdapters" is 
+deprecated. The 
+functionality can be used 
+without specifying it as a 
+preview feature.
+
+Error: Prisma schema 
+validation - (validate wasm)
+Error code: P1012
+[1;91merror[0m: [1mThe 
+datasource property `url` is 
+no longer supported in 
+schema files. Move 
+connection URLs for Migrate 
+to `prisma.config.ts` and 
+pass either `adapter` for a 
+direct database connection 
+or `accelerateUrl` for 
+Accelerate to the 
+`PrismaClient` constructor. 
+See https://pris.ly/d/config-
+datasource and https://pris.l
+y/d/prisma7-client-config[0m
+  [1;94m-->[0m  [4mprisma\
+schema.prisma:8[0m
+[1;94m   | [0m
+[1;94m 7 | [0m  provider  
+= "postgresql"
+[1;94m 8 | [0m  [1;91murl 
+      = 
+env("DATABASE_URL")[0m
+[1;94m   | [0m
+[1;91merror[0m: [1mThe 
+datasource property 
+`directUrl` is no longer 
+supported in schema files. 
+Move connection URLs to 
+`prisma.config.ts`. See https
+://pris.ly/d/config-datasourc
+e[0m
+  [1;94m-->[0m  [4mprisma\
+schema.prisma:9[0m
+[1;94m   | [0m
+[1;94m 8 | [0m  url       
+= env("DATABASE_URL")
+[1;94m 9 | [0m  
+[1;91mdirectUrl = 
+env("DIRECT_URL")[0m
+[1;94m   | [0m
+
+Validation Error Count: 2
+[Context: validate]
+
+Prisma CLI Version : 7.5.0

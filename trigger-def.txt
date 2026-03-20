@@ -1,0 +1,14 @@
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+AS $function$
+BEGIN
+  INSERT INTO public."User" (id, email)
+  VALUES (
+    NEW.id::text, -- Explicitly cast to text to match Prisma's String type
+    NEW.email
+  );
+  RETURN NEW;
+END;
+$function$

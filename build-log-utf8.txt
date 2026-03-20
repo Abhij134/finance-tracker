@@ -1,0 +1,537 @@
+﻿
+> finance-tracker@0.1.0 build
+> next build
+
+Γû▓ Next.js 16.1.6 (Turbopack)
+- Environments: .env.local, .env
+- Experiments (use with caution):
+  ┬╖ serverActions
+
+  Creating an optimized production build ...
+node.exe : 
+At line:1 char:1
++ & "P:\/node.exe" "P:\
+/node_modules/npm/bin/n
+pm-cli.js" run build
++ ~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo     
+         : NotSpecifi  
+  ed: (:String) [],    
+ RemoteException
+    + FullyQualifiedEr 
+   rorId : NativeComm  
+  andError
+ 
+> Build error occurred
+Error: Turbopack build 
+failed with 4 errors:
+./components/account-cl
+ient.tsx:5:1
+Export changePassword 
+doesn't exist in 
+target module
+[0m [90m 3 |[39m 
+[36mimport[39m { 
+useState } 
+[36mfrom[39m [32m"re
+act"[39m[33m;[39m
+ [90m 4 |[39m 
+[36mimport[39m { [33
+mKeyRound[39m[33m,[3
+9m [33mLogOut[39m[33
+m,[39m [33mAlertTrian
+gle[39m[33m,[39m [3
+3mUser[39m[33m,[39m 
+[33mMail[39m[33m,[3
+9m [33mEye[39m[33m,
+[39m [33mEyeOff[39m 
+} [36mfrom[39m [32m"
+lucide-react"[39m[33m
+;[39m
+[31m[1m>[22m[39m[9
+0m 5 |[39m 
+[36mimport[39m { chan
+gePassword[33m,[39m 
+handleSignOut } 
+[36mfrom[39m [32m"@/
+app/actions/auth"[39m
+[33m;[39m
+ [90m   |[39m [31m[
+1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m
+ [90m 6 |[39m 
+[36mimport[39m { 
+toast } [36mfrom[39m 
+[32m"sonner"[39m[33m
+;[39m [90m// 
+Assuming sonner is in 
+the project based on 
+UI norms, fallback to 
+alert if not[39m
+ [90m 7 |[39m 
+[36mimport[39m { 
+[33mDangerZone[39m } 
+[36mfrom[39m [32m"./
+DangerZone"[39m[33m;
+[39m
+ [90m 8 |[39m 
+[36minterface[39m [3
+3mAccountClientProps[3
+9m {[0m
+
+The export 
+changePassword was not 
+found in module [projec
+t]/app/actions/auth.ts 
+[app-client] 
+(ecmascript).
+Did you mean to import 
+handleSignOut?
+All exports of the 
+module are statically 
+known (It doesn't have 
+dynamic exports). So 
+it's known statically 
+that the requested 
+export doesn't exist.
+
+Import trace:
+  Server Component:
+    ./components/accoun
+t-client.tsx
+    ./app/(main)/accoun
+t/page.tsx
+
+
+./components/account-cl
+ient.tsx:5:1
+Export changePassword 
+doesn't exist in 
+target module
+[0m [90m 3 |[39m 
+[36mimport[39m { 
+useState } 
+[36mfrom[39m [32m"re
+act"[39m[33m;[39m
+ [90m 4 |[39m 
+[36mimport[39m { [33
+mKeyRound[39m[33m,[3
+9m [33mLogOut[39m[33
+m,[39m [33mAlertTrian
+gle[39m[33m,[39m [3
+3mUser[39m[33m,[39m 
+[33mMail[39m[33m,[3
+9m [33mEye[39m[33m,
+[39m [33mEyeOff[39m 
+} [36mfrom[39m [32m"
+lucide-react"[39m[33m
+;[39m
+[31m[1m>[22m[39m[9
+0m 5 |[39m 
+[36mimport[39m { chan
+gePassword[33m,[39m 
+handleSignOut } 
+[36mfrom[39m [32m"@/
+app/actions/auth"[39m
+[33m;[39m
+ [90m   |[39m [31m[
+1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m
+ [90m 6 |[39m 
+[36mimport[39m { 
+toast } [36mfrom[39m 
+[32m"sonner"[39m[33m
+;[39m [90m// 
+Assuming sonner is in 
+the project based on 
+UI norms, fallback to 
+alert if not[39m
+ [90m 7 |[39m 
+[36mimport[39m { 
+[33mDangerZone[39m } 
+[36mfrom[39m [32m"./
+DangerZone"[39m[33m;
+[39m
+ [90m 8 |[39m[0m
+
+The export 
+changePassword was not 
+found in module [projec
+t]/app/actions/auth.ts 
+[app-ssr] (ecmascript).
+Did you mean to import 
+handleSignOut?
+All exports of the 
+module are statically 
+known (It doesn't have 
+dynamic exports). So 
+it's known statically 
+that the requested 
+export doesn't exist.
+
+Import trace:
+  Server Component:
+    ./components/accoun
+t-client.tsx
+    ./app/(main)/accoun
+t/page.tsx
+
+
+./app/(auth)/register/p
+age.tsx:4:1
+Export registerUser 
+doesn't exist in 
+target module
+[0m [90m 2 |[39m
+ [90m 3 |[39m 
+[36mimport[39m { c 
+[36mas[39m _c } 
+[36mfrom[39m [32m"re
+act/compiler-runtime"[
+39m[33m;[39m
+[31m[1m>[22m[39m[9
+0m 4 |[39m 
+[36mimport[39m { 
+registerUser } 
+[36mfrom[39m [32m"@/
+app/actions/auth"[39m
+[33m;[39m
+ [90m   |[39m [31m[
+1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m
+[39m
+ [90m 5 |[39m 
+[36mimport[39m { 
+useRouter } 
+[36mfrom[39m [32m"ne
+xt/navigation"[39m[33
+m;[39m
+ [90m 6 |[39m 
+[36mimport[39m { 
+useState[33m,[39m 
+[33mFormEvent[39m } 
+[36mfrom[39m [32m"re
+act"[39m[33m;[39m
+ [90m 7 |[39m 
+[36mimport[39m 
+[33mLink[39m 
+[36mfrom[39m [32m"ne
+xt/link"[39m[33m;[39
+m[0m
+
+The export 
+registerUser was not 
+found in module [projec
+t]/app/actions/auth.ts 
+[app-client] 
+(ecmascript).
+Did you mean to import 
+deleteUserAccount?
+All exports of the 
+module are statically 
+known (It doesn't have 
+dynamic exports). So 
+it's known statically 
+that the requested 
+export doesn't exist.
+
+Import traces:
+  Client Component 
+Browser:
+    ./app/(auth)/regist
+er/page.tsx [Client 
+Component Browser]
+    ./app/(auth)/regist
+er/page.tsx [Server 
+Component]
+
+  Client Component SSR:
+    ./app/(auth)/regist
+er/page.tsx [Client 
+Component SSR]
+    ./app/(auth)/regist
+er/page.tsx [Server 
+Component]
+
+
+./app/(auth)/register/p
+age.tsx:3:1
+Export registerUser 
+doesn't exist in 
+target module
+[0m [90m 1 |[39m 
+[32m"use 
+client"[39m[33m;[39m
+ [90m 2 |[39m
+[31m[1m>[22m[39m[9
+0m 3 |[39m 
+[36mimport[39m { 
+registerUser } 
+[36mfrom[39m [32m"@/
+app/actions/auth"[39m
+[33m;[39m
+ [90m   |[39m [31m[
+1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m
+[39m
+ [90m 4 |[39m 
+[36mimport[39m { 
+useRouter } 
+[36mfrom[39m [32m"ne
+xt/navigation"[39m[33
+m;[39m
+ [90m 5 |[39m 
+[36mimport[39m { 
+useState[33m,[39m 
+[33mFormEvent[39m } 
+[36mfrom[39m [32m"re
+act"[39m[33m;[39m
+ [90m 6 |[39m 
+[36mimport[39m 
+[33mLink[39m 
+[36mfrom[39m [32m"ne
+xt/link"[39m[33m;[39
+m[0m
+
+The export 
+registerUser was not 
+found in module [projec
+t]/app/actions/auth.ts 
+[app-ssr] (ecmascript).
+Did you mean to import 
+deleteUserAccount?
+All exports of the 
+module are statically 
+known (It doesn't have 
+dynamic exports). So 
+it's known statically 
+that the requested 
+export doesn't exist.
+
+Import traces:
+  Client Component 
+Browser:
+    ./app/(auth)/regist
+er/page.tsx [Client 
+Component Browser]
+    ./app/(auth)/regist
+er/page.tsx [Server 
+Component]
+
+  Client Component SSR:
+    ./app/(auth)/regist
+er/page.tsx [Client 
+Component SSR]
+    ./app/(auth)/regist
+er/page.tsx [Server 
+Component]
+
+
+    at <unknown> (./com
+ponents/account-client.
+tsx:5:1)
+    at <unknown> (./com
+ponents/account-client.
+tsx:5:1)
+    at <unknown> (./app
+/(auth)/register/page.t
+sx:4:1)
+    at <unknown> (./app
+/(auth)/register/page.t
+sx:3:1)

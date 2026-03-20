@@ -1,0 +1,144 @@
+@import "tailwindcss";
+
+:root {
+  /* Default to FinanceNeo dark theme */
+  --background: #0B0F19;
+  --foreground: #ffffff;
+  --card: rgba(255, 255, 255, 0.02);
+  --card-foreground: #ffffff;
+  --muted: rgba(255, 255, 255, 0.04);
+  --muted-foreground: #a1a1aa;
+  /* zinc-400 */
+  --border: rgba(255, 255, 255, 0.05);
+  --primary: #10b981;
+  /* emerald-500 */
+  --primary-foreground: #022c22;
+  /* emerald-950 */
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+.dark {
+  --background: #0B0F19;
+  --foreground: #ffffff;
+  --card: rgba(255, 255, 255, 0.02);
+  --card-foreground: #ffffff;
+  --muted: rgba(255, 255, 255, 0.04);
+  --muted-foreground: #a1a1aa;
+  --border: rgba(255, 255, 255, 0.05);
+  --primary: #10b981;
+  --primary-foreground: #022c22;
+}
+
+/* Bright Yellow Theme: A very light, subtle yellow theme */
+.theme-yellow {
+  --background: #fffbeb;
+  /* amber-50 */
+  --foreground: #1f2937;
+  /* gray-800 */
+  --card: #ffffff;
+  --card-foreground: #1f2937;
+  --muted: #fef3c7;
+  /* yellow-200 */
+  --muted-foreground: #92400e;
+  /* amber-800 */
+
+  /* Softer Yellow Borders and Accents */
+  --border: #fbbf24;
+  /* amber-400 */
+  --primary: #f59e0b;
+  /* amber-500 */
+  --primary-foreground: #ffffff;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+html {
+  scrollbar-gutter: stable;
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  /* Webkit (Chrome, Safari, Edge) */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #333333;
+    /* Deep Obsidian grey */
+    border-radius: 10px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #10b981;
+    /* Tailwind Emerald 500 */
+  }
+
+  /* Firefox */
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #333333 transparent;
+  }
+}
+
+/* Hide browser-native password reveal icons (Edge, etc.) */
+/* Hide browser-native password reveal icons (Edge, etc.) */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none;
+}
+
+.bot-wrap { animation: bot-float 3.2s ease-in-out infinite; }
+button:hover .bot-hoverable { animation: bot-float-fast 1.6s ease-in-out infinite; }
+
+@keyframes bot-float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-2.5px); }
+}
+@keyframes bot-float-fast {
+  0%, 100% { transform: translateY(0px) rotate(-2deg); }
+  25%       { transform: translateY(-3.5px) rotate(1deg); }
+  75%       { transform: translateY(-1.5px) rotate(-1deg); }
+}
+
+.antenna-dot { transform-origin: 12px 4px; animation: pulse-ant 2.4s ease-in-out infinite; }
+@keyframes pulse-ant {
+  0%, 100% { opacity: 0.6; r: 1.5; }
+  50%       { opacity: 1;   r: 2.5; }
+}
+
+.eye-l { transform-origin: 9px 14px; animation: blink 4s ease-in-out infinite; }
+.eye-r { transform-origin: 15px 14px; animation: blink 4s ease-in-out infinite 0.08s; }
+@keyframes blink {
+  0%, 90%, 100% { transform: scaleY(1); }
+  95%           { transform: scaleY(0.1); }
+}

@@ -1,0 +1,93 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Transaction {
+  id          String   @id @default(uuid())
+  userId      String
+  merchant    String
+  amount      Float
+  category    String
+  date        DateTime @default(now())
+  isAiScanned Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  referenceId String?
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Insight {
+  id          String   @id @default(uuid())
+  userId      String
+  insightText String
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Budget {
+  id        String   @id @default(uuid())
+  userId    String
+  category  String
+  amount    Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, category])
+}
+
+model User {
+  id                          String             @id
+  email                       String             @unique
+  name                        String?
+  userId                      String?            @unique
+  image                       String?
+  createdAt                   DateTime           @default(now())
+  username                    String?            @unique
+  largeTxEmailEnabled         Boolean            @default(true)
+  largeTxThreshold            Float              @default(500)
+  periodicSummaryEmailEnabled Boolean            @default(true)
+  unusualSpendingEmailEnabled Boolean            @default(true)
+  unusualSpendingThreshold    Float              @default(80)
+  lastUnusualSpendAlert       DateTime?
+  budgets                     Budget[]
+  insights                    Insight[]
+  pushSubscriptions           PushSubscription[]
+  transactions                Transaction[]
+  exportLogs                  ExportLog[]
+}
+
+model ExportLog {
+  id               String   @id @default(uuid())
+  userId           String
+  format           String
+  dateFrom         DateTime
+  dateTo           DateTime
+  insightsIncluded Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PushSubscription {
+  id        String   @id @default(uuid())
+  userId    String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model user_sync_errors {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  auth_user_id  String?   @db.Uuid
+  error_time    DateTime? @default(now()) @db.Timestamptz(6)
+  error_message String?
+  error_detail  String?
+  payload       Json?
+}

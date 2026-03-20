@@ -1,0 +1,2 @@
+postgresql://postgres.ngegqphmpvqmwkkxoabn:Abhijeetgautam134@aws-1-ap-south-1.pooler.supabase.com:6543/postgres?pgbouncer=true
+Connected successfully, user: d4df65ee-55df-49bf-a24e-5129ebd549f9
