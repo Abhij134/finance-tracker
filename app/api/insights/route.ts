@@ -15,6 +15,16 @@ const openrouter = new OpenAI({
     baseURL: 'https://openrouter.ai/api/v1',
 });
 
+const groq = new OpenAI({
+    apiKey: process.env.GROQ_API_KEY || 'MISSING_KEY',
+    baseURL: 'https://api.groq.com/openai/v1',
+});
+
+const gemini = new OpenAI({
+    apiKey: process.env.GOOGLE_GEMINI_API_KEY || 'MISSING_KEY',
+    baseURL: 'https://generativelanguage.googleapis.com/v1beta/openai/',
+});
+
 function extractInsightsArray(raw: string): any[] {
     const text = raw.trim();
     try {
@@ -284,7 +294,6 @@ Return ONLY a JSON array of 3 objects:
         try {
             // console.log('[insights] Calling Novita AI...');
             const insights = await callAI(novita, 'qwen/qwen-2.5-72b-instruct', 500);
-            // console.log(`[insights] Got ${insights.length} insights from Novita`);
             return NextResponse.json({ insights });
         } catch (novitaError) {
             console.warn("Novita insights failed, trying OpenRouter fallback:", novitaError);
@@ -292,8 +301,20 @@ Return ONLY a JSON array of 3 objects:
                 const insights = await callAI(openrouter, 'meta-llama/llama-3.1-8b-instruct:free', 500);
                 return NextResponse.json({ insights });
             } catch (fallbackError) {
-                console.error("Both AI providers failed for insights:", fallbackError);
-                return NextResponse.json({ error: "AI providers unavailable." }, { status: 503 });
+                console.warn("OpenRouter failed, trying Groq fallback:", fallbackError);
+                try {
+                    const insights = await callAI(groq, 'llama-3.3-70b-versatile', 500);
+                    return NextResponse.json({ insights });
+                } catch (groqError) {
+                    console.warn("Groq failed, trying Gemini fallback:", groqError);
+                    try {
+                        const insights = await callAI(gemini, 'gemini-1.5-flash', 500);
+                        return NextResponse.json({ insights });
+                    } catch (geminiError) {
+                        console.error("All AI providers failed for insights:", geminiError);
+                        return NextResponse.json({ error: "AI providers unavailable." }, { status: 503 });
+                    }
+                }
             }
         }
 

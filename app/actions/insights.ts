@@ -9,6 +9,11 @@ const novita = createOpenAI({
     apiKey: process.env.NOVITA_API_KEY,
 });
 
+const groq = createOpenAI({
+    baseURL: 'https://api.groq.com/openai/v1',
+    apiKey: process.env.GROQ_API_KEY,
+});
+
 export async function generateInsight(prompt: string) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -77,10 +82,19 @@ Provide the requested financial insight for the user's prompt now.`;
             system: systemPrompt,
             prompt: finalPrompt,
         });
-
         return text;
-    } catch (err: any) {
-        console.error("Failed to generate insight with Novita:", err);
-        throw new Error("Failed to generate insight. Please try again.");
+    } catch (novitaErr: any) {
+        console.warn("Novita failed for insights action, trying Groq fallback:", novitaErr);
+        try {
+            const { text } = await generateText({
+                model: groq('llama-3.3-70b-versatile'),
+                system: systemPrompt,
+                prompt: finalPrompt,
+            });
+            return text;
+        } catch (groqErr: any) {
+            console.error("All AI providers failed for insights action:", groqErr);
+            throw new Error("Failed to generate insight. Please try again.");
+        }
     }
 }

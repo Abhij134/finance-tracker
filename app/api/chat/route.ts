@@ -13,10 +13,20 @@ if (!process.env.GOOGLE_GEMINI_API_KEY) {
     console.error("❌ FATAL: GOOGLE_GEMINI_API_KEY is missing from .env.local or server needs a restart.");
 }
 
-// Initialize the Primary Client (Novita)
+// Initialize Clients
 const novita = new OpenAI({
     apiKey: process.env.NOVITA_API_KEY || 'MISSING_KEY',
     baseURL: 'https://api.novita.ai/v3/openai',
+});
+
+const groq = new OpenAI({
+    apiKey: process.env.GROQ_API_KEY || 'MISSING_KEY',
+    baseURL: 'https://api.groq.com/openai/v1',
+});
+
+const gemini = new OpenAI({
+    apiKey: process.env.GOOGLE_GEMINI_API_KEY || 'MISSING_KEY',
+    baseURL: 'https://generativelanguage.googleapis.com/v1beta/openai/',
 });
 
 export async function POST(req: Request) {
@@ -131,11 +141,33 @@ USER FINANCIAL DATA: ${userDataContext}
             });
             return NextResponse.json({ message: response.choices[0].message.content });
         } catch (novitaError) {
-            console.error("Novita failed:", novitaError);
-            return NextResponse.json(
-                { error: "AI services are currently unreachable. Please try again later." },
-                { status: 503 }
-            );
+            console.warn("Novita failed, trying Groq fallback:", novitaError);
+            try {
+                const response = await groq.chat.completions.create({
+                    model: 'llama-3.3-70b-versatile',
+                    messages: messagesWithContext as any,
+                    max_tokens: 1000,
+                    temperature: 0.7,
+                });
+                return NextResponse.json({ message: response.choices[0].message.content });
+            } catch (groqError) {
+                console.warn("Groq failed, trying Gemini fallback:", groqError);
+                try {
+                    const response = await gemini.chat.completions.create({
+                        model: 'gemini-1.5-flash',
+                        messages: messagesWithContext as any,
+                        max_tokens: 1000,
+                        temperature: 0.7,
+                    });
+                    return NextResponse.json({ message: response.choices[0].message.content });
+                } catch (geminiError) {
+                    console.error("All AI providers failed for chat:", geminiError);
+                    return NextResponse.json(
+                        { error: "AI services are currently unreachable. Please try again later." },
+                        { status: 503 }
+                    );
+                }
+            }
         }
     } catch (error) {
         console.error("Fatal AI Chat Error:", error);
