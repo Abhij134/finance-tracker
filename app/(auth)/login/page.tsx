@@ -219,6 +219,9 @@ export default function LandingAndLoginPage() {
 
     return (
         <div className="relative min-h-screen text-white overflow-hidden selection:bg-emerald-500/30 font-sans">
+            <div className="absolute top-4 left-4 sm:left-8 text-[10px] text-zinc-500 font-medium tracking-widest uppercase z-50">
+                Made by Abhijeet
+            </div>
             {/* Landing Page Content */}
             <motion.div
                 className="relative z-10 w-full min-h-screen flex flex-col pt-32 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto will-change-transform"
