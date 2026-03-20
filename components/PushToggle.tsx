@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Bell, BellOff, Loader2 } from "lucide-react";
+import { Switch } from "./ui/switch";
 
 export function PushToggle() {
     const [isSupported, setIsSupported] = useState(false);
@@ -136,15 +137,12 @@ export function PushToggle() {
                 <p className="text-xs text-muted-foreground mt-1">Receive push notifications when you exceed your budget.</p>
             </div>
 
-            <button
-                onClick={isSubscribed ? unsubscribeFromPush : subscribeToPush}
-                disabled={isLoading}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-background disabled:opacity-50 ${isSubscribed ? 'bg-emerald-500' : 'bg-muted-foreground/30'}`}
-            >
-                <span className="sr-only">Toggle budget alerts</span>
-                {isLoading && <Loader2 className="absolute -left-5 h-4 w-4 animate-spin text-emerald-500" />}
-                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isSubscribed ? 'translate-x-6' : 'translate-x-1'}`} />
-            </button>
+            <Switch
+                checked={isSubscribed}
+                onChange={isSubscribed ? unsubscribeFromPush : subscribeToPush}
+                loading={isLoading}
+                ariaLabel="Toggle budget alerts"
+            />
         </div>
     );
 }

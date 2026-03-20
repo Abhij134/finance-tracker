@@ -81,13 +81,15 @@ export function BudgetProgress() {
             {/* Summary row */}
             {totalBudgeted > 0 && (
                 <div className="flex flex-col gap-2">
-                    <div className="flex items-center gap-3 p-3 rounded-xl bg-primary/5 border border-primary/20 text-sm">
+                    <div className="flex items-center gap-3 p-3 rounded-xl bg-primary/5 border border-primary/20">
                         <TrendingUp className="h-4 w-4 text-primary shrink-0" />
-                        <span className="text-muted-foreground">
+                        <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
                             <span className="font-semibold text-foreground">{fmt(totalSpent)}</span> spent of{" "}
-                            <span className="font-semibold text-foreground">{fmt(totalBudgeted)}</span> budgeted across{" "}
+                            <span className="font-semibold text-foreground">{fmt(totalBudgeted)}</span>
+                            <br className="sm:hidden" />
+                            {" "}budgeted across{" "}
                             {categoriesWithBudget} {categoriesWithBudget === 1 ? "category" : "categories"}
-                        </span>
+                        </p>
                     </div>
                 </div>
             )}
@@ -122,24 +124,24 @@ export function BudgetProgress() {
 
                 return (
                     <div key={cat.label} className="p-4 border border-border rounded-xl bg-background/50 hover:bg-background/80 transition-colors">
-                        <div className="flex items-center justify-between mb-2.5">
-                            <div className="flex items-center gap-2">
-                                <span className={`w-2.5 h-2.5 rounded-full ${cat.color}`} />
-                                <span className="font-medium text-sm text-foreground">{cat.label}</span>
+                        <div className="flex items-center justify-between gap-2 mb-2.5">
+                            <div className="flex items-center gap-2 min-w-0">
+                                <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${cat.color}`} />
+                                <span className="font-medium text-sm text-foreground truncate">{cat.label}</span>
                                 {spending > 0 && limit === 0 && (
-                                    <span className="text-[10px] text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded-full font-medium">No limit set</span>
+                                    <span className="text-[10px] text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded-full font-medium whitespace-nowrap">No limit</span>
                                 )}
                             </div>
 
                             {editingCategory === cat.label ? (
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 shrink-0">
                                     <div className="relative">
-                                        <span className="absolute left-2.5 top-1.5 text-muted-foreground text-sm">₹</span>
+                                        <span className="absolute left-2 top-1.5 text-muted-foreground text-[10px]">₹</span>
                                         <input
                                             type="number"
                                             value={editAmount}
                                             onChange={(e) => setEditAmount(e.target.value)}
-                                            className="w-28 pl-6 pr-2 py-1 text-sm bg-background border border-border rounded-lg focus:ring-1 focus:ring-primary focus:outline-none"
+                                            className="w-20 pl-4 pr-1 py-1 text-sm bg-background border border-border rounded-lg focus:ring-1 focus:ring-primary focus:outline-none"
                                             placeholder="0"
                                             autoFocus
                                             onKeyDown={(e) => {
@@ -148,16 +150,13 @@ export function BudgetProgress() {
                                             }}
                                         />
                                     </div>
-                                    <button onClick={() => handleSave(cat.label)} className="p-1.5 text-green-500 hover:bg-green-500/10 rounded-md transition-colors">
+                                    <button onClick={() => handleSave(cat.label)} className="p-1 text-green-500 hover:bg-green-500/10 rounded-md transition-colors">
                                         <Check className="w-3.5 h-3.5" />
-                                    </button>
-                                    <button onClick={() => setEditingCategory(null)} className="p-1.5 text-red-500 hover:bg-red-500/10 rounded-md transition-colors">
-                                        <X className="w-3.5 h-3.5" />
                                     </button>
                                 </div>
                             ) : (
-                                <div className="flex items-center gap-2.5">
-                                    <div className="text-sm font-semibold text-foreground text-right">
+                                <div className="flex items-center gap-1.5 shrink-0">
+                                    <div className="text-sm font-medium text-foreground text-right whitespace-nowrap">
                                         {fmt(spending)}
                                         <span className="text-muted-foreground font-normal ml-1">
                                             / {limit > 0 ? fmt(limit) : "—"}

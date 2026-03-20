@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { PushToggle } from "@/components/PushToggle";
 import { Mail, Smartphone, ShieldAlert, Loader2 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { getEmailPreferences, updateEmailPreference } from "@/app/actions/alerts";
 import { toast } from "sonner"; // Using toast if available in project
 
@@ -30,27 +31,7 @@ const alertSettingsList = [
   },
 ];
 
-function EmailToggle({ enabled, setEnabled, loading, disabled }: { enabled: boolean, setEnabled: () => void, loading?: boolean, disabled?: boolean }) {
-  return (
-    <button
-      type="button"
-      disabled={loading || disabled}
-      className={`${enabled ? 'bg-emerald-500' : 'bg-muted-foreground/30'
-        } relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:opacity-50`}
-      role="switch"
-      aria-checked={enabled}
-      onClick={setEnabled}
-    >
-      <span
-        aria-hidden="true"
-        className={`${enabled ? 'translate-x-5' : 'translate-x-0'
-          } pointer-events-none flex items-center justify-center h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
-      >
-        {loading && <Loader2 className="h-3 w-3 animate-spin text-emerald-600" />}
-      </span>
-    </button>
-  );
-}
+// Removed local EmailToggle in favor of unified Switch component
 
 export default function AlertsPage() {
   const [preferences, setPreferences] = useState({
@@ -124,7 +105,7 @@ export default function AlertsPage() {
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 w-full max-w-4xl mx-auto">
+    <main className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-6 w-full max-w-4xl mx-auto">
       <div className="mb-8">
         <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
           Alerts & Notifications
@@ -183,11 +164,12 @@ export default function AlertsPage() {
                           </p>
                         </div>
                       </div>
-                      <EmailToggle
-                        enabled={isActive}
-                        setEnabled={() => handleToggle(setting.dbKey)}
+                      <Switch
+                        checked={isActive}
+                        onChange={() => handleToggle(setting.dbKey)}
                         loading={isUpdating}
                         disabled={!setting.dbKey}
+                        ariaLabel={setting.name}
                       />
                     </div>
                     {/* Conditional Settings Sliders */}
@@ -237,6 +219,6 @@ export default function AlertsPage() {
           </div>
         </section>
       </div >
-    </div >
+    </main >
   );
 }

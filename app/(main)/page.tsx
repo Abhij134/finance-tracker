@@ -60,6 +60,7 @@ export default async function Home({
   const profileResponse = await getUserProfile();
   const dbUser = profileResponse.success && profileResponse.user ? profileResponse.user : null;
   const userName = dbUser?.username || "Guest";
+  const userEmail = dbUser?.email || "";
 
   const [dbTransactions, dbBudgets] = await Promise.all([
     getTransactions(),
@@ -91,10 +92,10 @@ export default async function Home({
 
   return (
     <div className="bg-background text-foreground">
-      <Navbar />
+      <Navbar userName={userName} userEmail={userEmail} />
       <TransactionsProvider initialTransactions={txs} initialFilter={initialFilter}>
         <BudgetProvider initialBudgets={budgets}>
-          <main className="mx-auto max-w-7xl space-y-4 px-3 py-4 sm:px-5 sm:py-5">
+          <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-6">
 
             <GreetingHeader userName={userName} />
 

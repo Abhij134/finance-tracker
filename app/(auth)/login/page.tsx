@@ -4,6 +4,7 @@ import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 import { useState, FormEvent, useRef, useEffect } from "react";
 import { Shield, Wallet, Activity, Target, ArrowRight, X, Eye, EyeOff, ChevronLeft, User, LayoutDashboard } from "lucide-react";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     signInUser,
@@ -235,11 +236,16 @@ export default function LandingAndLoginPage() {
             >
                 {/* Navbar Area */}
                 <div className="absolute top-8 left-4 sm:left-8 flex items-center gap-3 cursor-pointer">
-                    <div className="relative flex items-center justify-center h-10 w-10 shrink-0 rounded-xl border border-emerald-500/30 bg-emerald-500/5">
-                        <Wallet className="h-5 w-5 text-emerald-400" />
-                    </div>
+                    <Image
+                        src="/logo.svg"
+                        alt="FinanceNeo"
+                        width={40}
+                        height={40}
+                        className="rounded-xl"
+                        priority
+                    />
                     <span className="text-xl font-bold tracking-tight text-white">
-                        Finance<span className="text-emerald-400">Neo</span>
+                        Finance<span className="text-[#4ecca3]">Neo</span>
                     </span>
                 </div>
 
@@ -312,7 +318,7 @@ export default function LandingAndLoginPage() {
             {/* Interactive Login Overlay */}
             <AnimatePresence>
                 {showLogin && (
-                    <div className="absolute inset-0 z-50 flex flex-col items-center justify-center px-4 pointer-events-none">
+                    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center px-4 pointer-events-none overflow-y-auto pt-4 pb-4">
                         <motion.div
                             className="relative z-10 w-full max-w-md bg-white/[0.03] backdrop-blur-2xl border border-white/[0.08] shadow-[0_0_80px_rgba(0,0,0,0.8)] rounded-3xl p-8 sm:p-10 will-change-transform pointer-events-auto overflow-hidden"
                             initial={{ opacity: 0, x: "100vw" }}
@@ -345,7 +351,7 @@ export default function LandingAndLoginPage() {
                                     {view === "forgot_password_email" && "Recover Account"}
                                     {view === "forgot_password_otp" && "Secure Account"}
                                     <br />
-                                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400 text-3xl">FinanceNeo</span>
+                                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-[#4ecca3] text-3xl font-extrabold">FinanceNeo</span>
                                 </h2>
                                 <p className="text-zinc-400 text-sm h-5 transition-all">
                                     {view === "login" && "Enter your username to log in."}

@@ -9,9 +9,9 @@ import { FloatingAiChat } from "@/components/floating-ai-chat";
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   return (
     <ScanProvider>
-      <div className="flex h-screen overflow-hidden">
+      <div className="flex min-h-[100dvh]">
         <Sidebar />
-        <div className="flex-1 overflow-y-auto overflow-x-hidden pb-16 lg:pb-0">
+        <div className="flex-1 w-full pb-20 lg:pb-0">
           <PageTransition>{children}</PageTransition>
         </div>
       </div>

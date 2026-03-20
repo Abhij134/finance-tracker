@@ -151,36 +151,36 @@ export function AiLiveInsights({
   };
 
   return (
-    <div className="rounded-2xl border border-slate-800 bg-slate-900/40 backdrop-blur-md shadow-2xl p-5 h-full flex flex-col relative overflow-hidden group/container">
+    <div className="rounded-2xl border border-slate-800 bg-slate-900/40 backdrop-blur-md shadow-2xl p-3.5 sm:p-5 h-full flex flex-col relative overflow-hidden group/container">
       {/* Decorative background glow */}
       <div className="absolute top-0 right-0 w-48 h-48 -mr-16 -mt-16 rounded-full bg-emerald-500/5 blur-[80px] pointer-events-none group-hover/container:bg-emerald-500/10 transition-colors duration-1000" />
 
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-4 shrink-0 relative z-10">
-        <h2 className="text-xs font-bold text-zinc-100 flex items-center gap-2.5 uppercase tracking-widest">
-          <Sparkles className="h-3.5 w-3.5 text-emerald-500" />
-          A.I. Financial Insights
+      <div className="flex items-center justify-between border-b border-slate-800 pb-2.5 mb-3 sm:mb-4 shrink-0 relative z-10">
+        <h2 className="text-[10px] sm:text-xs font-bold text-zinc-100 flex items-center gap-2 uppercase tracking-widest">
+          <Sparkles className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-emerald-500" />
+          A.I. Insights
         </h2>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <button
             onClick={() => fetchInsights(true)}
             disabled={isLoading}
             className="p-1 rounded-md hover:bg-white/5 transition-all text-zinc-500 hover:text-zinc-200 active:scale-95 disabled:opacity-50"
           >
-            <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? "animate-spin" : ""}`} />
+            <RefreshCw className={`h-3 w-3 sm:h-3.5 sm:w-3.5 ${isLoading ? "animate-spin" : ""}`} />
           </button>
         </div>
       </div>
 
       {/* ── Insights list (Neon Tiles) ─────────────────────────────── */}
-      <div className="flex-1 flex flex-col gap-3.5 overflow-y-auto pr-1.5 relative z-10 custom-scrollbar pb-2">
+      <div className="flex-1 flex flex-col gap-2.5 sm:gap-4 overflow-y-auto pr-1 relative z-10 custom-scrollbar pb-1">
         {isLoading && !insights && (
-          <div className="flex flex-col items-center justify-center py-12 gap-3">
+          <div className="flex flex-col items-center justify-center py-10 gap-2">
             <div className="relative">
-              <Activity className="h-8 w-8 text-emerald-500/20" />
-              <Activity className="h-8 w-8 text-emerald-500 absolute top-0 left-0 animate-pulse" />
+              <Activity className="h-6 w-6 text-emerald-500/20" />
+              <Activity className="h-6 w-6 text-emerald-500 absolute top-0 left-0 animate-pulse" />
             </div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-600 animate-pulse">Running Heuristics...</p>
+            <p className="text-[8px] font-bold uppercase tracking-widest text-zinc-600 animate-pulse">Analyzing...</p>
           </div>
         )}
 
@@ -193,25 +193,25 @@ export function AiLiveInsights({
           return (
             <div
               key={idx}
-              className={`p-5 rounded-xl border border-slate-800/40 border-l-2 ${border} bg-slate-900/40 backdrop-blur-md hover:bg-slate-800/20 transition-all duration-300 group/insight relative overflow-hidden`}
+              className={`p-3 sm:p-5 rounded-xl border border-slate-800/40 border-l-2 ${border} bg-slate-900/30 backdrop-blur-sm hover:bg-slate-800/20 transition-all duration-300 group/insight relative overflow-hidden`}
             >
-              <div className="flex items-start gap-4">
-                <div className={`p-3 rounded-xl shrink-0 bg-white/5 border border-white/5`}>
-                  <Icon className={`h-5 w-5 ${color}`} />
+              <div className="flex items-start gap-3 sm:gap-4">
+                <div className={`h-8 w-8 sm:h-11 sm:w-11 rounded-lg shrink-0 bg-white/5 border border-white/5 flex items-center justify-center`}>
+                  <Icon className={`h-4 w-4 sm:h-5 sm:w-5 ${color}`} />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between gap-3 mb-2">
-                    <p className={`text-[10px] font-black uppercase tracking-widest ${color}`}>
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    <p className={`text-[10px] sm:text-xs font-black uppercase tracking-wider ${color}`}>
                       {insight.title || insight.type}
                     </p>
                     {isCritical && (
-                      <div className="flex items-center gap-1 bg-rose-500/10 border border-rose-500/20 px-1.5 py-0.5 rounded-md">
+                      <div className="flex items-center gap-1 bg-rose-500/10 border border-rose-500/20 px-1 py-0.5 rounded-md">
                         <div className="h-1 w-1 rounded-full bg-rose-500 animate-pulse" />
-                        <span className="text-[8px] font-black text-rose-400 uppercase">Critical</span>
+                        <span className="text-[7px] font-black text-rose-400 uppercase">Critical</span>
                       </div>
                     )}
                   </div>
-                  <p className="text-sm text-slate-200 leading-relaxed font-medium">
+                  <p className="text-xs sm:text-base text-slate-200 leading-tight font-medium">
                     {insight.msg}
                   </p>
                 </div>

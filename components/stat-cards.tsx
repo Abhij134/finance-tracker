@@ -232,7 +232,7 @@ export function StatCards() {
   return (
     <div className="space-y-3">
       {/* Date Filter Bar */}
-      <div className="relative z-50 flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card/80 px-3 py-2.5 shadow-sm">
+      <div className="relative z-20 flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card/80 px-3 py-2.5 shadow-sm">
         <Calendar className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
         <span className="text-xs font-medium text-muted-foreground">Period:</span>
         <div className="flex items-center gap-1 flex-wrap">

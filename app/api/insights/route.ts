@@ -252,26 +252,23 @@ export async function GET(req: Request) {
             });
         }
 
-        const systemPrompt = `You are a strict, highly analytical financial engine for FinanceNeo. Analyze the user's transactions strictly between ${rangeLabel}.
+        const systemPrompt = `You are a concise, logical financial analyzer for FinanceNeo. Analyze transactions for ${rangeLabel}.
 
 OVERVIEW: ${JSON.stringify(analytics.summary)}
-TIME PERIOD: ${daysLeft} days remaining in period. Spent: ₹${analytics.currentMonth.spent}, Earned: ₹${analytics.currentMonth.earned}, Current daily burn rate: ₹${analytics.currentMonth.dailyBurnRate}/day, Projected: ₹${analytics.currentMonth.projectedMonthEnd}, Tx count: ${analytics.currentMonth.txCount}
-TOP CATEGORIES: ${JSON.stringify(analytics.topCategories)}
-BUDGET STATUS: ${analytics.budgetAnalysis.length > 0 ? JSON.stringify(analytics.budgetAnalysis) : 'No budgets set.'}
-AVAILABLE DAILY ALLOWANCE: ₹${Math.round(dailyAllowance)}/day
+TIME PERIOD: ${daysLeft} days remaining. Spent: ₹${analytics.currentMonth.spent}, Earned: ₹${analytics.currentMonth.earned}.
+BURN RATE: ₹${analytics.currentMonth.dailyBurnRate}/day vs ALLOWANCE: ₹${Math.round(dailyAllowance)}/day.
+VELOCITY: ${velocityPrompt}
+BUDGETS: ${analytics.budgetAnalysis.length > 0 ? JSON.stringify(analytics.budgetAnalysis) : 'None set.'}
 
-You must provide EXACTLY 3 vast, highly detailed, predictive insights.
+INSTRUCTIONS:
+1. FIRST INSIGHT (Type: allowance): Compare Burn vs Allowance. IF SPENDING IS ₹0, provide encouraging "Getting Started" advice or a budget-setting tip. DO NOT do math projections for ₹0 spending.
+2. NEXT 2 INSIGHTS (Type: pattern|forecast|health): Highlight one specific numeric trend or a risk.
+3. CONCISE: Exactly 30-40 words per "msg". No fluff. No professional jargon like "substantial buffer".
+4. PUNCHY: Use direct, actionable language. No bullet points or hyphens.
+5. PRIORITY: High only for active overspending or zero balance risk.
 
-CRITICAL RULES:
-1. MANDATORY PACING INSIGHT: Your FIRST insight MUST be of type "allowance". Do NOT just say "It is safe to spend ₹X." Instead, perform a detailed **Budget Pacing Analysis**. Compare their Daily Burn Rate (₹${analytics.currentMonth.dailyBurnRate}/day) to their Daily Allowance (₹${Math.round(dailyAllowance)}/day). Explain the mathematical safety buffer or the velocity risk (e.g. "Because your current cumulative velocity is ₹500 lower than the allowance threshold, you are building a healthy secondary buffer...").
-2. NO BULLET POINTS OR LISTS: You are strictly FORBIDDEN from using bullet points, hyphens, or any list-like formatting inside the "msg" field. Write in cohesive, professional, easy-to-read analytical paragraphs.
-3. DEEP LOGICAL PREDICTIVITY: Every insight must include detailed numeric logic and explain *why* it is predicting a certain outcome (e.g., "At your current trajectory for Dining, which has risen by 15% this week, we calculate a month-end overshot of ₹2,100.").
-4. ACCURATE PRIORITY: Do NOT flag positive news (like the daily allowance insight) as "high" priority or "Critical". Use "high" strictly for active budget failures.
-5. TYPES: Use "allowance", "forecast", "pattern", "health", or "alert".
-
-Return ONLY a JSON array. Each object format:
-{"type":"allowance|alert|forecast|pattern|health","priority":"high|mid|low","title":"Analytical Title","msg":"A vast, detailed, cohesive paragraph (no points) with numeric logic and predictions, 45-50 words max."}
-Use Indian rupee formatting.`;
+Return ONLY a JSON array of 3 objects:
+{"type":"allowance|alert|forecast|pattern|health","priority":"high|mid|low","title":"Short Title","msg":"[30-40 words of logical, punchy insight]"}`;
 
         const callAI = async (client: OpenAI, model: string, maxTokens: number): Promise<any[]> => {
             const response = await client.chat.completions.create({

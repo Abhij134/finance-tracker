@@ -16,8 +16,14 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Finance Neo",
-  description: "Your intelligent finance companion",
+  title: "FinanceNeo",
+  description: "Your AI-powered personal finance tracker",
+  icons: {
+    icon: "/favicon.png",
+    shortcut: "/favicon.png",
+    apple: "/apple-touch-icon.png",
+  },
+  manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     title: "FinanceNeo",
@@ -47,6 +53,23 @@ export default function RootLayout({
 
         {/* Global Toast Notifications */}
         <Toaster position="top-center" richColors theme="dark" />
+
+        {/* PWA Service Worker Registration */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/sw.js').then(function(registration) {
+                    console.log('SW registered: ', registration);
+                  }, function(err) {
+                    console.log('SW registration failed: ', err);
+                  });
+                });
+              }
+            `,
+          }}
+        />
       </body>
     </html>
   );

@@ -13,10 +13,15 @@ export function GreetingHeader({ userName }: { userName: string }) {
     }, []);
 
     return (
-        <div className="px-1 mt-2 mb-4">
-            <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground">
-                {greeting}, <span className="text-emerald-500 font-bold">{userName}</span>
-            </h2>
+        <div className="px-1 mt-2 mb-6">
+            <div className="flex flex-col gap-1">
+                <p className="text-sm text-muted-foreground font-medium tracking-wide">
+                    {greeting} 👋
+                </p>
+                <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
+                    {userName}
+                </h1>
+            </div>
         </div>
     );
 }

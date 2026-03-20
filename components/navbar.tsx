@@ -1,12 +1,12 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { UserDropdown } from "@/components/user-dropdown";
 import { ExportDropdown } from "@/components/export-dropdown";
-import { Wallet } from "lucide-react";
 
-export function Navbar({ userName }: { userName?: string }) {
+export function Navbar({ userName, userEmail }: { userName?: string; userEmail?: string }) {
   const router = useRouter();
 
   const handleSignOut = async () => {
@@ -18,12 +18,17 @@ export function Navbar({ userName }: { userName?: string }) {
   return (
     <header className="sticky top-0 z-30 w-full border-b border-border bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-3 py-2 sm:px-5">
-        <Link href="/login" className="flex items-center gap-2">
-          <div className="flex items-center justify-center h-7 w-7 shrink-0 rounded-lg border border-emerald-500/30 bg-emerald-500/5">
-            <Wallet className="h-3.5 w-3.5 text-emerald-400" />
-          </div>
-          <span className="text-base font-bold tracking-tight text-white">
-            Finance<span className="text-emerald-400">Neo</span>
+        <Link href="/login" className="flex items-center gap-2.5">
+          <Image
+            src="/logo.svg"
+            alt="FinanceNeo"
+            width={36}
+            height={36}
+            className="rounded-lg"
+            priority
+          />
+          <span className="text-lg font-bold tracking-tight text-white">
+            Finance<span className="text-[#4ecca3]">Neo</span>
           </span>
         </Link>
 
@@ -34,10 +39,11 @@ export function Navbar({ userName }: { userName?: string }) {
           <UserDropdown
             userName={userName || "Abhijeet Gautam"}
             userHandle={userName ? userName.split(" ")[0] + "Neo" : "AbhijNeo"}
+            userEmail={userEmail || "user@financneo.com"}
             onSignOut={handleSignOut}
           />
           {/* AI Chat button is at fixed top-3 right-4 from FloatingAiChat — leave gap */}
-          <div className="w-24 sm:w-36" /> {/* spacer for the fixed AI button */}
+          <div className="w-14 sm:w-36" /> {/* reduced spacer for mobile to avoid crowding */}
         </div>
       </div>
     </header>

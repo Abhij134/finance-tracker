@@ -1,7 +1,8 @@
 "use client";
 import { useState, useMemo, useEffect } from "react";
-import { PenLine, Cpu, Plus } from "lucide-react";
+import { PenLine, Cpu, Plus, Loader2 } from "lucide-react";
 import { format } from "date-fns";
+import { motion, AnimatePresence } from "framer-motion";
 import { useTransactions } from "@/app/(main)/transactions-context";
 import { ManualTransactionModal } from "./manual-transaction-modal";
 
@@ -43,121 +44,159 @@ export function RecentTransactions() {
 
   return (
     <>
-      <section className="rounded-xl border border-border bg-card text-card-foreground shadow-md">
-        <div className="flex items-center justify-between border-b border-border px-4 py-3">
-          <h2 className="text-base font-semibold">Recent Transactions</h2>
+      <div className="space-y-4">
+        <div className="flex items-center justify-between px-1">
+          <h2 className="text-base font-semibold text-foreground">Recent Transactions</h2>
         </div>
-        <div className="max-h-[400px] overflow-y-auto custom-scrollbar pr-2 overflow-x-auto">
-          <table className="min-w-full border-separate border-spacing-0 desktop-table">
-            <thead>
-              <tr className="text-left text-xs text-muted-foreground">
-                <th className="sticky left-0 bg-card px-4 py-3">Date</th>
-                <th className="px-4 py-3">Merchant</th>
-                <th className="px-4 py-3">Category</th>
-                <th className="px-4 py-3">Method</th>
-                <th className="px-4 py-3 text-right">Amount</th>
-              </tr>
-            </thead>
-            <tbody>
-              {recentTransactions.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={5}
-                    className="px-4 py-10 text-center text-sm text-muted-foreground"
-                  >
-                    No transactions yet. Add one to get started!
-                  </td>
+        <div className="pr-2">
+          {/* Desktop View Table */}
+          <div className="hidden sm:block overflow-x-auto">
+            <table className="min-w-full border-separate border-spacing-0 desktop-table">
+              <thead>
+                <tr className="text-left text-xs text-muted-foreground">
+                  <th className="sticky left-0 bg-card px-4 py-3">Date</th>
+                  <th className="px-4 py-3">Merchant</th>
+                  <th className="px-4 py-3">Category</th>
+                  <th className="px-4 py-3">Method</th>
+                  <th className="px-4 py-3 text-right">Amount</th>
                 </tr>
-              )}
-              {recentTransactions.map((tx: any) => (
-                <tr
-                  key={tx.id}
-                  className="text-sm transition-colors hover:bg-muted/20"
-                >
-                  <td className="sticky left-0 bg-card/95 backdrop-blur px-4 py-3 text-muted-foreground whitespace-nowrap">
-                    <div className="flex flex-col">
-                      <span className="font-medium">
-                        {mounted ? format(new Date(tx.date), 'dd MMM yyyy') : '...'}
-                      </span>
-                      <span className="text-[10px] text-muted-foreground">
-                        {mounted ? format(new Date(tx.date), 'hh:mm a') : '...'}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 font-medium">{tx.merchant}</td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium text-white ${tx.category.color}`}
+              </thead>
+              <tbody>
+                {recentTransactions.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={5}
+                      className="px-4 py-10 text-center text-sm text-muted-foreground"
                     >
+                      No transactions yet. Add one to get started!
+                    </td>
+                  </tr>
+                )}
+                {recentTransactions.map((tx: any) => (
+                  <tr
+                    key={tx.id}
+                    className="text-sm transition-colors hover:bg-muted/20"
+                  >
+                    <td className="sticky left-0 bg-card/95 backdrop-blur px-4 py-3 text-muted-foreground whitespace-nowrap">
+                      <div className="flex flex-col">
+                        <span className="font-medium">
+                          {mounted ? format(new Date(tx.date), 'dd MMM yyyy') : '...'}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground">
+                          {mounted ? format(new Date(tx.date), 'hh:mm a') : '...'}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 font-medium">{tx.merchant}</td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium text-white ${tx.category.color}`}
+                      >
+                        {tx.category.label}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="inline-flex items-center gap-1 rounded-full border border-border bg-background px-2.5 py-1 text-xs">
+                        {tx.method === "manual" ? (
+                          <>
+                            <PenLine className="h-3.5 w-3.5" />
+                            <span>Manual</span>
+                          </>
+                        ) : (
+                          <>
+                            <Cpu className="h-3.5 w-3.5" />
+                            <span>AI</span>
+                          </>
+                        )}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-right font-medium">
+                      <span
+                        className={
+                          tx.amount < 0 ? "text-red-500" : "text-emerald-500"
+                        }
+                      >
+                        {formatAmount(tx.amount)}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile View Card List */}
+          <div className="sm:hidden divide-y divide-border/20">
+            {recentTransactions.length === 0 && (
+              <p className="text-center text-sm text-muted-foreground py-10">
+                No transactions yet. Add one to get started!
+              </p>
+            )}
+            <AnimatePresence mode="popLayout">
+              {recentTransactions.map((tx: any, idx) => (
+                <motion.div
+                  key={tx.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: Math.min(idx * 0.05, 0.3) }}
+                  className="flex items-center justify-between py-3 border-b border-border/30 last:border-0 px-1"
+                >
+                  {/* Left: Category dot + Merchant */}
+                  <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                    <div className={`h-2 w-2 rounded-full shrink-0 ${tx.category.color.replace('bg-', 'bg-') || 'bg-emerald-500'}`} />
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate max-w-[140px]">
+                        {tx.merchant}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">
+                        {mounted ? format(new Date(tx.date), 'dd MMM') : '...'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Right: Category badge + Amount stacked */}
+                  <div className="flex flex-col items-end gap-1 shrink-0 ml-2">
+                    <span className={`text-sm font-semibold ${tx.amount < 0 ? 'text-red-400' : 'text-emerald-400'}`}>
+                      {tx.amount < 0 ? `-₹${Math.abs(tx.amount).toLocaleString('en-IN')}` : `+₹${Math.abs(tx.amount).toLocaleString('en-IN')}`}
+                    </span>
+                    <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-medium text-white scale-90 ${tx.category.color}`}>
                       {tx.category.label}
                     </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className="inline-flex items-center gap-1 rounded-full border border-border bg-background px-2.5 py-1 text-xs">
-                      {tx.method === "manual" ? (
-                        <>
-                          <PenLine className="h-3.5 w-3.5" />
-                          <span>Manual</span>
-                        </>
-                      ) : (
-                        <>
-                          <Cpu className="h-3.5 w-3.5" />
-                          <span>AI</span>
-                        </>
-                      )}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-right font-medium">
-                    <span
-                      className={
-                        tx.amount < 0 ? "text-red-500" : "text-emerald-500"
-                      }
-                    >
-                      {formatAmount(tx.amount)}
-                    </span>
-                  </td>
-                </tr>
+                  </div>
+                </motion.div>
               ))}
-            </tbody>
-          </table>
-
-          {/* Mobile card view */}
-          <div className="mobile-cards space-y-2 p-3" style={{ display: 'none' }}>
-            {recentTransactions.length === 0 && (
-              <p className="text-center text-sm text-muted-foreground py-8">No transactions yet. Add one to get started!</p>
-            )}
-            {recentTransactions.map((tx: any) => (
-              <div key={tx.id} className="rounded-xl border border-border/40 bg-muted/30 px-4 py-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium truncate mr-2">{tx.merchant}</span>
-                  <span className={`text-sm font-semibold whitespace-nowrap ${tx.amount < 0 ? 'text-red-500' : 'text-emerald-500'}`}>
-                    {formatAmount(tx.amount)}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between mt-1.5">
-                  <span className="text-xs text-muted-foreground">
-                    {mounted ? format(new Date(tx.date), 'dd MMM') : '...'}
-                  </span>
-                  <span className={`inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-medium text-white ${tx.category.color}`}>
-                    {tx.category.label}
-                  </span>
-                </div>
-              </div>
-            ))}
+            </AnimatePresence>
           </div>
         </div>
-        {showLoadMore && mounted && (
-          <div className="border-t border-border p-3 flex justify-center">
-            <button
-              onClick={handleLoadMore}
-              disabled={isLoadingMore}
-              className="text-xs font-semibold text-primary hover:underline disabled:opacity-50 flex items-center gap-2"
+        <AnimatePresence>
+          {showLoadMore && mounted && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="flex flex-col items-center justify-center py-6"
             >
-              {isLoadingMore ? "Loading..." : "Load More Transactions"}
-            </button>
-          </div>
-        )}
-      </section>
+              {isLoadingMore ? (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="flex flex-col items-center gap-2"
+                >
+                  <Loader2 className="h-5 w-5 text-emerald-500 animate-spin" />
+                  <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest">Updating...</span>
+                </motion.div>
+              ) : (
+                <button
+                  onClick={handleLoadMore}
+                  className="group flex items-center gap-2 px-6 py-2 text-emerald-500 text-sm font-bold hover:text-emerald-400 transition-all duration-300 active:scale-90"
+                >
+                  Load More Transactions
+                </button>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
 
       <ManualTransactionModal
         open={isAddOpen}

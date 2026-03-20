@@ -274,14 +274,14 @@ export function FinancialReportsDashboard() {
           <h2 className="text-lg sm:text-xl font-bold text-zinc-100 mb-2 break-words">Category Breakdown</h2>
           <div className="flex-1 flex flex-col items-center justify-between py-2">
             {/* Donut Chart */}
-            <div className="w-[140px] h-[140px] sm:w-[180px] sm:h-[180px] relative mb-4">
-              <ResponsiveContainer width="100%" height="100%">
+            <div className="aspect-square h-[200px] w-[200px] mx-auto relative mb-4">
+              <ResponsiveContainer width="100%" height={200}>
                 <PieChart>
                   <Pie
                     data={pieData}
                     cx="50%"
                     cy="50%"
-                    innerRadius={50}
+                    innerRadius={60}
                     outerRadius={80}
                     paddingAngle={2}
                     stroke="#1A2229"

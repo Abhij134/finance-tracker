@@ -6,22 +6,21 @@ import prisma from '@/lib/prisma';
 // NOTE: Node.js runtime — NOT edge. Required for sequential processing + Supabase.
 
 // ─── PROVIDER TOGGLE ───────────────────────────────────────────────────────────
-// Switch to 'gemini' when Gemini quota resets tomorrow.
-const ACTIVE_PROVIDER: 'groq' | 'gemini' = 'groq';
-const MODEL = ACTIVE_PROVIDER === 'groq' ? 'llama-3.1-8b-instant' : 'gemini-1.5-flash';
+const ACTIVE_PROVIDER: 'gemini' | 'groq' = 'gemini';
+const MODEL = ACTIVE_PROVIDER === 'gemini' ? 'gemini-2.5-flash' : 'llama-3.1-8b-instant';
 
 const aiClient = new OpenAI({
-    baseURL: ACTIVE_PROVIDER === 'groq'
-        ? 'https://api.groq.com/openai/v1'
-        : 'https://generativelanguage.googleapis.com/v1beta/openai/',
-    apiKey: ACTIVE_PROVIDER === 'groq'
-        ? process.env.GROQ_API_KEY
-        : process.env.GOOGLE_GEMINI_API_KEY,
-    maxRetries: 0, // MANDATORY: Prevents silent retry loops that drain API quotas
+    baseURL: ACTIVE_PROVIDER === 'gemini'
+        ? 'https://generativelanguage.googleapis.com/v1beta/openai/'
+        : 'https://api.groq.com/openai/v1',
+    apiKey: ACTIVE_PROVIDER === 'gemini'
+        ? process.env.GOOGLE_GEMINI_API_KEY
+        : process.env.GROQ_API_KEY,
+    maxRetries: 0,
 });
 
-const CHUNK_SIZE = 5000; // Matches frontend chunking (5000 chars ≈ 1250 tokens for Groq)
-const INTER_CHUNK_DELAY_MS = 25000; // 25s delay to respect Groq TPM limits
+const CHUNK_SIZE = 5000;
+const INTER_CHUNK_DELAY_MS = 25000;
 
 function sleep(ms: number) {
     return new Promise(r => setTimeout(r, ms));
@@ -36,53 +35,78 @@ const VALID_CATEGORIES = new Set([
 
 // ─── AI EXTRACTION ─────────────────────────────────────────────────────────────
 async function extractTransactionsFromChunk(text: string): Promise<any[]> {
-    const systemPrompt = `Extract financial transactions from bank statement text. Today's date is ${new Date().toISOString().split('T')[0]}. If the year is missing in the statement, assume it is ${new Date().getFullYear()}. Return ONLY valid JSON, no markdown/backticks.
-
-FORMAT: {"transactions":[{"date":"YYYY-MM-DD","amount":<positive number>,"merchant":"<string>","category":"<string>","type":"Expense"|"Income","referenceId":"<UTR/UPI Ref/Txn ID/Cheque No or null>"}]}
-
-CATEGORIZE BY MERCHANT/NARRATIVE — use these exact labels:
-- Food & Dining: Swiggy, Zomato, restaurants, cafes, chai, bakery, pizza, biryani, KFC, McDonald's, Dominos, Starbucks, dhaba, canteen, mess
-- Groceries: BigBasket, Blinkit, Zepto, DMart, Reliance Fresh, grocery, kirana, supermarket, JioMart, Spencer's
-- Shopping: Amazon, Flipkart, Myntra, Ajio, Meesho, Nykaa, mall, clothing, electronics, Croma, Reliance Digital, Apple, Google
-- Transport: Ola, Uber, Rapido, metro, railway, bus, cab, auto, NCMC
-- Fuel & Auto: petrol, diesel, HP, BPCL, IOCL, fuel station, car wash, service center, FASTag, toll, parking
-- Travel: MakeMyTrip, airline, hotel, Indigo, SpiceJet, Air India, booking.com, resort
-- Health & Medical: hospital, pharmacy, Apollo, Practo, PharmEasy, 1mg, doctor, clinic, lab test, medicine, dentist, Medplus
-- Bills & Utilities: electricity, water, gas, broadband, Jio, Airtel, Vi, BSNL, recharge, DTH, Tata Play, WiFi, internet
-- Entertainment: Cinema, PVR, INOX, movies, gaming, park, hobby, club, bar, liquor
-- Education: school, college, university, Udemy, Coursera, coaching, tuition, books, stationery, exam fee
-- UPI Transfer: UPI transfer OUT, NEFT, IMPS, RTGS sent where it is a personal transfer.
-- Income: salary, interest, refund, cashback, "received from", "credited by"
-- Investment: SIP, mutual fund, Zerodha, Groww, stocks, FD, gold, insurance premium
-- Subscriptions: Netflix, Spotify, Hotstar, Prime, YouTube, Cloud storage, SaaS
-- Rent & Housing: Rent payment, society maintenance, domestic help, house repair
-- Other: if none of the above match reasonably
-
-TYPE RULES: Expense=debit/withdrawal/payment/DR/"- Rs." | Income=credit/received/salary/CR/"+ Rs."/"Credited"
-REFERENCE ID: Extract UTR/UPI Ref/Txn ID/Cheque No if visible, else null.
-ONE transaction per statement line. No duplicates. Empty text → {"transactions":[]}`;
-
-    const response = await aiClient.chat.completions.create({
-        model: MODEL,
-        messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: `Extract all financial transactions from this text:\n\n${text}` },
-        ],
-        temperature: 0.1,
-        response_format: { type: 'json_object' },
-    });
-
-    let rawContent = response.choices[0]?.message?.content || '{"transactions":[]}';
-
-    // Strip markdown wrappers open-source models sometimes add
-    rawContent = rawContent.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    const systemPrompt = `Extract all financial transactions from the following bank statement text. 
+    CRITICAL RULES FOR 'type':
+    1. If the money left the account (Debit / Withdrawal / Payment / Spent), the type MUST be 'EXPENSE'. 
+    2. If the money entered the account (Credit / Deposit / Received), the type MUST be 'INCOME'.
+    3. The amount should always be a positive absolute number. The type field will dictate the flow.`;
 
     try {
-        const parsed = JSON.parse(rawContent);
-        return Array.isArray(parsed) ? parsed : (parsed.transactions || []);
-    } catch (e) {
-        console.error(`[scan] Failed to parse AI output:`, rawContent.slice(0, 500));
-        return [];
+        if (ACTIVE_PROVIDER === 'gemini') {
+            const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${process.env.GOOGLE_GEMINI_API_KEY}`;
+
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{
+                        role: 'user',
+                        parts: [{ text: `System Instructions: ${systemPrompt}\n\nUser Content to process: ${text}` }]
+                    }],
+                    generationConfig: {
+                        temperature: 0.1,
+                        response_mime_type: "application/json",
+                        response_schema: {
+                            type: "ARRAY",
+                            items: {
+                                type: "OBJECT",
+                                properties: {
+                                    date: { type: "STRING" },
+                                    merchant: { type: "STRING" },
+                                    amount: { type: "NUMBER" },
+                                    category: { type: "STRING" },
+                                    type: { type: "STRING", enum: ["INCOME", "EXPENSE"] }
+                                },
+                                required: ["date", "merchant", "amount", "category", "type"]
+                            }
+                        }
+                    }
+                })
+            });
+
+            if (!response.ok) {
+                const errorBody = await response.text();
+                throw new Error(`Gemini API Error: ${response.status} ${response.statusText} - ${errorBody}`);
+            }
+
+            const data = await response.json();
+            const rawContent = data.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
+            // With structured outputs, rawContent is guaranteed to be valid JSON
+            const parsed = JSON.parse(rawContent);
+            return Array.isArray(parsed) ? parsed : (parsed.transactions || []);
+        } else {
+            // Groq still uses OpenAI SDK
+            const response = await aiClient.chat.completions.create({
+                model: MODEL,
+                messages: [
+                    { role: 'system', content: systemPrompt },
+                    { role: 'user', content: text },
+                ],
+                temperature: 0.1,
+            });
+
+            const rawContent = response.choices[0]?.message?.content || '[]';
+            const cleanContent = rawContent.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+            const parsed = JSON.parse(cleanContent);
+            return Array.isArray(parsed) ? parsed : (parsed.transactions || []);
+        }
+    } catch (err: any) {
+        console.error(`[scan] AI API Error (Provider: ${ACTIVE_PROVIDER}, Model: ${MODEL}):`, {
+            status: err.status,
+            message: err.message,
+            detail: err.message,
+        });
+        throw err;
     }
 }
 
@@ -103,14 +127,12 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Missing text parameter' }, { status: 400 });
         }
 
-        const apiKey = ACTIVE_PROVIDER === 'groq' ? process.env.GROQ_API_KEY : process.env.GOOGLE_GEMINI_API_KEY;
+        const apiKey = ACTIVE_PROVIDER === 'gemini' ? process.env.GOOGLE_GEMINI_API_KEY : process.env.GROQ_API_KEY;
         if (!apiKey) {
-            return NextResponse.json({ error: `Missing ${ACTIVE_PROVIDER === 'groq' ? 'GROQ_API_KEY' : 'GOOGLE_GEMINI_API_KEY'}` }, { status: 500 });
+            return NextResponse.json({ error: `Missing ${ACTIVE_PROVIDER.toUpperCase()}_API_KEY` }, { status: 500 });
         }
 
         // ─── CHUNKING ─────────────────────────────────────────────────────────────
-        // Note: If frontend already chunked, this will be a single chunk (5000 chars).
-        // If fullText is sent directly, this splits it server-side.
         const chunks: string[] = [];
         for (let i = 0; i < textToProcess.length; i += CHUNK_SIZE) {
             chunks.push(textToProcess.substring(i, i + CHUNK_SIZE));
@@ -125,9 +147,8 @@ export async function POST(req: Request) {
             try {
                 const txs = await extractTransactionsFromChunk(chunks[i]);
                 rawExtracted.push(...txs);
-                console.log(`[scan] Chunk ${i + 1}: +${txs.length} tx (running total: ${rawExtracted.length})`);
             } catch (err: any) {
-                console.error(`[scan] Chunk ${i + 1} failed:`, err.message);
+                console.error(`[scan] FATAL: Chunk ${i + 1} processing failed. Current total items: ${rawExtracted.length}. Error detail above.`);
             }
 
             if (i < chunks.length - 1) {
@@ -220,7 +241,7 @@ export async function POST(req: Request) {
             id: crypto.randomUUID(),
             userId,
             merchant: tx.merchant || 'Unknown',
-            amount: tx.type === 'Expense' ? -Math.abs(tx.amount) : Math.abs(tx.amount),
+            amount: tx.type === 'EXPENSE' ? -Math.abs(tx.amount) : Math.abs(tx.amount),
             category: VALID_CATEGORIES.has(tx.category) ? tx.category : 'Miscellaneous',
             date: (() => {
                 if (!tx.date) return new Date().toISOString();

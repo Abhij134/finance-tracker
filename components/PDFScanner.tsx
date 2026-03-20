@@ -8,7 +8,7 @@ import { scanReceipt } from "../app/actions/scan";
 import { useScanContext } from "./scan-context";
 
 interface PDFScannerProps {
-  onTransactionsExtracted: (transactions: any[]) => void;
+  onTransactionsExtracted: (data: any[] | ((prev: any[]) => any[])) => void;
   onLoadingChange?: (loading: boolean) => void;
 }
 
@@ -52,44 +52,55 @@ export function PDFScanner({ onTransactionsExtracted, onLoadingChange }: PDFScan
   };
 
   /* ── PDF extraction ────────────────────────────────────────────────── */
-  const extractTextFromPDF = async (file: File): Promise<string> => {
+  const extractTextFromPDF = async (file: File): Promise<string[]> => {
     extractionCancelledRef.current = false;
     setUploadState("extracting");
     setProgress(10);
-    setStatusText("Extracting document text...");
+    setStatusText("Reading document structure...");
 
     const pdfjsLib = await import("pdfjs-dist");
     pdfjsLib.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
 
     const arrayBuffer = await file.arrayBuffer();
     const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-    let fullText = "";
+
+    const chunks: string[] = [];
+    let currentChunkText = "";
+    const PAGES_PER_CHUNK = 10;
 
     for (let i = 1; i <= pdf.numPages; i++) {
       if (extractionCancelledRef.current) throw new Error("CANCELLED");
+
+      // Inject micro-pause to un-freeze main thread
+      await new Promise(r => setTimeout(r, 10));
+
       const page = await pdf.getPage(i);
       const textContent = await page.getTextContent();
       const pageText = textContent.items.map((item: any) => item.str).join(" ");
-      fullText += pageText + "\n";
+      currentChunkText += pageText + "\n";
+
+      // If we've reached 10 pages or the last page, push the chunk
+      if (i % PAGES_PER_CHUNK === 0 || i === pdf.numPages) {
+        chunks.push(currentChunkText);
+        currentChunkText = "";
+      }
+
       setProgress(10 + Math.round((i / pdf.numPages) * 30));
       setStatusText(`Extracting page ${i} of ${pdf.numPages}...`);
     }
 
-    if (fullText.trim().length === 0)
+    if (chunks.length === 0 || chunks.join("").trim().length === 0)
       throw new Error("No text found. If this is a scanned receipt, upload it as an image.");
 
-    return fullText;
+    return chunks;
   };
 
-  const MAX_CHARS_PER_CHUNK = 5000;
-
-  const processChunks = async (fullText: string) => {
+  const processChunks = async (chunks: string[]) => {
     if (extractionCancelledRef.current) return;
-    const chunks: string[] = [];
-    for (let i = 0; i < fullText.length; i += MAX_CHARS_PER_CHUNK)
-      chunks.push(fullText.slice(i, i + MAX_CHARS_PER_CHUNK));
-    toast.info(`PDF split into ${chunks.length} chunk${chunks.length > 1 ? "s" : ""}. Processing in background.`);
-    startScan(chunks);
+    toast.info(`Document split into ${chunks.length} processing unit${chunks.length > 1 ? "s" : ""}. Scanning in background.`);
+    startScan(chunks, (newTxs) => {
+      onTransactionsExtracted(newTxs);
+    });
   };
 
   /* ── Image processing ──────────────────────────────────────────────── */
@@ -181,14 +192,12 @@ export function PDFScanner({ onTransactionsExtracted, onLoadingChange }: PDFScan
           if (file) await handleFile(file);
         }}
         onClick={() => fileInputRef.current?.click()}
-        className={`flex items-center gap-2.5 rounded-xl border bg-card px-4 py-3 text-sm font-semibold text-foreground shadow-sm hover:bg-muted hover:-translate-y-0.5 hover:shadow-md transition-all cursor-pointer w-full select-none ${
-          isDragging ? "border-primary bg-primary/5 scale-[1.02]" : "border-border hover:border-primary/30"
-        }`}
+        className={`flex items-center gap-2.5 rounded-xl border bg-card px-4 py-3 text-sm font-semibold text-foreground shadow-sm hover:bg-muted hover:-translate-y-0.5 hover:shadow-md transition-all cursor-pointer w-full select-none ${isDragging ? "border-primary bg-primary/5 scale-[1.02]" : "border-border hover:border-primary/30"
+          }`}
       >
         <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="application/pdf,image/*" className="hidden" />
-        <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg transition-colors ${
-          isDragging ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-        }`}>
+        <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg transition-colors ${isDragging ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+          }`}>
           {isDragging ? <UploadCloud className="h-4 w-4" /> : <ScanLine className="h-4 w-4" />}
         </span>
         <span className="truncate">{isDragging ? "Drop to scan" : "Upload Receipt"}</span>
@@ -209,14 +218,14 @@ export function PDFScanner({ onTransactionsExtracted, onLoadingChange }: PDFScan
           {effectiveState === "success"
             ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
             : effectiveState === "error"
-            ? <AlertCircle className="w-3.5 h-3.5 text-destructive" />
-            : <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+              ? <AlertCircle className="w-3.5 h-3.5 text-destructive" />
+              : <Loader2 className="w-3.5 h-3.5 animate-spin" />}
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-xs font-semibold text-foreground truncate">
             {effectiveState === "extracting" ? "Extracting text..." :
-             effectiveState === "analyzing" ? "AI analyzing..." :
-             effectiveState === "success" ? "Import complete!" : "Error"}
+              effectiveState === "analyzing" ? "AI analyzing..." :
+                effectiveState === "success" ? "Import complete!" : "Error"}
           </p>
           <p className="text-[10px] text-muted-foreground truncate">{effectiveStatusText}</p>
         </div>
