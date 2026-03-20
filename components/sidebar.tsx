@@ -22,9 +22,6 @@ const mainNavItems = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
   { name: "Financial Reports", href: "/dashboard/budget", icon: BarChart3 },
   { name: "Transactions", href: "/transactions", icon: Clock },
-];
-
-const settingsNavItems = [
   { name: "Alerts", href: "/alerts", icon: Mail },
 ];
 
@@ -55,15 +52,6 @@ export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
 
-  const onSignOut = async () => {
-    if (window.confirm("Are you sure you want to sign out of FinanceNeo?")) {
-      await handleSignOut();
-      toast.success("Signed out successfully");
-      router.push("/login");
-      router.refresh();
-    }
-  };
-
   return (
     <div
       className={`relative flex h-screen flex-col bg-card border-r border-border transition-all duration-300 ease-in-out ${isOpen ? "w-64" : "w-16"
@@ -82,29 +70,7 @@ export function Sidebar() {
         {mainNavItems.map((item) => (
           <NavLink key={item.name} item={item} isOpen={isOpen} pathname={pathname} />
         ))}
-        <div className="pt-4 mt-4 space-y-2 border-t border-border">
-          <h3 className={`px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider ${isOpen ? 'block' : 'hidden'}`}>
-            Settings
-          </h3>
-          {settingsNavItems.map((item) => (
-            <NavLink key={item.name} item={item} isOpen={isOpen} pathname={pathname} />
-          ))}
-        </div>
       </nav>
-      <div className="p-2 border-t border-border">
-        <button
-          onClick={onSignOut}
-          className="flex items-center w-full p-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-        >
-          <LogOut className="h-6 w-6 flex-shrink-0" />
-          <span
-            className={`ml-4 text-sm font-medium whitespace-nowrap overflow-hidden transition-all duration-300 ${isOpen ? "w-28 opacity-100" : "w-0 opacity-0"
-              }`}
-          >
-            Sign Out
-          </span>
-        </button>
-      </div>
     </div>
   );
 }
