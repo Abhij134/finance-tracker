@@ -832,15 +832,17 @@ export function UserDropdown({
                 >
                     <Settings size={15} />
                 </div>
-                <span style={{ paddingRight: 2 }}>Settings</span>
-                <ChevronDown
-                    size={13}
-                    style={{
-                        opacity: open ? 0.8 : 0.4,
-                        transition: "transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
-                        transform: open ? "rotate(-180deg)" : "rotate(0deg)"
-                    }}
-                />
+                <span className="hidden sm:inline" style={{ paddingRight: 2 }}>Settings</span>
+                <span className="hidden sm:inline">
+                    <ChevronDown
+                        size={13}
+                        style={{
+                            opacity: open ? 0.8 : 0.4,
+                            transition: "transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+                            transform: open ? "rotate(-180deg)" : "rotate(0deg)"
+                        }}
+                    />
+                </span>
             </button>
 
             {/* ── Dropdown & Modals via Portal ── */}

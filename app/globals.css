@@ -67,6 +67,45 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  overflow-x: hidden;
+}
+
+/* Better touch targets */
+button,
+[role="button"] {
+  min-height: 36px;
+}
+
+/* Scrollable horizontal containers */
+.scroll-x {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.scroll-x::-webkit-scrollbar {
+  display: none;
+}
+
+/* Mobile card view for tables */
+@media (max-width: 640px) {
+  .desktop-table {
+    display: none !important;
+  }
+
+  .mobile-cards {
+    display: block !important;
+  }
+}
+
+@media (min-width: 641px) {
+  .desktop-table {
+    display: table !important;
+  }
+
+  .mobile-cards {
+    display: none !important;
+  }
 }
 
 html {
@@ -117,28 +156,80 @@ input[type="password"]::-ms-clear {
   display: none;
 }
 
-.bot-wrap { animation: bot-float 3.2s ease-in-out infinite; }
-button:hover .bot-hoverable { animation: bot-float-fast 1.6s ease-in-out infinite; }
+.bot-wrap {
+  animation: bot-float 3.2s ease-in-out infinite;
+}
+
+button:hover .bot-hoverable {
+  animation: bot-float-fast 1.6s ease-in-out infinite;
+}
 
 @keyframes bot-float {
-  0%, 100% { transform: translateY(0px); }
-  50%       { transform: translateY(-2.5px); }
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-2.5px);
+  }
 }
+
 @keyframes bot-float-fast {
-  0%, 100% { transform: translateY(0px) rotate(-2deg); }
-  25%       { transform: translateY(-3.5px) rotate(1deg); }
-  75%       { transform: translateY(-1.5px) rotate(-1deg); }
+
+  0%,
+  100% {
+    transform: translateY(0px) rotate(-2deg);
+  }
+
+  25% {
+    transform: translateY(-3.5px) rotate(1deg);
+  }
+
+  75% {
+    transform: translateY(-1.5px) rotate(-1deg);
+  }
 }
 
-.antenna-dot { transform-origin: 12px 4px; animation: pulse-ant 2.4s ease-in-out infinite; }
+.antenna-dot {
+  transform-origin: 12px 4px;
+  animation: pulse-ant 2.4s ease-in-out infinite;
+}
+
 @keyframes pulse-ant {
-  0%, 100% { opacity: 0.6; r: 1.5; }
-  50%       { opacity: 1;   r: 2.5; }
+
+  0%,
+  100% {
+    opacity: 0.6;
+    r: 1.5;
+  }
+
+  50% {
+    opacity: 1;
+    r: 2.5;
+  }
 }
 
-.eye-l { transform-origin: 9px 14px; animation: blink 4s ease-in-out infinite; }
-.eye-r { transform-origin: 15px 14px; animation: blink 4s ease-in-out infinite 0.08s; }
+.eye-l {
+  transform-origin: 9px 14px;
+  animation: blink 4s ease-in-out infinite;
+}
+
+.eye-r {
+  transform-origin: 15px 14px;
+  animation: blink 4s ease-in-out infinite 0.08s;
+}
+
 @keyframes blink {
-  0%, 90%, 100% { transform: scaleY(1); }
-  95%           { transform: scaleY(0.1); }
+
+  0%,
+  90%,
+  100% {
+    transform: scaleY(1);
+  }
+
+  95% {
+    transform: scaleY(0.1);
+  }
 }

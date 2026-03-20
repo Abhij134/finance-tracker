@@ -198,7 +198,7 @@ export function FinancialReportsDashboard() {
             />
           </div>
         </div>
-        <div className="ml-auto flex items-center gap-1.5">
+        <div className="ml-auto hidden sm:flex items-center gap-1.5">
           <span className="text-[10px] font-medium text-muted-foreground">Total:</span>
           <span className="text-xs font-bold text-primary tabular-nums">
             {filteredTransactions.length}
@@ -209,7 +209,7 @@ export function FinancialReportsDashboard() {
 
       {/* Top Grid: Cash Flow Trend (Full Width) */}
       <div className="grid grid-cols-1 gap-6 relative z-10">
-        <div className="bg-[#1A2229]/80 backdrop-blur-md border border-emerald-500/10 shadow-[0_8px_30px_rgb(16,185,129,0.03)] rounded-2xl p-6 flex flex-col min-h-[380px]">
+        <div className="bg-[#1A2229]/80 backdrop-blur-md border border-emerald-500/10 shadow-[0_8px_30px_rgb(16,185,129,0.03)] rounded-2xl p-4 sm:p-6 flex flex-col min-h-[240px] sm:min-h-[380px]">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-bold text-zinc-100">Cash Flow Trend</h2>
             <div className="flex items-center gap-4 text-xs font-medium text-zinc-400">
@@ -226,7 +226,7 @@ export function FinancialReportsDashboard() {
 
           <div className="flex-1 w-full relative overflow-x-auto custom-scrollbar pb-6">
             <div style={{ minWidth: Math.max(800, finalChartData.length * 80) + 'px', height: '100%' }}>
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={200}>
                 <AreaChart data={finalChartData} margin={{ top: 10, right: 30, left: -20, bottom: 25 }}>
                   <defs>
                     <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
@@ -270,11 +270,11 @@ export function FinancialReportsDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 relative z-10">
 
         {/* Category Breakdown */}
-        <div className="lg:col-span-1 bg-[#1A2229]/80 backdrop-blur-md border border-emerald-500/10 shadow-[0_8px_30px_rgb(16,185,129,0.03)] rounded-2xl p-6 flex flex-col h-[380px]">
-          <h2 className="text-xl font-bold text-zinc-100 mb-2">Category Breakdown</h2>
+        <div className="lg:col-span-1 min-w-0 bg-[#1A2229]/80 backdrop-blur-md border border-emerald-500/10 shadow-[0_8px_30px_rgb(16,185,129,0.03)] rounded-2xl p-4 sm:p-6 flex flex-col h-auto sm:h-[380px]">
+          <h2 className="text-lg sm:text-xl font-bold text-zinc-100 mb-2 break-words">Category Breakdown</h2>
           <div className="flex-1 flex flex-col items-center justify-between py-2">
             {/* Donut Chart */}
-            <div className="w-[180px] h-[180px] relative mb-4">
+            <div className="w-[140px] h-[140px] sm:w-[180px] sm:h-[180px] relative mb-4">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -312,7 +312,7 @@ export function FinancialReportsDashboard() {
         <div className="lg:col-span-2 bg-[#1A2229]/80 backdrop-blur-md border border-emerald-500/10 shadow-[0_8px_30px_rgb(16,185,129,0.03)] rounded-2xl p-6 flex flex-col min-h-[380px]">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-bold text-zinc-100">Budget Progress</h2>
-            <p className="text-xs font-medium text-zinc-400 max-w-[200px] text-right">
+            <p className="text-xs font-medium text-zinc-400 max-w-[200px] text-right hidden sm:block">
               Track limits. Click ✏️ to customize your budget category limit.
             </p>
           </div>

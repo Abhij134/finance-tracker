@@ -148,7 +148,7 @@ export function FloatingAiChat() {
 
       {/* ── Chat panel — drops down from top-right ─────────────────── */}
       <div
-        className="fixed top-[120px] right-4 z-50 w-[calc(100vw-2rem)] sm:w-[380px] md:w-[420px]"
+        className="fixed z-50 w-[calc(100vw-1rem)] sm:w-[380px] md:w-[420px] top-[120px] right-2 sm:right-4"
         style={{
           // Spring pop: scale from 0.85 + translateY(-8px) → full size
           transform: isOpen ? "translateY(0) scale(1)" : "translateY(-12px) scale(0.88)",
@@ -162,7 +162,7 @@ export function FloatingAiChat() {
       >
         <div
           className="flex flex-col rounded-2xl border border-border bg-[#0B0F19]/98 backdrop-blur-3xl overflow-hidden shadow-2xl shadow-black/80"
-          style={{ height: "min(540px, calc(100dvh - 80px))" }}
+          style={{ height: "min(540px, calc(100dvh - 140px))" }}
         >
           {/* Header */}
           <div className="flex items-center justify-between border-b border-border px-4 py-3 shrink-0 bg-gradient-to-r from-emerald-950/80 to-[#0B0F19]/98">
@@ -311,8 +311,8 @@ export function FloatingAiChat() {
       <button
         onClick={() => setIsOpen((v) => !v)}
         className={`
-          fixed top-[74px] right-4 z-50 flex items-center gap-3 rounded-full
-          px-4 py-2.5 text-sm font-medium tracking-wide
+          fixed top-[74px] right-2 sm:right-4 z-50 flex items-center gap-2 sm:gap-3 rounded-full
+          px-3 sm:px-4 py-2 sm:py-2.5 text-sm font-medium tracking-wide
           border transition-all duration-300 active:scale-95
           ${isOpen
             ? "bg-card border-border text-foreground hover:bg-muted shadow-lg"

@@ -21,7 +21,7 @@ function MiniSparkline({ data, color, index }: { data: { val: number; label: str
 
   return (
     <div className="relative">
-      <div className="flex items-end gap-[2px] h-10 w-full">
+      <div className="flex items-end gap-[2px] h-6 sm:h-10 w-full">
         {data.map((d, i) => {
           const isZero = d.val === 0;
           return (
@@ -256,7 +256,7 @@ export function StatCards() {
             />
           </div>
         </div>
-        <div className="ml-auto flex items-center gap-1.5">
+        <div className="ml-auto hidden sm:flex items-center gap-1.5">
           <span className="text-[10px] font-medium text-muted-foreground">Total:</span>
           <span className="text-xs font-bold text-primary tabular-nums">
             {stats.incomeCount + stats.expenseCount}
@@ -394,7 +394,7 @@ function StatCard({ title, value, sub, icon, color, data, index }: {
           <span style={{ color }}>{icon}</span>
         </div>
       </div>
-      <p className="text-xl sm:text-2xl font-extrabold mt-1.5 leading-none relative z-10 truncate" style={{ color }}>
+      <p className="text-xl sm:text-2xl font-extrabold mt-1.5 leading-none relative z-10 truncate tabular-nums" style={{ color }}>
         {value}
       </p>
       <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 relative z-10 truncate">{sub}</p>

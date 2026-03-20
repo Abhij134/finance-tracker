@@ -125,24 +125,26 @@ export function TransactionListView({ initialTransactions }: { initialTransactio
                     </div>
                 </div>
 
-                <div className="space-y-1.5">
-                    <label className="text-sm font-medium text-foreground">From Date</label>
-                    <input
-                        type="date"
-                        value={startDate}
-                        onChange={(e) => setStartDate(e.target.value)}
-                        className="w-full px-3 py-2 bg-background border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                    />
-                </div>
+                <div className="grid grid-cols-2 gap-2 w-full sm:w-auto sm:flex sm:gap-4">
+                    <div className="space-y-1.5">
+                        <label className="text-sm font-medium text-foreground">From Date</label>
+                        <input
+                            type="date"
+                            value={startDate}
+                            onChange={(e) => setStartDate(e.target.value)}
+                            className="w-full px-3 py-2 bg-background border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                        />
+                    </div>
 
-                <div className="space-y-1.5">
-                    <label className="text-sm font-medium text-foreground">To Date</label>
-                    <input
-                        type="date"
-                        value={endDate}
-                        onChange={(e) => setEndDate(e.target.value)}
-                        className="w-full px-3 py-2 bg-background border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                    />
+                    <div className="space-y-1.5">
+                        <label className="text-sm font-medium text-foreground">To Date</label>
+                        <input
+                            type="date"
+                            value={endDate}
+                            onChange={(e) => setEndDate(e.target.value)}
+                            className="w-full px-3 py-2 bg-background border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                        />
+                    </div>
                 </div>
 
                 {(startDate || endDate || searchQuery) && (
@@ -156,7 +158,7 @@ export function TransactionListView({ initialTransactions }: { initialTransactio
                 )}
 
                 {/* Select Transaction Button area */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 w-full sm:w-auto">
                     {isSelectionMode && (
                         <button
                             onClick={handleSelectAll}
@@ -167,7 +169,7 @@ export function TransactionListView({ initialTransactions }: { initialTransactio
                     )}
                     <button
                         onClick={toggleSelectionMode}
-                        className={`px-4 py-2 flex items-center gap-2 border rounded-md text-sm font-medium transition-colors h-[38px] ${isSelectionMode
+                        className={`px-4 py-2 flex items-center gap-2 border rounded-md text-sm font-medium transition-colors h-[38px] w-full sm:w-auto justify-center ${isSelectionMode
                             ? "bg-emerald-500/20 text-emerald-500 border-emerald-500/30 hover:bg-emerald-500/30"
                             : "bg-background text-foreground border-border hover:bg-muted"
                             }`}
@@ -180,7 +182,7 @@ export function TransactionListView({ initialTransactions }: { initialTransactio
 
             {/* Table Section */}
             <div className="max-h-[700px] overflow-y-auto custom-scrollbar pr-2 rounded-xl border border-border bg-card text-card-foreground shadow-md overflow-x-auto relative">
-                <table className="min-w-full border-separate border-spacing-0">
+                <table className="min-w-full border-separate border-spacing-0 desktop-table">
                     <thead>
                         <tr className="text-left text-sm bg-muted/30">
                             {isSelectionMode && (
@@ -245,11 +247,54 @@ export function TransactionListView({ initialTransactions }: { initialTransactio
                         )}
                     </tbody>
                 </table>
+
+                {/* Mobile card view */}
+                <div className="mobile-cards space-y-2 p-3" style={{ display: 'none' }}>
+                    {filteredTransactions.length === 0 && (
+                        <p className="text-center text-sm text-muted-foreground py-8">No transactions found matching your filters.</p>
+                    )}
+                    {filteredTransactions.map((tx) => {
+                        const isSelected = selectedIds.has(tx.id);
+                        return (
+                            <div
+                                key={tx.id}
+                                onClick={() => isSelectionMode && toggleSelect(tx.id)}
+                                className={`rounded-xl border px-4 py-3 transition-colors ${isSelected ? 'border-emerald-500/40 bg-emerald-500/10' : 'border-border/40 bg-muted/30'
+                                    } ${isSelectionMode ? 'cursor-pointer' : ''}`}
+                            >
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2 min-w-0">
+                                        {isSelectionMode && (
+                                            <input
+                                                type="checkbox"
+                                                checked={isSelected}
+                                                onChange={() => toggleSelect(tx.id)}
+                                                className="rounded border-border accent-emerald-500 h-4 w-4 shrink-0"
+                                            />
+                                        )}
+                                        <span className="text-sm font-medium truncate">{tx.merchant}</span>
+                                    </div>
+                                    <span className={`text-sm font-semibold whitespace-nowrap ml-2 ${tx.amount < 0 ? 'text-foreground' : 'text-emerald-500'}`}>
+                                        {formatAmount(tx.amount)}
+                                    </span>
+                                </div>
+                                <div className="flex items-center justify-between mt-1.5">
+                                    <span className="text-xs text-muted-foreground">
+                                        {mounted ? format(new Date(tx.date), 'dd MMM yyyy') : '...'}
+                                    </span>
+                                    <span className={`inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-semibold text-white ${tx.category.color}`}>
+                                        {tx.category.label}
+                                    </span>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
             </div>
 
             {/* Floating Action Bar */}
             {selectedIds.size > 0 && (
-                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4 rounded-xl border border-emerald-500/30 bg-black/80 backdrop-blur-xl p-3 shadow-[0_8px_32px_0_rgba(16,185,129,0.2)] animate-in slide-in-from-bottom-5">
+                <div className="fixed bottom-20 sm:bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 sm:gap-4 rounded-xl border border-emerald-500/30 bg-black/80 backdrop-blur-xl p-2.5 sm:p-3 shadow-[0_8px_32px_0_rgba(16,185,129,0.2)] animate-in slide-in-from-bottom-5 max-w-[calc(100vw-2rem)]">
                     <span className="text-sm font-medium text-emerald-50 px-2 flex items-center gap-1.5">
                         <CheckSquare className="h-4 w-4 text-emerald-400" />
                         {selectedIds.size} selected

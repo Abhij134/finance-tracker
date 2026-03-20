@@ -157,15 +157,17 @@ export function ExportDropdown() {
                 >
                     <FileDown size={15} />
                 </div>
-                <span style={{ paddingRight: 2 }}>Export</span>
-                <ChevronDown
-                    size={13}
-                    style={{
-                        opacity: open ? 0.8 : 0.4,
-                        transition: "transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
-                        transform: open ? "rotate(-180deg)" : "rotate(0deg)"
-                    }}
-                />
+                <span className="hidden sm:inline" style={{ paddingRight: 2 }}>Export</span>
+                <span className="hidden sm:inline">
+                    <ChevronDown
+                        size={13}
+                        style={{
+                            opacity: open ? 0.8 : 0.4,
+                            transition: "transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+                            transform: open ? "rotate(-180deg)" : "rotate(0deg)"
+                        }}
+                    />
+                </span>
             </button>
             <style>{`
                 @keyframes spin { to { transform: rotate(360deg); } }

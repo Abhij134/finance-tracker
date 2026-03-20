@@ -48,7 +48,7 @@ export function RecentTransactions() {
           <h2 className="text-base font-semibold">Recent Transactions</h2>
         </div>
         <div className="max-h-[400px] overflow-y-auto custom-scrollbar pr-2 overflow-x-auto">
-          <table className="min-w-full border-separate border-spacing-0">
+          <table className="min-w-full border-separate border-spacing-0 desktop-table">
             <thead>
               <tr className="text-left text-xs text-muted-foreground">
                 <th className="sticky left-0 bg-card px-4 py-3">Date</th>
@@ -120,6 +120,31 @@ export function RecentTransactions() {
               ))}
             </tbody>
           </table>
+
+          {/* Mobile card view */}
+          <div className="mobile-cards space-y-2 p-3" style={{ display: 'none' }}>
+            {recentTransactions.length === 0 && (
+              <p className="text-center text-sm text-muted-foreground py-8">No transactions yet. Add one to get started!</p>
+            )}
+            {recentTransactions.map((tx: any) => (
+              <div key={tx.id} className="rounded-xl border border-border/40 bg-muted/30 px-4 py-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium truncate mr-2">{tx.merchant}</span>
+                  <span className={`text-sm font-semibold whitespace-nowrap ${tx.amount < 0 ? 'text-red-500' : 'text-emerald-500'}`}>
+                    {formatAmount(tx.amount)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between mt-1.5">
+                  <span className="text-xs text-muted-foreground">
+                    {mounted ? format(new Date(tx.date), 'dd MMM') : '...'}
+                  </span>
+                  <span className={`inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-medium text-white ${tx.category.color}`}>
+                    {tx.category.label}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
         {showLoadMore && mounted && (
           <div className="border-t border-border p-3 flex justify-center">
