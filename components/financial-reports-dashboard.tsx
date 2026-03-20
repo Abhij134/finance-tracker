@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
-import { Clock, MousePointer2 } from "lucide-react";
+import { Calendar, Clock, MousePointer2 } from "lucide-react";
 import { useTransactions, DatePreset } from "@/app/(main)/transactions-context";
 import { toLocalISO } from "@/lib/utils";
 import { CATEGORIES } from "@/lib/constants";
@@ -165,11 +165,11 @@ export function FinancialReportsDashboard() {
 
   return (
     <div className="min-h-screen text-zinc-100 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
-      {/* Top Bar Area */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <h1 className="text-3xl font-bold tracking-tight text-white mb-2 md:mb-0">Financial Reports</h1>
-
-        <div className="flex items-center gap-1.5 flex-wrap">
+      {/* Date Filter Bar — Same style as Dashboard */}
+      <div className="relative z-50 flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card/80 px-3 py-2.5 shadow-sm">
+        <Calendar className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+        <span className="text-xs font-medium text-muted-foreground">Period:</span>
+        <div className="flex items-center gap-1 flex-wrap">
           {(["all", "month"] as DatePreset[]).map((p) => (
             <button
               key={p}
@@ -182,9 +182,9 @@ export function FinancialReportsDashboard() {
                 }
                 setDateFilter({ preset: p, range: { from, to } });
               }}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${dateFilter.preset === p
+              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${dateFilter.preset === p
                 ? "border border-primary/60 bg-primary/10 text-primary shadow-[0_0_10px_rgba(16,185,129,0.15)]"
-                : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground border border-zinc-700/30"
+                : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
                 }`}
             >
               {p === "all" ? "All Time" : "This Month"}
@@ -195,9 +195,15 @@ export function FinancialReportsDashboard() {
               from={dateFilter.preset === "custom" ? dateFilter.range.from : ""}
               to={dateFilter.preset === "custom" ? dateFilter.range.to : ""}
               onRangeChange={(from, to) => setDateFilter({ preset: "custom", range: { from, to } })}
-              align="right"
             />
           </div>
+        </div>
+        <div className="ml-auto flex items-center gap-1.5">
+          <span className="text-[10px] font-medium text-muted-foreground">Total:</span>
+          <span className="text-xs font-bold text-primary tabular-nums">
+            {filteredTransactions.length}
+          </span>
+          <span className="text-[10px] text-muted-foreground">transactions</span>
         </div>
       </div>
 
@@ -318,6 +324,6 @@ export function FinancialReportsDashboard() {
         </div>
 
       </div>
-    </div>
+    </div >
   );
 }

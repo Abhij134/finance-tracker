@@ -256,6 +256,13 @@ export function StatCards() {
             />
           </div>
         </div>
+        <div className="ml-auto flex items-center gap-1.5">
+          <span className="text-[10px] font-medium text-muted-foreground">Total:</span>
+          <span className="text-xs font-bold text-primary tabular-nums">
+            {stats.incomeCount + stats.expenseCount}
+          </span>
+          <span className="text-[10px] text-muted-foreground">transactions</span>
+        </div>
       </div>
 
       {/* 2×2 Stat Cards Grid */}

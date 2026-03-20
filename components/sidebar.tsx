@@ -2,25 +2,19 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { toast } from "sonner";
+import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   Clock,
   Mail,
-  User,
   ChevronLeft,
   ChevronRight,
-  Home,
-  LogOut,
-  Settings,
   BarChart3,
 } from "lucide-react";
-import { handleSignOut } from "@/app/actions/auth";
 
 const mainNavItems = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
-  { name: "Financial Reports", href: "/dashboard/budget", icon: BarChart3 },
+  { name: "Financial Charts", href: "/dashboard/budget", icon: BarChart3 },
   { name: "Transactions", href: "/transactions", icon: Clock },
   { name: "Alerts", href: "/alerts", icon: Mail },
 ];
@@ -50,7 +44,6 @@ function NavLink({ item, isOpen, pathname }: { item: { name: string; href: strin
 export function Sidebar() {
   const [isOpen, setIsOpen] = useState(true);
   const pathname = usePathname();
-  const router = useRouter();
 
   return (
     <div

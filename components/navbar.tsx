@@ -10,11 +10,9 @@ export function Navbar({ userName }: { userName?: string }) {
   const router = useRouter();
 
   const handleSignOut = async () => {
-    if (window.confirm("Sign out of FinanceNeo?")) {
-      const { handleSignOut: signOutAction } = await import("@/app/actions/auth");
-      await signOutAction();
-      router.push("/login");
-    }
+    const { handleSignOut: signOutAction } = await import("@/app/actions/auth");
+    await signOutAction();
+    router.push("/login");
   };
 
   return (
