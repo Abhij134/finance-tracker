@@ -5,7 +5,6 @@ generator client {
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")        // pooler URL (6543)
-  directUrl = env("DIRECT_URL")          // direct URL (5432)
 }
 
 model Transaction {
@@ -47,6 +46,7 @@ model User {
   name                        String?
   userId                      String?            @unique
   image                       String?
+  birthdate                   DateTime?
   createdAt                   DateTime           @default(now())
   username                    String?            @unique
   largeTxEmailEnabled         Boolean            @default(true)

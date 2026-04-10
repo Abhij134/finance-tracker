@@ -172,54 +172,48 @@ export function StatCards() {
         current.setDate(current.getDate() + step);
       }
     } else {
-      // All time: group continuously by month
+      // All time: group by specific active months ONLY
       const monthMap = new Map<string, { income: number; expense: number }>();
-      let minMonth = "";
-      let maxMonth = "";
 
       [...incomeTxs, ...expenseTxs].forEach((t) => {
         const key = t.date.substring(0, 7); // YYYY-MM
-        if (!minMonth || key < minMonth) minMonth = key;
-        if (!maxMonth || key > maxMonth) maxMonth = key;
+        if (!monthMap.has(key)) monthMap.set(key, { income: 0, expense: 0 });
+        const m = monthMap.get(key)!;
+        if (t.amount > 0) m.income += t.amount;
+        else m.expense += Math.abs(t.amount);
       });
 
-      if (minMonth && maxMonth) {
-        // limit to maximum 24 consecutive months ending at the most recent transaction
-        const [minY, minM] = minMonth.split("-").map(Number);
-        const [maxY, maxM] = maxMonth.split("-").map(Number);
-        let start = new Date(minY, minM - 1, 1);
-        const end = new Date(maxY, maxM - 1, 1);
+      // Sort chronological
+      const sortedKeys = Array.from(monthMap.keys()).sort();
 
-        const cutoff = new Date(maxY, maxM - 1 - 23, 1);
-        if (start < cutoff) start = cutoff;
-
-        let curr = new Date(start);
-        while (curr <= end) {
-          const key = `${curr.getFullYear()}-${String(curr.getMonth() + 1).padStart(2, '0')}`;
-          monthMap.set(key, { income: 0, expense: 0 });
-          curr = new Date(curr.getFullYear(), curr.getMonth() + 1, 1);
-        }
-      } else {
-        const now = new Date();
-        monthMap.set(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`, { income: 0, expense: 0 });
-      }
-
-      [...incomeTxs, ...expenseTxs].forEach((t) => {
-        const key = t.date.substring(0, 7); // YYYY-MM
-        if (monthMap.has(key)) {
-          const m = monthMap.get(key)!;
+      // If the number of unique months is huge (e.g. > 36), we group by year instead
+      if (sortedKeys.length > 36) {
+        const yearMap = new Map<string, { income: number; expense: number }>();
+        [...incomeTxs, ...expenseTxs].forEach((t) => {
+          const key = t.date.substring(0, 4); // YYYY
+          if (!yearMap.has(key)) yearMap.set(key, { income: 0, expense: 0 });
+          const m = yearMap.get(key)!;
           if (t.amount > 0) m.income += t.amount;
           else m.expense += Math.abs(t.amount);
-        }
-      });
-
-      monthMap.forEach((val, key) => {
-        const [y, mo] = key.split("-");
-        const label = new Date(parseInt(y), parseInt(mo) - 1).toLocaleDateString("en-IN", { month: "short", year: "2-digit" });
-        incomeHist.push({ val: val.income, label });
-        expenseHist.push({ val: val.expense, label });
-        savingsHist.push({ val: Math.abs(val.income - val.expense), label });
-      });
+        });
+        const sortedYears = Array.from(yearMap.keys()).sort();
+        sortedYears.forEach(y => {
+          const val = yearMap.get(y)!;
+          incomeHist.push({ val: val.income, label: y });
+          expenseHist.push({ val: val.expense, label: y });
+          savingsHist.push({ val: Math.abs(val.income - val.expense), label: y });
+        });
+      } else {
+        // Just group by active months, omitting empty gaps
+        sortedKeys.forEach(key => {
+          const val = monthMap.get(key)!;
+          const [y, mo] = key.split("-");
+          const label = new Date(parseInt(y), parseInt(mo) - 1).toLocaleDateString("en-IN", { month: "short", year: "numeric" });
+          incomeHist.push({ val: val.income, label });
+          expenseHist.push({ val: val.expense, label });
+          savingsHist.push({ val: Math.abs(val.income - val.expense), label });
+        });
+      }
     }
 
     return {

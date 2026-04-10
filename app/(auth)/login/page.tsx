@@ -14,8 +14,9 @@ import {
     recoverUserId
 } from "@/app/actions/auth";
 import { toast } from "sonner";
+import Link from "next/link";
 
-type AuthState = "login" | "signup" | "forgot_password_email" | "forgot_password_otp" | "forgot_userid_email" | "forgot_userid_otp" | "userid_recovered";
+type AuthState = "login" | "signup" | "forgot_password_email" | "forgot_password_otp" | "forgot_userid_email" | "forgot_userid_otp" | "userid_recovered" | "privacy" | "terms";
 
 export default function LandingAndLoginPage() {
     const router = useRouter();
@@ -220,12 +221,9 @@ export default function LandingAndLoginPage() {
 
     return (
         <div className="relative min-h-screen text-white overflow-hidden selection:bg-emerald-500/30 font-sans">
-            <div className="absolute top-4 left-4 sm:left-8 text-[10px] text-zinc-500 font-medium tracking-widest uppercase z-50">
-                Made by Abhijeet
-            </div>
             {/* Landing Page Content */}
             <motion.div
-                className="relative z-10 w-full min-h-screen flex flex-col pt-32 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto will-change-transform"
+                className="relative z-10 w-full min-h-screen flex flex-col pt-24 sm:pt-32 pb-16 sm:pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto will-change-transform"
                 initial={false}
                 animate={{
                     x: showLogin ? "-100vw" : "0vw",
@@ -241,7 +239,7 @@ export default function LandingAndLoginPage() {
                         alt="FinanceNeo"
                         width={40}
                         height={40}
-                        className="rounded-xl"
+                        className="rounded-xl object-contain drop-shadow-md"
                         priority
                     />
                     <span className="text-xl font-bold tracking-tight text-white">
@@ -249,21 +247,21 @@ export default function LandingAndLoginPage() {
                     </span>
                 </div>
 
-                <div className="text-center max-w-4xl mx-auto space-y-8 mt-12">
+                <div className="text-center max-w-4xl mx-auto space-y-6 sm:space-y-8 mt-8 sm:mt-12">
                     <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.03] border border-white/[0.05] shadow-inner backdrop-blur-sm">
                         <span className="flex h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] animate-pulse" />
                         <span className="text-xs font-semibold tracking-wider text-emerald-400 uppercase">Early Access Available</span>
                     </div>
 
-                    <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-b from-white to-white/60 drop-shadow-lg leading-tight pb-2">
+                    <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-b from-white to-white/60 drop-shadow-lg leading-tight pb-2">
                         Intelligent Finances <br /> Built for the Future
                     </h1>
 
-                    <p className="text-lg sm:text-xl text-zinc-400 max-w-2xl mx-auto leading-relaxed">
+                    <p className="text-base sm:text-xl text-zinc-400 max-w-2xl mx-auto leading-relaxed px-2">
                         Master your financial life with AI-driven insights, real-time analytics, and bulletproof security. Welcome to the new standard of wealth management.
                     </p>
 
-                    <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-8">
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 sm:pt-8 w-full max-w-xs sm:max-w-none mx-auto">
                         <button
                             onClick={async () => {
                                 const { data: { user } } = await supabase.auth.getUser();
@@ -313,6 +311,16 @@ export default function LandingAndLoginPage() {
                         </p>
                     </div>
                 </div>
+
+                <footer className="mt-32 pt-8 pb-4 border-t border-white/10 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs font-medium text-zinc-500">
+                    <p>© {new Date().getFullYear()} FinanceNeo by Abhijeet. All rights reserved.</p>
+                    <div className="flex items-center gap-6">
+                        <button type="button" onClick={() => { setShowLogin(true); handleSwitchView("privacy"); }} className="hover:text-emerald-400 transition-colors">Privacy Policy</button>
+                        {/* PASTE YOUR CONTACT LINK HERE (replace PASTE_YOUR_LINK_HERE) */}
+                        <Link href="https://abhijeetg.netlify.app" target="_blank" rel="noopener noreferrer" className="hover:text-emerald-400 transition-colors">Contact Us</Link>
+                        <button type="button" onClick={() => { setShowLogin(true); handleSwitchView("terms"); }} className="hover:text-emerald-400 transition-colors">Terms and Conditions</button>
+                    </div>
+                </footer>
             </motion.div>
 
             {/* Interactive Login Overlay */}
@@ -326,35 +334,36 @@ export default function LandingAndLoginPage() {
                             exit={{ opacity: 0, x: "100vw" }}
                             transition={{ duration: 0.5, ease: [0.32, 0.72, 0, 1] }}
                         >
-                            {view !== "login" && (
-                                <button
-                                    onClick={() => handleSwitchView("login")}
-                                    className="absolute top-4 left-4 p-2 rounded-full text-zinc-500 hover:text-white hover:bg-white/5 transition-colors focus:outline-none z-20 flex items-center pr-3"
-                                >
-                                    <ChevronLeft className="h-5 w-5 mr-1" />
-                                    <span className="text-sm font-medium">Back</span>
-                                </button>
-                            )}
                             <button
                                 onClick={() => {
-                                    setShowLogin(false);
-                                    handleSwitchView("login");
+                                    if (view === "login" || view === "privacy" || view === "terms") {
+                                        setShowLogin(false);
+                                        setTimeout(() => handleSwitchView("login"), 300);
+                                    } else {
+                                        handleSwitchView("login");
+                                    }
                                 }}
-                                className="absolute top-4 right-4 p-2 rounded-full text-zinc-500 hover:text-white hover:bg-white/5 transition-colors focus:outline-none z-20"
+                                className="absolute top-4 left-4 p-2 rounded-full text-zinc-500 hover:text-white hover:bg-white/5 transition-colors focus:outline-none z-20 flex items-center pr-3"
                             >
-                                <X className="h-5 w-5" />
+                                <ChevronLeft className="h-5 w-5 mr-1" />
+                                <span className="text-sm font-medium">Back</span>
                             </button>
 
-                            <div className="mb-8 mt-2 text-center relative z-10">
-                                <h2 className="text-2xl font-bold text-white tracking-tight mb-2">
-                                    {(view === "login" || view === "signup") && "Welcome to"}
+                            {/* X button removed per user request */}
+
+                            <div className="mb-4 mt-6 text-center relative z-10 px-4">
+                                <h2 className="text-2xl font-bold text-white tracking-tight leading-tight">
+                                    {(view === "login" || view === "signup") && <div className="mb-1">Welcome to</div>}
                                     {view === "forgot_password_email" && "Recover Account"}
                                     {view === "forgot_password_otp" && "Secure Account"}
-                                    <br />
-                                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-[#4ecca3] text-3xl font-extrabold">FinanceNeo</span>
+                                    {view === "privacy" && "Privacy Policy"}
+                                    {view === "terms" && "Terms and Conditions"}
+                                    {view !== "privacy" && view !== "terms" && (
+                                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-[#4ecca3] text-3xl font-extrabold block">FinanceNeo</span>
+                                    )}
                                 </h2>
                                 <p className="text-zinc-400 text-sm h-5 transition-all">
-                                    {view === "login" && "Enter your username to log in."}
+                                    {view === "login" && "Please enter your User ID and password to login."}
                                     {view === "signup" && "Create your new account profile."}
                                     {view === "forgot_password_email" && "Enter your email to receive an OTP."}
                                     {view === "forgot_password_otp" && "Reset your password with the code sent."}
@@ -366,7 +375,7 @@ export default function LandingAndLoginPage() {
 
                             <motion.div
                                 className="relative w-full"
-                                animate={{ height: view === "signup" ? 390 : view === "forgot_password_otp" ? 350 : view === "login" ? 340 : view === "userid_recovered" ? 280 : 220 }}
+                                animate={{ height: (view === "privacy" || view === "terms") ? "auto" : view === "signup" ? 390 : view === "forgot_password_otp" ? 350 : view === "login" ? 340 : view === "userid_recovered" ? 280 : 220 }}
                                 transition={{ duration: 0.3, ease: "easeInOut" }}
                             >
                                 <AnimatePresence mode="wait">
@@ -691,6 +700,57 @@ export default function LandingAndLoginPage() {
                                             >
                                                 Return to Log In
                                             </button>
+                                        </motion.div>
+                                    )}
+
+                                    {/* --- STATE 5: PRIVACY POLICY --- */}
+                                    {view === "privacy" && (
+                                        <motion.div
+                                            key="privacy"
+                                            initial={{ opacity: 0, scale: 0.95 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            exit={{ opacity: 0, scale: 0.95 }}
+                                            transition={{ duration: 0.3 }}
+                                            className="text-left text-zinc-300 text-sm max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar"
+                                        >
+                                            <p className="mb-4 text-xs text-zinc-500">Last updated: April 2026</p>
+                                            <h4 className="font-bold text-white mb-2 mt-4">1. Information We Collect</h4>
+                                            <p className="mb-2">We collect information to provide better services to all our users. To fully utilize FinanceNeo's automated tracking, we collect:</p>
+                                            <ul className="list-disc pl-5 mb-4 marker:text-emerald-500">
+                                                <li>Personal identifiers (Name, Email).</li>
+                                                <li>Financial transaction categorical routing information.</li>
+                                                <li>PDF statement uploads required to extract data locally.</li>
+                                            </ul>
+                                            <h4 className="font-bold text-white mb-2 mt-4">2. How We Use Your Information</h4>
+                                            <p className="mb-4">The integrity of your data is paramount. We utilize AI processing via Google Gemini to securely parse and categorize PDF statement uploads. Your data is used exclusively to train these isolated, individual AI models dedicated to your personalized financial goals.</p>
+                                            <h4 className="font-bold text-white mb-2 mt-4">3. Data Security</h4>
+                                            <p className="mb-4">We deploy military-grade encryption algorithms to ensure your raw identifiers and financial history are securely isolated. <strong>We do not, and never will, sell your financial data.</strong></p>
+                                        </motion.div>
+                                    )}
+
+                                    {/* --- STATE 6: TERMS AND CONDITIONS --- */}
+                                    {view === "terms" && (
+                                        <motion.div
+                                            key="terms"
+                                            initial={{ opacity: 0, scale: 0.95 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            exit={{ opacity: 0, scale: 0.95 }}
+                                            transition={{ duration: 0.3 }}
+                                            className="text-left text-zinc-300 text-sm max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar"
+                                        >
+                                            <p className="mb-4 text-xs text-zinc-500">Last updated: April 2026</p>
+                                            <h4 className="font-bold text-white mb-2 mt-4">1. Acceptance of Terms</h4>
+                                            <p className="mb-4">By accessing and using FinanceNeo, you accept and agree to be bound by the terms and provision of this agreement.</p>
+                                            <h4 className="font-bold text-white mb-2 mt-4">2. Description of Service</h4>
+                                            <p className="mb-4">FinanceNeo provides AI-powered financial categorization, tracking, and dashboard generation reliant on local and cloud AI models.</p>
+                                            <h4 className="font-bold text-white mb-2 mt-4">3. User Responsibilities</h4>
+                                            <ul className="list-disc pl-5 mb-4 marker:text-teal-500">
+                                                <li>Provide accurate and lawful information.</li>
+                                                <li>Maintain confidentiality of login credentials.</li>
+                                                <li>Do not upload malicious files or embedded malware.</li>
+                                            </ul>
+                                            <h4 className="font-bold text-white mb-2 mt-4">4. Limitation of Liability</h4>
+                                            <p className="mb-4">To the maximum extent permitted by law, FinanceNeo shall not be liable for any indirect or consequential damages, or any loss of profits.</p>
                                         </motion.div>
                                     )}
                                 </AnimatePresence>

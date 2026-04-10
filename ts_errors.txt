@@ -1,0 +1,1 @@
+﻿lib/extractTransactions.ts(40,35): error TS2307: Cannot find module 'pdfjs-dist/legacy/build/pdf.js' or its corresponding type declarations.

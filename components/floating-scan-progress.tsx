@@ -7,7 +7,7 @@ import { Loader2, CheckCircle2, AlertCircle, FileText, StopCircle } from "lucide
 export function FloatingScanProgress() {
     const { scanState, isScanning, cancelScan } = useScanContext();
 
-    const isVisible = scanState.status !== "idle";
+    const isVisible = scanState.status !== "idle" && scanState.status !== "analyzing";
 
     return (
         <AnimatePresence>
@@ -17,7 +17,7 @@ export function FloatingScanProgress() {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 80, scale: 0.95 }}
                     transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                    className="fixed bottom-24 sm:bottom-6 left-4 right-4 sm:left-auto sm:right-6 z-[9999] sm:w-[340px] rounded-2xl border border-border bg-card/95 backdrop-blur-xl shadow-2xl overflow-hidden"
+                    className="fixed bottom-24 sm:bottom-6 left-4 right-4 sm:left-auto sm:right-6 z-[50] sm:w-[340px] rounded-2xl border border-border bg-card/95 backdrop-blur-xl shadow-2xl overflow-hidden pointer-events-none"
                 >
                     {/* Animated progress bar at top */}
                     <div className="h-1 bg-muted w-full">
@@ -74,7 +74,7 @@ export function FloatingScanProgress() {
                         </div>
 
                         {/* Controls */}
-                        <div className="flex items-center gap-2 shrink-0">
+                        <div className="flex items-center gap-2 shrink-0 pointer-events-auto">
                             {isScanning && (
                                 <button
                                     onClick={cancelScan}

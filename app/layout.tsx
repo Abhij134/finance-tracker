@@ -19,9 +19,11 @@ export const metadata: Metadata = {
   title: "FinanceNeo",
   description: "Your AI-powered personal finance tracker",
   icons: {
-    icon: "/favicon.png",
-    shortcut: "/favicon.png",
-    apple: "/apple-touch-icon.png",
+    icon: [
+      { url: "/logo.svg", type: "image/svg+xml" },
+    ],
+    shortcut: "/logo.svg",
+    apple: "/logo.svg",
   },
   manifest: "/manifest.json",
   appleWebApp: {

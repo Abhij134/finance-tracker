@@ -11,7 +11,7 @@ import { getBudgets } from "@/app/actions/budgets";
 import { GreetingHeader } from "@/components/greeting-header";
 import { getUserProfile } from "@/app/actions/auth";
 import { Suspense } from "react";
-import { StatCardSkeleton, RecentTransactionsSkeleton, AiInsightsSkeleton } from "@/components/skeletons";
+import { StatCardSkeleton, RecentTransactionsSkeleton, AiInsightsSkeleton, GreetingHeaderSkeleton } from "@/components/skeletons";
 import { toLocalISO, getLocalStartOfDay, getLocalEndOfDay } from "@/lib/utils";
 
 function deriveDateRange(range: string, fromParam?: string, toParam?: string) {
@@ -51,9 +51,9 @@ export default async function Home({
   searchParams: Promise<{ range?: string; from?: string; to?: string }>;
 }) {
   const params = await searchParams;
-  const rangeParam = (params.range as string) || "30d";
+  const rangeParam = (params.range as string) || "month";
   const preset = (
-    ["all", "7d", "30d", "month", "custom"].includes(rangeParam) ? rangeParam : "30d"
+    ["all", "7d", "30d", "month", "custom"].includes(rangeParam) ? rangeParam : "month"
   ) as DatePreset;
   const { from, to } = deriveDateRange(preset, params.from as string, params.to as string);
 
@@ -61,6 +61,8 @@ export default async function Home({
   const dbUser = profileResponse.success && profileResponse.user ? profileResponse.user : null;
   const userName = dbUser?.username || "Guest";
   const userEmail = dbUser?.email || "";
+  const userBirthdate = dbUser?.birthdate ? new Date(dbUser.birthdate).toISOString() : undefined;
+  const userImage = dbUser?.image || undefined;
 
   const [dbTransactions, dbBudgets] = await Promise.all([
     getTransactions(),
@@ -92,12 +94,14 @@ export default async function Home({
 
   return (
     <div className="bg-background text-foreground">
-      <Navbar userName={userName} userEmail={userEmail} />
+      <Navbar userName={userName} userEmail={userEmail} userBirthdate={userBirthdate} userImage={userImage} />
       <TransactionsProvider initialTransactions={txs} initialFilter={initialFilter}>
         <BudgetProvider initialBudgets={budgets}>
           <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-6">
 
-            <GreetingHeader userName={userName} />
+            <Suspense fallback={<GreetingHeaderSkeleton />}>
+              <GreetingHeader userName={userName} />
+            </Suspense>
 
             <Suspense fallback={
               <div className="grid grid-cols-2 gap-2.5">

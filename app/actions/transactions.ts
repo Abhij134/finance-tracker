@@ -164,10 +164,54 @@ export async function addBulkTransactions(transactions: any[]) {
             category: tx.category,
             isAiScanned: tx.method === "ai" || tx.isAiScanned || false,
             date: tx.date ? new Date(tx.date) : new Date(),
+            referenceId: tx.referenceId || null,
         }));
 
+        const minDate = new Date(Math.min(...rows.map(r => r.date.getTime())));
+        const maxDate = new Date(Math.max(...rows.map(r => r.date.getTime())));
+
+        const existingTxs = await prisma.transaction.findMany({
+            where: {
+                userId,
+                date: {
+                    gte: new Date(minDate.setHours(0, 0, 0, 0)),
+                    lte: new Date(maxDate.setHours(23, 59, 59, 999))
+                }
+            },
+            select: { date: true, merchant: true, amount: true, referenceId: true }
+        });
+
+        const uniqueRows = rows.filter(newTx => {
+            // First deduplicate by explicitly provided transaction ID
+            if (newTx.referenceId) {
+                const matchIndex = existingTxs.findIndex(ex => ex.referenceId === newTx.referenceId);
+                if (matchIndex !== -1) {
+                    existingTxs.splice(matchIndex, 1);
+                    return false;
+                }
+            }
+
+            // Fallback to heuristic date/merchant/amount matching
+            const dateStr = newTx.date.toISOString().split('T')[0];
+            const matchIndex = existingTxs.findIndex(ex =>
+                ex.merchant === newTx.merchant &&
+                Math.abs(ex.amount - newTx.amount) < 0.01 &&
+                ex.date.toISOString().split('T')[0] === dateStr
+            );
+
+            if (matchIndex !== -1) {
+                existingTxs.splice(matchIndex, 1);
+                return false; // Found a duplicate in the database, skip inserting
+            }
+            return true;
+        });
+
+        if (uniqueRows.length === 0) {
+            return { success: true, addedCount: 0 };
+        }
+
         const result = await prisma.transaction.createMany({
-            data: rows
+            data: uniqueRows
         });
 
         revalidatePath("/");
@@ -188,12 +232,12 @@ export async function addBulkTransactions(transactions: any[]) {
         }).then(async (userPrefs: any) => {
             if (!userPrefs?.email) return;
 
-            const hasExpenses = rows.some(tx => tx.amount < 0);
+            const hasExpenses = uniqueRows.some(tx => tx.amount < 0);
 
             // 1. Large Transaction Alerts
             if (userPrefs.largeTxEmailEnabled) {
                 const { sendEmail, buildLargeTransactionHTML } = await import('@/lib/email');
-                const largeTxs = rows.filter(tx => tx.amount < 0 && Math.abs(tx.amount) >= userPrefs.largeTxThreshold);
+                const largeTxs = uniqueRows.filter(tx => tx.amount < 0 && Math.abs(tx.amount) >= userPrefs.largeTxThreshold);
 
                 for (const tx of largeTxs) {
                     const html = buildLargeTransactionHTML(tx.amount, tx.merchant, tx.date);

@@ -10,6 +10,7 @@ export type Tx = {
     category: { label: string; color: string };
     method: "manual" | "ai";
     amount: number;
+    referenceId?: string | null;
 };
 
 export type DatePreset = "all" | "7d" | "30d" | "month" | "custom";

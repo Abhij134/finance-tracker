@@ -1,0 +1,178 @@
+﻿node.exe : 
+[@serwist/next] 
+WARNING: You are using 
+'@serwist/next' with 
+`next dev 
+--turbopack`, but it 
+doesn't support 
+Turbopack. Do one of 
+the following:
+At line:1 char:1
++ & "P:\/node.exe" "P:\
+/node_modules/npm/bin/n
+px-cli.js" next build
++ ~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo     
+         : NotSpecifi  
+  ed: ([@serwist/nex   
+ t]... the followin    
+g::String) [], Rem    
+oteException
+    + FullyQualifiedEr 
+   rorId : NativeComm  
+  andError
+ 
+
+- Set `disable` to 
+`process.env.NODE_ENV 
+!== "production"`.
+
+- Use webpack by 
+running `next dev 
+--webpack` instead of 
+`next dev --turbopack`.
+
+- Migrate to 
+'@serwist/turbopack' 
+which has experimental 
+support for Turbopack. 
+See https://serwist.pag
+es.dev/docs/next/turbo 
+for more information.
+
+- Migrate to 
+configurator mode 
+which has support for 
+Turbopack. See https://
+serwist.pages.dev/docs/
+next/config for more 
+information. 
+
+Follow https://github.c
+om/serwist/serwist/issu
+es/54 for progress on 
+Serwist + Turbopack. 
+You can also suppress 
+this warning by 
+setting SERWIST_SUPPRES
+S_TURBOPACK_WARNING=1.
+
+ΓÜá Invalid 
+next.config.ts options 
+detected: 
+ΓÜá     Unrecognized 
+key(s) in object: 'serv
+erComponentsExternalPac
+kages' at 
+"experimental"
+ΓÜá See more info 
+here: https://nextjs.or
+g/docs/messages/invalid
+-next-config
+ΓÜá `experimental.serve
+rComponentsExternalPack
+ages` has been moved 
+to `serverExternalPacka
+ges`. Please update 
+your next.config.ts 
+file accordingly.
+Γû▓ Next.js 16.1.6 (Turbopack)
+- Environments: .env.local, .env
+- Experiments (use with caution):
+  ┬╖ serverActions
+  ? serverComponentsExternalPackages (invalid experimental key)
+
+  Creating an optimized production build ...
+
+> Build error occurred
+Error: Turbopack build 
+failed with 1 errors:
+./lib/extractTransactio
+ns.ts:41:28
+Module not found: 
+Can't resolve 'pdfjs-di
+st/legacy/build/pdf.js'
+[0m [90m 39 |[39m   
+  [90m// Dynamic 
+imports to avoid SSR 
+issues[39m
+ [90m 40 |[39m     
+[90m// @ts-ignore[39m
+[31m[1m>[22m[39m[9
+0m 41 |[39m     
+[36mconst[39m 
+pdfjsLib [33m=[39m 
+[36mawait[39m [36mim
+port[39m([32m"pdfjs-d
+ist/legacy/build/pdf.js
+"[39m)[33m;[39m
+ [90m    |[39m       
+                     [
+31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31
+m[1m^[22m[39m
+ [90m 42 |[39m     
+[90m// @ts-ignore[39m
+ [90m 43 |[39m     
+[36mconst[39m { 
+createCanvas } 
+[33m=[39m 
+[36mawait[39m [36mim
+port[39m([32m"canvas"
+[39m)[33m;[39m
+ [90m 44 |[39m[0m
+
+
+
+Import trace:
+  App Route:
+    ./lib/extractTransa
+ctions.ts
+    ./app/api/extract/r
+oute.ts
+
+https://nextjs.org/docs
+/messages/module-not-fo
+und
+
+
+    at <unknown> (./lib
+/extractTransactions.ts
+:41:28)
+    at <unknown> (https
+://nextjs.org/docs/mess
+ages/module-not-found)

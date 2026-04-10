@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { UserDropdown } from "@/components/user-dropdown";
 import { ExportDropdown } from "@/components/export-dropdown";
 
-export function Navbar({ userName, userEmail }: { userName?: string; userEmail?: string }) {
+export function Navbar({ userName, userEmail, userBirthdate, userImage }: { userName?: string; userEmail?: string; userBirthdate?: string; userImage?: string; }) {
   const router = useRouter();
 
   const handleSignOut = async () => {
@@ -24,7 +24,7 @@ export function Navbar({ userName, userEmail }: { userName?: string; userEmail?:
             alt="FinanceNeo"
             width={36}
             height={36}
-            className="rounded-lg"
+            className="rounded-lg object-contain"
             priority
           />
           <span className="text-lg font-bold tracking-tight text-white">
@@ -40,6 +40,8 @@ export function Navbar({ userName, userEmail }: { userName?: string; userEmail?:
             userName={userName || "Abhijeet Gautam"}
             userHandle={userName ? userName.split(" ")[0] + "Neo" : "AbhijNeo"}
             userEmail={userEmail || "user@financneo.com"}
+            userBirthdate={userBirthdate}
+            userImage={userImage}
             onSignOut={handleSignOut}
           />
           {/* AI Chat button is at fixed top-3 right-4 from FloatingAiChat — leave gap */}

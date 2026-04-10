@@ -2,21 +2,18 @@ import { defineConfig } from '@prisma/config';
 import dotenv from 'dotenv';
 import path from 'path';
 
-// Load .env.local manually so Prisma CLI can find DIRECT_URL
+// Load .env.local manually so Prisma CLI can find variables
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 
-// THE FIX: Mutate process.env so Prisma CLI uses the IPv4-capable pooler domain.
-// This bypasses IPv6-related P1001 errors on restricted networks.
-if (process.env.DATABASE_URL?.includes("db.ngegqphmpvqmwkkxoabn.supabase.co")) {
-    process.env.DATABASE_URL = process.env.DATABASE_URL.replace("db.ngegqphmpvqmwkkxoabn.supabase.co", "ngegqphmpvqmwkkxoabn.supabase.org");
-}
-if (process.env.DIRECT_URL?.includes("db.ngegqphmpvqmwkkxoabn.supabase.co")) {
-    process.env.DIRECT_URL = process.env.DIRECT_URL.replace("db.ngegqphmpvqmwkkxoabn.supabase.co", "ngegqphmpvqmwkkxoabn.supabase.org");
-}
+// Derive the session-mode pooler URL (IPv4 compliant) from the transaction-mode pooler URL
+// This allows db push/migrations to succeed on port 5432 via the pooler, bypassing IPv6 timeouts
+const fallbackDirectUrl = process.env.DATABASE_URL
+    ? process.env.DATABASE_URL.replace(':6543', ':5432').replace('?pgbouncer=true', '')
+    : undefined;
 
 export default defineConfig({
     datasource: {
         url: process.env.DATABASE_URL,
-        directUrl: process.env.DIRECT_URL,
+        directUrl: fallbackDirectUrl,
     },
 } as any);

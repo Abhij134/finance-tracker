@@ -1,7 +1,7 @@
 import { Sidebar } from "@/components/sidebar";
 import { BottomNav } from "@/components/bottom-nav";
 import { ScanProvider } from "@/components/scan-context";
-import { FloatingScanProgress } from "@/components/floating-scan-progress";
+import { Suspense, ReactNode } from "react";
 import { PageTransition } from "@/components/page-transition";
 import { FloatingAiChat } from "@/components/floating-ai-chat";
 
@@ -16,7 +16,6 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         </div>
       </div>
       <BottomNav />
-      <FloatingScanProgress />
       {/* Floating AI Chatbox — available on all pages */}
       <FloatingAiChat />
     </ScanProvider>

@@ -19,6 +19,8 @@ interface ScanContextType {
     startScan: (chunks: string[], onChunk?: (txs: any[]) => void) => void;
     cancelScan: () => void;
     isScanning: boolean;
+    setExternalScanState?: React.Dispatch<React.SetStateAction<ScanState>>;
+    resetExternalScanState?: () => void;
 }
 
 const defaultState: ScanState = {
@@ -36,6 +38,8 @@ const ScanContext = createContext<ScanContextType>({
     startScan: () => { },
     cancelScan: () => { },
     isScanning: false,
+    setExternalScanState: () => { },
+    resetExternalScanState: () => { },
 });
 
 export const useScanContext = () => useContext(ScanContext);
@@ -211,7 +215,19 @@ export function ScanProvider({ children }: { children: React.ReactNode }) {
 
     const cancelScan = useCallback(() => {
         abortRef.current = true;
-        abortControllerRef.current?.abort();
+        try { abortControllerRef.current?.abort(); } catch { /* ignore */ }
+        // Immediately update UI — don't wait 5 seconds
+        setScanState(prev => ({
+            ...prev,
+            status: "idle",
+            statusText: `Stopped. ${prev.extractedCount} transactions saved.`,
+            progress: 0,
+        }));
+        processingRef.current = false;
+    }, []);
+
+    const resetExternalScanState = useCallback(() => {
+        setScanState(defaultState);
     }, []);
 
     return (
@@ -220,6 +236,8 @@ export function ScanProvider({ children }: { children: React.ReactNode }) {
             startScan,
             cancelScan,
             isScanning: scanState.status === "analyzing" || scanState.status === "extracting",
+            setExternalScanState: setScanState,
+            resetExternalScanState,
         }}>
             {children}
         </ScanContext.Provider>

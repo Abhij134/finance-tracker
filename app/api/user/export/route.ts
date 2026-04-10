@@ -102,7 +102,7 @@ export async function GET(req: Request) {
         });
 
         const dbUser = await prisma.user.findUnique({ where: { id: userId } });
-        const userName = dbUser?.name || "User";
+        const userName = dbUser?.name || session?.user?.user_metadata?.name || dbUser?.username || "User";
 
         // 2. CSV Generation
         if (format === "csv") {
@@ -192,10 +192,13 @@ export async function GET(req: Request) {
                 // --- AI INSIGHTS ---
                 if (includeInsights && aiText) {
                     currentY += 10;
-                    doc.rect(50, currentY, 490, 80).fill('#ecfdf5');
+                    doc.fontSize(10).font('Helvetica');
+                    const textHeight = doc.heightOfString(aiText, { width: 460, lineGap: 3 });
+                    const boxHeight = textHeight + 45;
+                    doc.rect(50, currentY, 490, boxHeight).fill('#ecfdf5');
                     doc.fillColor(BRAND_COLOR).fontSize(12).font('Helvetica-Bold').text('AI Financial Summary', 65, currentY + 15);
                     doc.fillColor('#065f46').fontSize(10).font('Helvetica').text(aiText, 65, currentY + 35, { width: 460, lineGap: 3 });
-                    currentY += 100;
+                    currentY += boxHeight + 25;
                 } else {
                     currentY += 20;
                 }

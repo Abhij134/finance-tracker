@@ -1,171 +1,194 @@
 import { auth } from "@/auth";
 import { NextResponse } from "next/server";
-import OpenAI from "openai";
 import prisma from "@/lib/prisma";
+import Groq from "groq-sdk";
 
 export const maxDuration = 60;
 
-const novita = new OpenAI({
-    apiKey: process.env.NOVITA_API_KEY || 'MISSING_KEY',
-    baseURL: 'https://api.novita.ai/v3/openai',
-});
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY || 'MISSING_KEY' });
 
-const openrouter = new OpenAI({
-    apiKey: process.env.OPENROUTER_API_KEY || 'MISSING_KEY',
-    baseURL: 'https://openrouter.ai/api/v1',
-});
-
-const groq = new OpenAI({
-    apiKey: process.env.GROQ_API_KEY || 'MISSING_KEY',
-    baseURL: 'https://api.groq.com/openai/v1',
-});
-
-const gemini = new OpenAI({
-    apiKey: process.env.GOOGLE_GEMINI_API_KEY || 'MISSING_KEY',
-    baseURL: 'https://generativelanguage.googleapis.com/v1beta/openai/',
-});
-
-function extractInsightsArray(raw: string): any[] {
-    const text = raw.trim();
-    try {
-        const parsed = JSON.parse(text);
-        if (Array.isArray(parsed)) return parsed;
-        for (const key of Object.keys(parsed)) {
-            if (Array.isArray(parsed[key])) return parsed[key];
-        }
-    } catch { /* fall through */ }
-    const start = text.indexOf('[');
-    const end = text.lastIndexOf(']');
-    if (start !== -1 && end !== -1 && end > start) {
-        try { return JSON.parse(text.substring(start, end + 1)); } catch { /* ignore */ }
-    }
-    throw new Error("Could not parse insights array from model response");
+interface InsightInput {
+    transactions: {
+        date: string;
+        description: string;
+        amount: number;
+        type: "credit" | "debit";
+        category: string;
+    }[];
+    budgets: {
+        category: string;
+        limit: number;
+        spent: number;
+    }[];
+    totalBudget: number;
+    totalSpent: number;
+    totalIncome: number;
+    periodStart: string;
+    periodEnd: string;
+    selectedPeriod: "this_month" | "last_month" | "custom" | "all_time" | string;
 }
 
-function computeAnalytics(transactions: any[], budgets: any[]) {
-    const now = new Date();
-    const currentYear = now.getFullYear();
-    const currentMonth = now.getMonth();
-    const dayOfMonth = now.getDate();
-    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-    const daysRemaining = daysInMonth - dayOfMonth;
-    const fmt = (n: number) => `₹${Math.abs(Math.round(n)).toLocaleString('en-IN')}`;
+function buildInsightsPrompt(data: InsightInput): string {
+    const today = new Date();
+    const start = new Date(data.periodStart);
+    const end = new Date(data.periodEnd);
 
-    const expenses = transactions.filter(t => t.amount < 0);
-    const income = transactions.filter(t => t.amount > 0);
-    const totalExpenses = expenses.reduce((s, t) => s + Math.abs(t.amount), 0);
-    const totalIncome = income.reduce((s, t) => s + t.amount, 0);
+    const totalDays = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
+    const daysElapsed = Math.max(1, Math.min(totalDays, Math.ceil((today.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))));
+    const remainingDays = Math.max(1, totalDays - daysElapsed);
+    const remainingBudget = Math.max(0, data.totalBudget - data.totalSpent);
+    const dailyAllowance = remainingDays > 0 ? remainingBudget / remainingDays : 0;
+    const dailySpendRate = data.totalSpent / daysElapsed;
+    const netBalance = data.totalIncome - data.totalSpent;
+    const savingsRate = data.totalIncome > 0 ? ((netBalance / data.totalIncome) * 100) : 0;
 
-    const monthlyData: Record<string, { income: number; expense: number; count: number }> = {};
-    transactions.forEach(tx => {
-        const d = new Date(tx.date);
-        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-        if (!monthlyData[key]) monthlyData[key] = { income: 0, expense: 0, count: 0 };
-        if (tx.amount > 0) monthlyData[key].income += tx.amount;
-        else monthlyData[key].expense += Math.abs(tx.amount);
-        monthlyData[key].count++;
-    });
+    // Category spending breakdown
+    const categoryBreakdown = data.budgets
+        .filter(b => b.spent > 0)
+        .sort((a, b) => b.spent - a.spent)
+        .map(b => `${b.category}: ₹${b.spent.toLocaleString("en-IN")}${b.limit ? ` / ₹${b.limit.toLocaleString("en-IN")} budget (${Math.round((b.spent / b.limit) * 100)}% used)` : " (no budget set)"}`)
+        .join("\n");
 
-    const sortedMonths = Object.keys(monthlyData).sort();
-    const lastNMonths = sortedMonths.slice(-3);
-    const monthlyTrend = lastNMonths.map(m => ({
-        month: m,
-        income: Math.round(monthlyData[m].income),
-        expense: Math.round(monthlyData[m].expense),
-        net: Math.round(monthlyData[m].income - monthlyData[m].expense),
-        txCount: monthlyData[m].count,
-    }));
+    // Over-budget categories
+    const overBudget = data.budgets.filter(b => b.limit > 0 && b.spent > b.limit);
+    const nearLimit = data.budgets.filter(b => b.limit > 0 && b.spent >= b.limit * 0.8 && b.spent <= b.limit);
 
-    const currentMonthKey = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
-    const thisMonth = monthlyData[currentMonthKey] || { income: 0, expense: 0, count: 0 };
-    const dailyBurnRate = dayOfMonth > 0 ? thisMonth.expense / dayOfMonth : 0;
-    const projectedMonthEnd = dailyBurnRate * daysInMonth;
-
-    const catSpend: Record<string, number> = {};
-    expenses.forEach(tx => {
-        const d = new Date(tx.date);
-        if (d.getFullYear() === currentYear && d.getMonth() === currentMonth) {
-            catSpend[tx.category] = (catSpend[tx.category] || 0) + Math.abs(tx.amount);
-        }
-    });
-    const topCategories = Object.entries(catSpend)
+    // Top merchants
+    const merchantSpend: Record<string, number> = {};
+    data.transactions
+        .filter(t => t.type === "debit")
+        .forEach(t => {
+            const key = t.description?.split(" ").slice(0, 3).join(" ") ?? "Unknown";
+            merchantSpend[key] = (merchantSpend[key] ?? 0) + t.amount;
+        });
+    const topMerchants = Object.entries(merchantSpend)
         .sort((a, b) => b[1] - a[1])
         .slice(0, 5)
-        .map(([cat, amt]) => ({ category: cat, spent: Math.round(amt), pct: totalExpenses > 0 ? Math.round((amt / thisMonth.expense) * 100) : 0 }));
+        .map(([m, a]) => `${m}: ₹${a.toLocaleString("en-IN")}`)
+        .join(", ");
 
-    const overallBudget = budgets.find((b: any) => b.category === "OVERALL")?.amount ?? 0;
-    const categoryBudgets = budgets.filter((b: any) => b.category !== "OVERALL");
+    // Transaction frequency
+    const txByDay: Record<string, number> = {};
+    data.transactions.forEach(t => {
+        const day = t.date?.slice(0, 10) ?? "";
+        txByDay[day] = (txByDay[day] ?? 0) + 1;
+    });
+    const avgTxPerDay = (data.transactions.length / daysElapsed).toFixed(1);
 
-    const budgetAnalysis: { category: string; budget: number; spent: number; pct: number; status: string; daysToOverspend?: number }[] = [];
+    // UPI transfers
+    const upiTransfers = data.transactions.filter(t =>
+        t.category === "UPI Transfer" && t.type === "debit"
+    );
+    const totalUPISent = upiTransfers.reduce((s, t) => s + t.amount, 0);
 
-    if (overallBudget > 0) {
-        const overallPct = Math.round((thisMonth.expense / overallBudget) * 100);
-        const overallDaysToOverspend = dailyBurnRate > 0 ? Math.round((overallBudget - thisMonth.expense) / dailyBurnRate) : 999;
-        budgetAnalysis.push({
-            category: 'OVERALL',
-            budget: overallBudget,
-            spent: Math.round(thisMonth.expense),
-            pct: overallPct,
-            status: overallPct >= 100 ? 'OVERSPENT' : overallPct >= 80 ? 'WARNING' : 'SAFE',
-            daysToOverspend: overallDaysToOverspend > 0 ? overallDaysToOverspend : 0,
+    return `You are a personal finance AI for an Indian user. Analyze this financial data and generate 5-7 specific, actionable insights.
+
+PERIOD: ${data.periodStart} to ${data.periodEnd} (${totalDays} days total, ${daysElapsed} days elapsed, ${remainingDays} days remaining)
+SELECTED PERIOD TYPE: ${data.selectedPeriod}
+
+FINANCIAL SUMMARY:
+- Total Income: ₹${data.totalIncome.toLocaleString("en-IN")}
+- Total Expenses: ₹${data.totalSpent.toLocaleString("en-IN")}
+- Net Balance: ₹${netBalance.toLocaleString("en-IN")} (${savingsRate.toFixed(1)}% savings rate)
+- Total Budget: ₹${data.totalBudget.toLocaleString("en-IN")}
+- Remaining Budget: ₹${remainingBudget.toLocaleString("en-IN")}
+- Daily spend rate: ₹${dailySpendRate.toFixed(0)}/day
+- Correct daily allowance for remaining ${remainingDays} days: ₹${dailyAllowance.toFixed(0)}/day
+- Total transactions: ${data.transactions.length} (avg ${avgTxPerDay}/day)
+- Total UPI transfers sent: ₹${totalUPISent.toLocaleString("en-IN")} across ${upiTransfers.length} transfers
+
+SPENDING BY CATEGORY:
+${categoryBreakdown || "No categorized spending yet"}
+
+OVER-BUDGET CATEGORIES: ${overBudget.length > 0 ? overBudget.map(b => `${b.category} (${Math.round((b.spent / b.limit) * 100)}% of budget)`).join(", ") : "None"}
+NEAR LIMIT (80%+): ${nearLimit.length > 0 ? nearLimit.map(b => b.category).join(", ") : "None"}
+
+TOP SPENDING MERCHANTS/PAYEES: ${topMerchants || "No data"}
+
+RULES FOR INSIGHTS:
+1. NEVER say "Start Tracking" if transactions.length > 0
+2. Use ACTUAL numbers from the data above — no generic advice
+3. Daily allowance = remaining budget ÷ remaining days = ₹${dailyAllowance.toFixed(0)}/day (NOT total budget ÷ 30)
+4. If period is "all_time" or custom with no end date, skip daily allowance insight
+5. Be specific: mention actual category names, actual amounts, actual merchants
+6. If no budget is set for a category, suggest setting one
+7. Detect patterns: is spending accelerating, stable, or slowing down?
+8. For UPI transfers > ₹5000 total, mention it
+
+Return ONLY a valid JSON array:
+[
+  {
+    "title": "SHORT TITLE IN CAPS",
+    "description": "Specific insight with actual ₹ amounts and percentages",
+    "type": "warning|success|info|danger|tip",
+    "icon": "trending_up|trending_down|savings|warning|category|calendar|transfer|food|shopping"
+  }
+]
+
+INSIGHT TYPES TO GENERATE (pick the most relevant 5-7):
+- Budget pacing: are they on track for the period?
+- Top spending category with actual amount
+- Over-budget alert (if any category exceeded)
+- Daily allowance (correct calculation for remaining days)
+- Savings rate analysis
+- UPI transfer pattern (if significant)
+- Unusual spike in spending day/week
+- Category with no budget set but high spending
+- Positive reinforcement if savings rate > 20%
+- Warning if projected spending will exceed budget`;
+}
+
+// Fallback if AI fails — still uses real data
+function getFallbackInsights(data: InsightInput) {
+    const today = new Date();
+    const start = new Date(data.periodStart);
+    const end = new Date(data.periodEnd);
+    const totalDays = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
+    const daysElapsed = Math.max(1, Math.min(totalDays, Math.ceil((today.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))));
+    const remainingDays = Math.max(1, totalDays - daysElapsed);
+    const remainingBudget = Math.max(0, data.totalBudget - data.totalSpent);
+    const dailyAllowance = remainingDays > 0 ? remainingBudget / remainingDays : 0;
+    const netBalance = data.totalIncome - data.totalSpent;
+    const savingsRate = data.totalIncome > 0 ? ((netBalance / data.totalIncome) * 100) : 0;
+    const topCategory = data.budgets.sort((a, b) => b.spent - a.spent)[0];
+
+    const insights = [];
+
+    if (remainingBudget > 0 && remainingDays > 0 && data.totalBudget > 0) {
+        insights.push({
+            title: "DAILY ALLOWANCE",
+            description: `You have ₹${remainingBudget.toLocaleString("en-IN")} remaining over ${remainingDays} days — spend ₹${Math.round(dailyAllowance).toLocaleString("en-IN")}/day to stay on budget.`,
+            type: "info",
+            icon: "calendar",
         });
     }
 
-    categoryBudgets.forEach((b: any) => {
-        const spent = catSpend[b.category] || 0;
-        const pct = b.amount > 0 ? Math.round((spent / b.amount) * 100) : 0;
-        const dailyCatBurn = dayOfMonth > 0 ? spent / dayOfMonth : 0;
-        const daysToOverspend = dailyCatBurn > 0 ? Math.round((b.amount - spent) / dailyCatBurn) : 999;
-        budgetAnalysis.push({
-            category: b.category,
-            budget: b.amount,
-            spent: Math.round(spent),
-            pct,
-            status: pct >= 100 ? 'OVERSPENT' : pct >= 80 ? 'WARNING' : 'SAFE',
-            daysToOverspend: daysToOverspend > 0 ? daysToOverspend : 0,
+    if (topCategory?.spent > 0) {
+        insights.push({
+            title: "TOP SPENDING CATEGORY",
+            description: `${topCategory.category} is your biggest expense at ₹${topCategory.spent.toLocaleString("en-IN")}${topCategory.limit ? ` — ${Math.round((topCategory.spent / topCategory.limit) * 100)}% of your ₹${topCategory.limit.toLocaleString("en-IN")} budget` : ""}.`,
+            type: topCategory.limit && topCategory.spent > topCategory.limit ? "warning" : "info",
+            icon: "category",
         });
-    });
+    }
 
-    const merchantFreq: Record<string, { count: number; total: number }> = {};
-    expenses.forEach(tx => {
-        const m = tx.merchant?.toLowerCase().trim();
-        if (!m) return;
-        if (!merchantFreq[m]) merchantFreq[m] = { count: 0, total: 0 };
-        merchantFreq[m].count++;
-        merchantFreq[m].total += Math.abs(tx.amount);
-    });
-    const frequentMerchants = Object.entries(merchantFreq)
-        .filter(([, v]) => v.count >= 3)
-        .sort((a, b) => b[1].total - a[1].total)
-        .slice(0, 5)
-        .map(([name, v]) => ({ merchant: name, visits: v.count, totalSpent: Math.round(v.total), avgPerVisit: Math.round(v.total / v.count) }));
+    if (savingsRate < 0) {
+        insights.push({
+            title: "NEGATIVE SAVINGS RATE",
+            description: `You've spent ₹${Math.abs(netBalance).toLocaleString("en-IN")} more than your income this period. Review your ${topCategory?.category ?? "top"} expenses.`,
+            type: "danger",
+            icon: "warning",
+        });
+    } else if (savingsRate > 20) {
+        insights.push({
+            title: "GREAT SAVINGS",
+            description: `You're saving ${savingsRate.toFixed(1)}% of your income this period — ₹${netBalance.toLocaleString("en-IN")} saved so far.`,
+            type: "success",
+            icon: "savings",
+        });
+    }
 
-    const savingsRate = totalIncome > 0 ? Math.round(((totalIncome - totalExpenses) / totalIncome) * 100) : 0;
-
-    return {
-        summary: {
-            totalTransactions: transactions.length,
-            totalIncome: fmt(totalIncome),
-            totalExpenses: fmt(totalExpenses),
-            netBalance: fmt(totalIncome - totalExpenses),
-            netPositive: totalIncome >= totalExpenses,
-            savingsRate: `${savingsRate}%`,
-        },
-        currentMonth: {
-            month: currentMonthKey,
-            dayOfMonth,
-            daysRemaining,
-            spent: fmt(thisMonth.expense),
-            earned: fmt(thisMonth.income),
-            dailyBurnRate: fmt(dailyBurnRate),
-            projectedMonthEnd: fmt(projectedMonthEnd),
-            txCount: thisMonth.count,
-        },
-        monthlyTrend,
-        topCategories,
-        budgetAnalysis,
-        frequentMerchants,
-    };
+    return insights;
 }
 
 export async function GET(req: Request) {
@@ -182,140 +205,127 @@ export async function GET(req: Request) {
             return NextResponse.json({ error: "User not found in database" }, { status: 404 });
         }
 
-        // Optional range or month filters
+        // Parse filters
         const url = new URL(req.url);
         const fromParam = url.searchParams.get("from");
         const toParam = url.searchParams.get("to");
-        const monthParam = url.searchParams.get("month"); // e.g. "2026-02" (legacy support/shorthand)
-        const dailyAllowanceParam = url.searchParams.get("dailyAllowance");
-        const daysLeftParam = url.searchParams.get("daysLeft");
-
-        const dailyAllowance = dailyAllowanceParam ? parseFloat(dailyAllowanceParam) : 0;
-        const daysLeft = daysLeftParam ? parseInt(daysLeftParam) : 1;
+        const rangeParam = url.searchParams.get("range") || "month";
 
         let dateFilter = {};
-        let rangeLabel = "current month";
+        let periodStart = new Date().toISOString().slice(0, 10);
+        let periodEnd = new Date().toISOString().slice(0, 10);
 
         if (fromParam && toParam) {
-            // Priority: Explicit range
             const start = new Date(fromParam);
             const end = new Date(toParam);
             end.setHours(23, 59, 59, 999);
             dateFilter = { date: { gte: start, lte: end } };
-            rangeLabel = `${fromParam} to ${toParam}`;
-        } else if (monthParam && /^\d{4}-\d{2}$/.test(monthParam)) {
-            const [year, month] = monthParam.split('-').map(Number);
-            const startOfMonth = new Date(year, month - 1, 1);
-            const endOfMonth = new Date(year, month, 0, 23, 59, 59, 999);
-            dateFilter = { date: { gte: startOfMonth, lte: endOfMonth } };
-            rangeLabel = new Date(monthParam + '-01').toLocaleString('en-IN', { month: 'long', year: 'numeric' });
+            periodStart = start.toISOString().slice(0, 10);
+            periodEnd = end.toISOString().slice(0, 10);
         } else {
             // Default: Current month
             const now = new Date();
             const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
             const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
             dateFilter = { date: { gte: startOfMonth, lte: endOfMonth } };
+            periodStart = startOfMonth.toISOString().slice(0, 10);
+            periodEnd = endOfMonth.toISOString().slice(0, 10);
         }
 
         // Fetch filtered transactions and budgets in parallel
-        const [allTxs, budgets] = await Promise.all([
+        const [allTxs, dbBudgets] = await Promise.all([
             prisma.transaction.findMany({ where: { userId: dbUser.id, ...dateFilter }, orderBy: { date: 'desc' } }),
             prisma.budget.findMany({ where: { userId: dbUser.id } })
         ]);
 
-        const analytics = computeAnalytics(allTxs, budgets);
+        // Transform data to InsightInput format
+        const totalIncome = allTxs.filter(t => t.amount > 0).reduce((s, t) => s + t.amount, 0);
+        const totalSpent = allTxs.filter(t => t.amount < 0).reduce((s, t) => s + Math.abs(t.amount), 0);
 
-        // 3. Burn Rate Velocity Engine
-        const now = new Date();
-        const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-        const currentDay = now.getDate();
-        const timeElapsedPct = currentDay / daysInMonth;
+        const catSpent: Record<string, number> = {};
+        allTxs.filter(t => t.amount < 0).forEach(t => {
+            catSpent[t.category] = (catSpent[t.category] || 0) + Math.abs(t.amount);
+        });
 
-        // Calculate budget consumption (Overall budget preferred)
-        const overallBudget = budgets.find((b: any) => b.category === "OVERALL")?.amount ||
-            budgets.reduce((acc, b) => acc + b.amount, 0);
+        const formattedBudgets = dbBudgets.filter(b => b.category !== 'OVERALL').map(b => ({
+            category: b.category,
+            limit: b.amount,
+            spent: catSpent[b.category] || 0,
+        }));
 
-        const totalExpenses = allTxs.filter(t => t.amount < 0).reduce((s, t) => s + Math.abs(t.amount), 0);
-        const budgetConsumedPct = overallBudget > 0 ? totalExpenses / overallBudget : 0;
+        // Add categories with spending but no budget set
+        Object.entries(catSpent).forEach(([cat, amount]) => {
+            if (!formattedBudgets.some(b => b.category === cat)) {
+                formattedBudgets.push({ category: cat, limit: 0, spent: amount });
+            }
+        });
 
-        const velocityGap = budgetConsumedPct - timeElapsedPct;
-        const isOverspendingVelocity = velocityGap > 0.1; // 10% margin
+        const overallBudget = dbBudgets.find(b => b.category === "OVERALL")?.amount || 0;
+        const totalBudget = overallBudget > 0 ? overallBudget : formattedBudgets.reduce((s, b) => s + b.limit, 0);
 
-        const projectedTotal = timeElapsedPct > 0 ? (totalExpenses / timeElapsedPct) : totalExpenses;
-        const overspendAmount = overallBudget > 0 ? Math.max(0, projectedTotal - overallBudget) : 0;
+        const data: InsightInput = {
+            transactions: allTxs.map(t => ({
+                date: t.date.toISOString(),
+                description: t.merchant || "Unknown",
+                amount: Math.abs(t.amount),
+                type: t.amount < 0 ? "debit" : "credit",
+                category: t.category,
+            })),
+            budgets: formattedBudgets,
+            totalBudget,
+            totalSpent,
+            totalIncome,
+            periodStart,
+            periodEnd,
+            selectedPeriod: rangeParam,
+        };
 
-        const velocityPrompt = isOverspendingVelocity
-            ? `\nCRITICAL VELOCITY WARNING: The user has consumed ${Math.round(budgetConsumedPct * 100)}% of their budget while only ${Math.round(timeElapsedPct * 100)}% of the month has passed. At this "burn rate", they will overspend by ₹${Math.round(overspendAmount)} by month-end. WARN THEM AGGRESSIVELY.`
-            : `\nSpending Velocity: Stable. (${Math.round(budgetConsumedPct * 100)}% budget vs ${Math.round(timeElapsedPct * 100)}% time).`;
-
-        const monthLabel = rangeLabel;
-
-        if (allTxs.length === 0) {
+        if (data.transactions.length === 0) {
             return NextResponse.json({
                 insights: [{
-                    type: "opportunity",
-                    priority: "low",
-                    title: "No Transactions Found",
-                    msg: `No transactions found for ${monthLabel}. Add or scan transactions to get AI insights.`,
-                    action: null
+                    title: "NO TRANSACTIONS YET",
+                    description: `Upload a bank statement or add transactions manually to get personalized insights for this period.`,
+                    type: "info",
+                    icon: "calendar",
                 }]
             });
         }
 
-        const systemPrompt = `You are a concise, logical financial analyzer for FinanceNeo. Analyze transactions for ${rangeLabel}.
-
-OVERVIEW: ${JSON.stringify(analytics.summary)}
-TIME PERIOD: ${daysLeft} days remaining. Spent: ₹${analytics.currentMonth.spent}, Earned: ₹${analytics.currentMonth.earned}.
-BURN RATE: ₹${analytics.currentMonth.dailyBurnRate}/day vs ALLOWANCE: ₹${Math.round(dailyAllowance)}/day.
-VELOCITY: ${velocityPrompt}
-BUDGETS: ${analytics.budgetAnalysis.length > 0 ? JSON.stringify(analytics.budgetAnalysis) : 'None set.'}
-
-INSTRUCTIONS:
-1. FIRST INSIGHT (Type: allowance): Compare Burn vs Allowance. IF SPENDING IS ₹0, provide encouraging "Getting Started" advice or a budget-setting tip. DO NOT do math projections for ₹0 spending.
-2. NEXT 2 INSIGHTS (Type: pattern|forecast|health): Highlight one specific numeric trend or a risk.
-3. CONCISE: Exactly 30-40 words per "msg". No fluff. No professional jargon like "substantial buffer".
-4. PUNCHY: Use direct, actionable language. No bullet points or hyphens.
-5. PRIORITY: High only for active overspending or zero balance risk.
-
-Return ONLY a JSON array of 3 objects:
-{"type":"allowance|alert|forecast|pattern|health","priority":"high|mid|low","title":"Short Title","msg":"[30-40 words of logical, punchy insight]"}`;
-
-        const callAI = async (client: OpenAI, model: string, maxTokens: number): Promise<any[]> => {
-            const response = await client.chat.completions.create({
-                model,
-                messages: [{ role: "user", content: systemPrompt }],
-                max_tokens: maxTokens,
-                temperature: 0.3,
-            });
-            const raw = response.choices[0].message.content || "[]";
-            return extractInsightsArray(raw);
-        };
+        const prompt = buildInsightsPrompt(data);
 
         try {
-            // console.log('[insights] Calling Novita AI...');
-            const insights = await callAI(novita, 'qwen/qwen-2.5-72b-instruct', 500);
-            return NextResponse.json({ insights });
-        } catch (novitaError) {
-            console.warn("Novita insights failed, trying OpenRouter fallback:", novitaError);
-            try {
-                const insights = await callAI(openrouter, 'meta-llama/llama-3.1-8b-instruct:free', 500);
-                return NextResponse.json({ insights });
-            } catch (fallbackError) {
-                console.warn("OpenRouter failed, trying Groq fallback:", fallbackError);
-                try {
-                    const insights = await callAI(groq, 'llama-3.3-70b-versatile', 500);
-                    return NextResponse.json({ insights });
-                } catch (groqError) {
-                    console.warn("Groq failed, trying Gemini fallback:", groqError);
-                    try {
-                        const insights = await callAI(gemini, 'gemini-1.5-flash', 500);
-                        return NextResponse.json({ insights });
-                    } catch (geminiError) {
-                        console.error("All AI providers failed for insights:", geminiError);
-                        return NextResponse.json({ error: "AI providers unavailable." }, { status: 503 });
-                    }
-                }
+            const response = await groq.chat.completions.create({
+                model: "llama-3.1-8b-instant",
+                messages: [
+                    {
+                        role: "system",
+                        content: "You are a precise financial analyst. Always use exact numbers from the data provided. Return only valid JSON.",
+                    },
+                    {
+                        role: "user",
+                        content: prompt,
+                    },
+                ],
+                temperature: 0.3,
+                max_tokens: 2048,
+            });
+
+            const raw = response.choices?.[0]?.message?.content ?? "[]";
+            const s = raw.indexOf("[");
+            const e = raw.lastIndexOf("]");
+
+            let insights = [];
+            if (s !== -1 && e !== -1 && e > s) {
+                const parsed = JSON.parse(raw.slice(s, e + 1));
+                insights = Array.isArray(parsed) ? parsed : getFallbackInsights(data);
+            } else {
+                insights = getFallbackInsights(data);
             }
+
+            return NextResponse.json({ insights });
+        } catch (err) {
+            console.error("[generateInsights] error:", err);
+            return NextResponse.json({ insights: getFallbackInsights(data) });
         }
 
     } catch (error) {

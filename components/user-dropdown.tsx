@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     Settings,
+    HelpCircle,
     LogOut,
     Trash2,
     ChevronDown,
@@ -151,17 +152,74 @@ function InfoRow({ icon, label, value }: { icon: React.ReactNode; label: string;
 }
 
 // ─── Profile Modal ────────────────────────────────────────────────────────────
-function ProfileModal({ onClose, userName, userEmail }: { onClose: () => void; userName: string; userEmail: string }) {
-    const [username, setUsername] = useState("");
-    const [birthdate, setBirthdate] = useState("");
+function ProfileModal({ onClose, userName, userEmail, userBirthdate, userImage }: { onClose: () => void; userName: string; userEmail: string; userBirthdate?: string; userImage?: string; }) {
+    const [username, setUsername] = useState(userName || "");
+    const [birthdate, setBirthdate] = useState(userBirthdate ? userBirthdate.split('T')[0] : "");
+    const [image, setImage] = useState(userImage || "");
+    const [isSaving, setIsSaving] = useState(false);
 
-    const handleSave = () => {
-        toast.custom(() => (
-            <div style={{ display: "flex", gap: 10, alignItems: "center", background: "#0e1118", border: "1px solid rgba(16,185,129,0.25)", padding: "14px 18px", borderRadius: 12, color: "#10b981", boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }}>
-                <Check size={18} />
-                <span style={{ fontSize: 13, fontWeight: 500 }}>Profile updated successfully</span>
-            </div>
-        ), { duration: 3000, position: "bottom-right" });
+    // Create a ref for the hidden file input
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement("canvas");
+                const MAX_SIZE = 200;
+                let width = img.width;
+                let height = img.height;
+
+                if (width > height) {
+                    if (width > MAX_SIZE) {
+                        height *= MAX_SIZE / width;
+                        width = MAX_SIZE;
+                    }
+                } else {
+                    if (height > MAX_SIZE) {
+                        width *= MAX_SIZE / height;
+                        height = MAX_SIZE;
+                    }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext("2d");
+                ctx?.drawImage(img, 0, 0, width, height);
+
+                const dataUrl = canvas.toDataURL("image/webp", 0.8);
+                setImage(dataUrl);
+            };
+            img.src = event.target?.result as string;
+        };
+        reader.readAsDataURL(file);
+    };
+
+    const handleSave = async () => {
+        setIsSaving(true);
+        const { updateProfile } = await import("@/app/actions/auth");
+        const formData = new FormData();
+        formData.append("username", username);
+        if (birthdate) formData.append("birthdate", birthdate);
+        if (image) formData.append("image", image);
+
+        const res = await updateProfile(formData);
+        setIsSaving(false);
+        if (res.success) {
+            toast.custom(() => (
+                <div style={{ display: "flex", gap: 10, alignItems: "center", background: "#0e1118", border: "1px solid rgba(16,185,129,0.25)", padding: "14px 18px", borderRadius: 12, color: "#10b981", boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }}>
+                    <Check size={18} />
+                    <span style={{ fontSize: 13, fontWeight: 500 }}>Profile updated successfully</span>
+                </div>
+            ), { duration: 3000, position: "bottom-right" });
+            onClose();
+        } else {
+            toast.error(res.error || "Failed to update profile");
+        }
     };
 
     const initials = userName ? userName.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase() : "FN";
@@ -170,7 +228,7 @@ function ProfileModal({ onClose, userName, userEmail }: { onClose: () => void; u
         <AnimatedModalBackdrop onClose={onClose}>
             <ModalHeader title="Profile" onClose={onClose} />
             <div style={{ padding: "16px 20px 40px", overflowY: "auto", flex: 1 }} className="custom-scrollbar">
-                <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
 
                     {/* Avatar + Name Banner (compact) */}
                     <div style={{
@@ -178,36 +236,59 @@ function ProfileModal({ onClose, userName, userEmail }: { onClose: () => void; u
                         borderRadius: 14, background: "linear-gradient(135deg, rgba(16,185,129,0.06) 0%, rgba(6,182,212,0.04) 100%)",
                         border: "1px solid rgba(16,185,129,0.1)",
                     }}>
-                        <div style={{
-                            width: 44, height: 44, borderRadius: 14,
-                            background: "linear-gradient(135deg, #10b981, #059669)",
-                            display: "flex", alignItems: "center", justifyContent: "center",
-                            fontSize: 16, fontWeight: 700, color: "#022c22", flexShrink: 0,
-                            boxShadow: "0 4px 12px rgba(16,185,129,0.25)",
-                        }}>
-                            {initials}
+                        <div
+                            className="group relative cursor-pointer"
+                            style={{ width: 44, height: 44, borderRadius: 14, flexShrink: 0, overflow: "hidden", boxShadow: "0 4px 12px rgba(16,185,129,0.25)" }}
+                            onClick={() => fileInputRef.current?.click()}
+                        >
+                            {image ? (
+                                <img src={image} alt="User" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                            ) : (
+                                <div style={{
+                                    width: "100%", height: "100%",
+                                    background: "linear-gradient(135deg, #10b981, #059669)",
+                                    display: "flex", alignItems: "center", justifyContent: "center",
+                                    fontSize: 16, fontWeight: 700, color: "#022c22",
+                                }}>
+                                    {initials}
+                                </div>
+                            )}
+                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" /><circle cx="12" cy="13" r="3" /></svg>
+                            </div>
+                            <input
+                                type="file"
+                                ref={fileInputRef}
+                                accept="image/*"
+                                className="hidden"
+                                onChange={handleFileChange}
+                            />
                         </div>
                         <div style={{ minWidth: 0, flex: 1 }}>
                             <p style={{ fontSize: 14, fontWeight: 600, color: "#fff", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{userName}</p>
                             <p style={{ fontSize: 11, color: "#a1a1aa", margin: "3px 0 0", fontWeight: 400, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{userEmail}</p>
-                            <div style={{ display: "flex", flexWrap: "wrap", gap: "4px 8px", marginTop: 4 }}>
-                                <span style={{ fontSize: 10, color: "#71717a", margin: 0, fontWeight: 500 }}>
+                            <div style={{ display: "flex", flexWrap: "nowrap", gap: "6px", marginTop: 4, alignItems: "center", overflow: "hidden" }}>
+                                <span style={{ fontSize: 10, color: "#71717a", margin: 0, fontWeight: 500, whiteSpace: "nowrap" }}>
                                     Member since {new Date().toLocaleDateString("en-US", { month: "short", year: "numeric" })}
                                 </span>
                                 {birthdate && (
-                                    <div style={{ fontSize: 10, color: "#34d399", margin: 0, fontWeight: 500, display: "flex", alignItems: "center", gap: 3 }}>
-                                        <span style={{ width: 3, height: 3, borderRadius: "50%", background: "currentColor" }} />
-                                        Born {new Date(birthdate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-                                    </div>
+                                    <>
+                                        <span style={{ width: 3, height: 3, borderRadius: "50%", background: "#34d399", display: "inline-block", flexShrink: 0 }} />
+                                        <span style={{ fontSize: 10, color: "#34d399", margin: 0, fontWeight: 500, whiteSpace: "nowrap", textOverflow: "ellipsis", overflow: "hidden" }}>
+                                            Born {new Date(birthdate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                                        </span>
+                                    </>
                                 )}
                             </div>
                         </div>
                     </div>
 
                     {/* Edit Section */}
-                    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                         <p style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.12em", fontWeight: 600, color: "#71717a", margin: 0 }}>Edit Profile</p>
+
                         <TextInput label="Username" value={username} onChange={setUsername} placeholder="e.g. SatoshiNeo" />
+
                         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                             <label style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.12em", fontWeight: 600, color: "#71717a" }}>Birthdate</label>
                             <input
@@ -219,11 +300,15 @@ function ProfileModal({ onClose, userName, userEmail }: { onClose: () => void; u
                                 }}
                             />
                         </div>
-                        <button onClick={handleSave} className="active:scale-[0.98] transition-all duration-200" style={{
+
+                        <button onClick={handleSave} disabled={isSaving} className="active:scale-[0.98] transition-all duration-200 hover:brightness-110" style={{
                             padding: "11px 20px", borderRadius: 12, fontSize: 12, fontWeight: 600,
                             border: "none", background: "linear-gradient(135deg,#10b981,#059669)",
-                            color: "#022c22", cursor: "pointer", marginTop: 6,
-                        }}>Save Changes</button>
+                            color: "#022c22", cursor: isSaving ? "not-allowed" : "pointer", marginTop: 6,
+                            opacity: isSaving ? 0.7 : 1
+                        }}>
+                            {isSaving ? "Saving..." : "Save Changes"}
+                        </button>
                     </div>
                 </div>
             </div>
@@ -395,11 +480,15 @@ export function UserDropdown({
     userName = "Abhijeet Gautam",
     userHandle = "AbhijNeo",
     userEmail = "abhijeet@financneo.com",
+    userBirthdate,
+    userImage,
     onSignOut,
 }: {
     userName?: string;
     userHandle?: string;
     userEmail?: string;
+    userBirthdate?: string;
+    userImage?: string;
     onSignOut?: () => void;
 }) {
     const [open, setOpen] = useState(false);
@@ -452,6 +541,7 @@ export function UserDropdown({
                     <DropdownPortal open={open} rect={btnRect}>
                         <MenuItem icon={<User size={13} />} label="Profile Settings" onClick={() => openModal("profile")} />
                         <MenuItem icon={<KeyRound size={13} />} label="Change Password" onClick={() => openModal("security")} />
+                        <MenuItem icon={<HelpCircle size={13} />} label="Contact Us" onClick={() => window.open("https://abhijeetg.netlify.app", "_blank")} />
 
                         {/* Direct Add to Home Screen Row */}
                         <div style={{ position: "relative" }}>
@@ -495,7 +585,7 @@ export function UserDropdown({
             </AnimatePresence>
 
             <AnimatePresence>
-                {modal === "profile" && <ProfileModal onClose={() => setModal(null)} userName={userName} userEmail={userEmail} />}
+                {modal === "profile" && <ProfileModal onClose={() => setModal(null)} userName={userName} userEmail={userEmail} userBirthdate={userBirthdate} userImage={userImage} />}
                 {modal === "security" && <SecurityModal onClose={() => setModal(null)} />}
                 {modal === "danger" && <DangerModal onClose={() => setModal(null)} />}
                 {modal === "signout" && <SignOutModal onClose={() => setModal(null)} onConfirm={() => { setModal(null); onSignOut?.(); }} />}

@@ -4,8 +4,9 @@ import { useTransactions } from "@/app/(main)/transactions-context";
 import { useBudgets } from "@/app/(main)/budget-context";
 import { useDailyAllowance } from "@/lib/use-daily-allowance";
 import {
-  Sparkles, AlertTriangle, TrendingUp, Activity, Target,
-  Lightbulb, RefreshCw, Wallet, Coins, HeartPulse
+  Sparkles, AlertTriangle, TrendingUp, TrendingDown,
+  PiggyBank, Tag, Calendar, ArrowLeftRight, Utensils,
+  ShoppingBag, RefreshCw, Activity
 } from "lucide-react";
 import { useState, useEffect } from "react";
 
@@ -134,19 +135,28 @@ export function AiLiveInsights({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [transactions?.length, from, to]);
 
-  const getIconInfo = (type: string, priority: string) => {
-    // Only use Red/Critical if it's genuinely high priority AND an alert
-    if (priority === "high" || type === "alert") {
-      return { Icon: AlertTriangle, color: "text-rose-500", border: "border-rose-500", isCritical: priority === "high" };
-    }
+  const getInsightIcon = (icon: string) => {
+    const iconMap: Record<string, React.ReactNode> = {
+      trending_up: <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-current" />,
+      trending_down: <TrendingDown className="w-4 h-4 sm:w-5 sm:h-5 text-current" />,
+      savings: <PiggyBank className="w-4 h-4 sm:w-5 sm:h-5 text-current" />,
+      warning: <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-current" />,
+      category: <Tag className="w-4 h-4 sm:w-5 sm:h-5 text-current" />,
+      calendar: <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-current" />,
+      transfer: <ArrowLeftRight className="w-4 h-4 sm:w-5 sm:h-5 text-current" />,
+      food: <Utensils className="w-4 h-4 sm:w-5 sm:h-5 text-current" />,
+      shopping: <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5 text-current" />,
+    };
+    return iconMap[icon] ?? <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-current" />;
+  };
+
+  const getInsightColor = (type: string) => {
     switch (type) {
-      case "allowance": return { Icon: Coins, color: "text-cyan-400", border: "border-cyan-500/50", isCritical: false };
-      case "pattern": return { Icon: Activity, color: "text-blue-500", border: "border-blue-500/50", isCritical: false };
-      case "forecast": return { Icon: TrendingUp, color: "text-purple-500", border: "border-purple-500/50", isCritical: false };
-      case "health": return { Icon: HeartPulse, color: "text-emerald-500", border: "border-emerald-500/50", isCritical: false };
-      case "opportunity": return { Icon: Lightbulb, color: "text-amber-500", border: "border-amber-500/50", isCritical: false };
-      case "cashflow": return { Icon: Wallet, color: "text-teal-500", border: "border-teal-500/50", isCritical: false };
-      default: return { Icon: Sparkles, color: "text-zinc-400", border: "border-zinc-500/30", isCritical: false };
+      case "danger": return "text-red-400 bg-red-500/10 border-red-500/20";
+      case "warning": return "text-amber-400 bg-amber-500/10 border-amber-500/20";
+      case "success": return "text-emerald-400 bg-emerald-500/10 border-emerald-500/20";
+      case "tip": return "text-purple-400 bg-purple-500/10 border-purple-500/20";
+      default: return "text-blue-400 bg-blue-500/10 border-blue-500/20";
     }
   };
 
@@ -186,25 +196,26 @@ export function AiLiveInsights({
 
         {insights && insights.map((insight, idx) => {
           const i = insight as any;
-          const type = i.t || i.type || "info";
-          const priority = i.p || i.priority || "low";
-          const { Icon, color, border, isCritical } = getIconInfo(type, priority);
+          const type = i.type || "info";
+          const iconName = i.icon || "sparkles";
+          const iconElement = getInsightIcon(iconName);
+          const colorClasses = getInsightColor(type);
 
           return (
             <div
               key={idx}
-              className={`p-3 sm:p-5 rounded-xl border border-slate-800/40 border-l-2 ${border} bg-slate-900/30 backdrop-blur-sm hover:bg-slate-800/20 transition-all duration-300 group/insight relative overflow-hidden`}
+              className={`p-3 sm:p-5 rounded-xl border-l-[3px] bg-slate-900/30 backdrop-blur-sm hover:bg-slate-800/20 transition-all duration-300 group/insight relative overflow-hidden ${colorClasses}`}
             >
               <div className="flex items-start gap-3 sm:gap-4">
-                <div className={`h-8 w-8 sm:h-11 sm:w-11 rounded-lg shrink-0 bg-white/5 border border-white/5 flex items-center justify-center`}>
-                  <Icon className={`h-4 w-4 sm:h-5 sm:w-5 ${color}`} />
+                <div className={`h-8 w-8 sm:h-11 sm:w-11 rounded-lg shrink-0 bg-white/5 border border-white/5 flex items-center justify-center text-current`}>
+                  {iconElement}
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2 mb-1">
-                    <p className={`text-[10px] sm:text-xs font-black uppercase tracking-wider ${color}`}>
-                      {insight.title || insight.type}
+                    <p className={`text-[10px] sm:text-xs font-black uppercase tracking-wider text-current`}>
+                      {i.title || i.type}
                     </p>
-                    {isCritical && (
+                    {type === "danger" && (
                       <div className="flex items-center gap-1 bg-rose-500/10 border border-rose-500/20 px-1 py-0.5 rounded-md">
                         <div className="h-1 w-1 rounded-full bg-rose-500 animate-pulse" />
                         <span className="text-[7px] font-black text-rose-400 uppercase">Critical</span>
@@ -212,7 +223,7 @@ export function AiLiveInsights({
                     )}
                   </div>
                   <p className="text-xs sm:text-base text-slate-200 leading-tight font-medium">
-                    {insight.msg}
+                    {i.description || i.msg}
                   </p>
                 </div>
               </div>

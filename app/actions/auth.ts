@@ -239,10 +239,8 @@ export async function getUserProfile() {
     }
 
     try {
-        const dbUser = await prisma.user.findUnique({
-            where: { id: user.id },
-            select: { id: true, email: true, username: true, userId: true }
-        });
+        const dbUsers: any[] = await prisma.$queryRaw`SELECT id, email, username, "userId", image, birthdate FROM "User" WHERE id = ${user.id}`;
+        const dbUser = dbUsers[0];
 
         if (!dbUser) {
             return { success: false, error: "User profile not found in database" };
@@ -340,5 +338,52 @@ export async function deleteUserAccount(password?: string) {
         return { success: true };
     } catch (error: any) {
         return { success: false, error: error.message || "Failed to delete account" };
+    }
+}
+
+export async function updateProfile(formData: FormData) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) return { success: false, error: "Unauthorized" };
+
+    const username = formData.get("username") as string;
+    const birthdate = formData.get("birthdate") as string;
+    const image = formData.get("image") as string;
+
+    const dataToUpdate: any = {};
+    if (username && username.trim().length >= 3) {
+        const existingUsername = await prisma.user.findFirst({
+            where: { username: username.trim() }
+        });
+        if (existingUsername && existingUsername.id !== user.id) {
+            return { success: false, error: "Username is already taken." };
+        }
+        dataToUpdate.username = username.trim();
+        await supabase.auth.updateUser({ data: { username: username.trim() } });
+    }
+    if (birthdate) {
+        dataToUpdate.birthdate = new Date(birthdate);
+    }
+    if (image) {
+        dataToUpdate.image = image;
+    }
+
+    try {
+        if (dataToUpdate.username && !dataToUpdate.birthdate && !dataToUpdate.image) {
+            await prisma.$executeRawUnsafe(`UPDATE "User" SET username = '${dataToUpdate.username}' WHERE id = '${user.id}'`);
+        } else {
+            const updates = [];
+            if (dataToUpdate.username) updates.push(`username = '${dataToUpdate.username}'`);
+            if (dataToUpdate.birthdate) updates.push(`birthdate = '${dataToUpdate.birthdate.toISOString()}'`);
+            if (dataToUpdate.image) updates.push(`image = '${dataToUpdate.image}'`);
+            if (updates.length > 0) {
+                await prisma.$executeRawUnsafe(`UPDATE "User" SET ${updates.join(', ')} WHERE id = '${user.id}'`);
+            }
+        }
+        revalidatePath("/", "layout");
+        return { success: true };
+    } catch (error: any) {
+        return { success: false, error: error.message || "Failed to update profile" };
     }
 }

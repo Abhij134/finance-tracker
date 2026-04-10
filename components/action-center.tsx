@@ -19,13 +19,14 @@ export function ActionCenter() {
       const rawAmount = typeof tx.amount === "number" ? tx.amount : parseFloat(tx.amount || "0");
       const type = tx.type?.toString().toUpperCase();
       const amount = Math.abs(rawAmount) * (type === "EXPENSE" ? -1 : type === "INCOME" ? 1 : -1);
-      const cat = CATEGORIES.find((c) => c.label.toLowerCase() === tx.category?.toLowerCase()) ?? CATEGORIES[0];
+      const cat = CATEGORIES.find((c) => c.label.toLowerCase() === tx.category?.toLowerCase()) ?? CATEGORIES.find(c => c.label === "Other") ?? CATEGORIES[0];
       return {
         date: tx.date || new Date().toISOString().split("T")[0],
         merchant: tx.merchant || "Unknown",
         category: cat,
         method: "ai" as "ai" | "manual",
         amount,
+        referenceId: tx.referenceId || null,
       };
     });
 
@@ -59,7 +60,7 @@ export function ActionCenter() {
         </button>
 
         {/* Upload Receipt — compact, no tall box */}
-        <div className={`transition-opacity ${isScanning ? "pointer-events-none opacity-60" : ""}`}>
+        <div className={`transition-opacity`}>
           <PDFScanner
             onTransactionsExtracted={async (data) => {
               if (Array.isArray(data) && isScanning) {
@@ -67,13 +68,14 @@ export function ActionCenter() {
                   const rawAmount = typeof tx.amount === "number" ? tx.amount : parseFloat(tx.amount || "0");
                   const type = tx.type?.toString().toUpperCase();
                   const amount = Math.abs(rawAmount) * (type === "EXPENSE" ? -1 : type === "INCOME" ? 1 : -1);
-                  const cat = CATEGORIES.find((c) => c.label.toLowerCase() === tx.category?.toLowerCase()) ?? CATEGORIES[0];
+                  const cat = CATEGORIES.find((c) => c.label.toLowerCase() === tx.category?.toLowerCase()) ?? CATEGORIES.find(c => c.label === "Other") ?? CATEGORIES[0];
                   return {
                     date: tx.date || new Date().toISOString().split("T")[0],
                     merchant: tx.merchant || "Unknown",
                     category: cat,
                     method: "ai" as "ai" | "manual",
                     amount,
+                    referenceId: tx.referenceId || null,
                   };
                 });
                 await addBulkTransactions(txsToInsert);
