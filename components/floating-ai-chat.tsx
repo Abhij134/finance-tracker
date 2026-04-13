@@ -63,8 +63,11 @@ export function FloatingAiChat() {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      sessionStorage.setItem("financeneo_chat_history", JSON.stringify(messages));
-      sessionStorage.setItem("financeneo_unread_count", unreadCount.toString());
+      const handler = setTimeout(() => {
+        sessionStorage.setItem("financeneo_chat_history", JSON.stringify(messages));
+        sessionStorage.setItem("financeneo_unread_count", unreadCount.toString());
+      }, 500);
+      return () => clearTimeout(handler);
     }
   }, [messages, unreadCount]);
 

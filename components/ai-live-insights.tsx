@@ -90,21 +90,23 @@ export function AiLiveInsights({
     const CACHE_KEY = `ai_insights_data_${from}_${to}`;
     const TIME_KEY = `ai_insights_timestamp_${from}_${to}`;
     const TX_COUNT_KEY = `ai_insights_tx_count_${from}_${to}`;
-    setIsLoading(true);
+
+    let hasValidCache = false;
     if (!force && typeof window !== "undefined") {
       const cachedData = localStorage.getItem(CACHE_KEY);
-      const cachedTime = localStorage.getItem(TIME_KEY);
-      const cachedTxCount = localStorage.getItem(TX_COUNT_KEY);
-      if (cachedData && cachedTime && cachedTxCount) {
-        const isTxCountSame = parseInt(cachedTxCount) === transactions.length;
-        const isRecent = Date.now() - parseInt(cachedTime) < 24 * 60 * 60 * 1000;
-        if (isTxCountSame && isRecent) {
+      if (cachedData) {
+        try {
           setInsights(JSON.parse(cachedData));
           setIsLoading(false);
-          return;
-        }
+          hasValidCache = true;
+        } catch (e) { }
       }
     }
+
+    if (!hasValidCache) {
+      setIsLoading(true);
+    }
+
     try {
       const queryParams = new URLSearchParams();
       if (from) queryParams.set("from", from);
@@ -124,7 +126,7 @@ export function AiLiveInsights({
         }
       } else throw new Error("Empty response");
     } catch {
-      setInsights(buildLocalInsights(transactions));
+      if (!hasValidCache) setInsights(buildLocalInsights(transactions));
     } finally {
       setIsLoading(false);
     }
@@ -161,9 +163,7 @@ export function AiLiveInsights({
   };
 
   return (
-    <div className="rounded-2xl border border-slate-800 bg-slate-900/40 backdrop-blur-md shadow-2xl p-3.5 sm:p-5 h-full flex flex-col relative overflow-hidden group/container">
-      {/* Decorative background glow */}
-      <div className="absolute top-0 right-0 w-48 h-48 -mr-16 -mt-16 rounded-full bg-emerald-500/5 blur-[80px] pointer-events-none group-hover/container:bg-emerald-500/10 transition-colors duration-1000" />
+    <div className="rounded-2xl border border-slate-800 bg-slate-900/40 backdrop-blur-md shadow-[inset_0_50px_100px_-20px_rgba(16,185,129,0.05)] hover:shadow-[inset_0_50px_100px_-20px_rgba(16,185,129,0.1)] transition-shadow duration-1000 p-3.5 sm:p-5 h-full flex flex-col relative overflow-hidden group/container">
 
       {/* Header */}
       <div className="flex items-center justify-between border-b border-slate-800 pb-2.5 mb-3 sm:mb-4 shrink-0 relative z-10">

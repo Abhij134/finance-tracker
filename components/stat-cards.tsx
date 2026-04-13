@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import {
   Edit2, Check, X, Calendar, Wallet, ArrowDownLeft, ArrowUpRight, PiggyBank,
 } from "lucide-react";
@@ -15,7 +15,7 @@ function fmt(n: number) {
 }
 
 // Sparkline with mobile-safe tooltips (no overflow)
-function MiniSparkline({ data, color, index }: { data: { val: number; label: string }[]; color: string; index: number }) {
+const MiniSparkline = React.memo(function MiniSparkline({ data, color, index }: { data: { val: number; label: string }[]; color: string; index: number }) {
   const max = Math.max(...data.map((d) => d.val), 1);
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
 
@@ -68,7 +68,7 @@ function MiniSparkline({ data, color, index }: { data: { val: number; label: str
       </div>
     </div>
   );
-}
+});
 
 type DatePreset = "all" | "7d" | "30d" | "month" | "custom";
 
@@ -293,8 +293,7 @@ export function StatCards() {
         />
 
         {/* Budget Card */}
-        <div className="relative bg-slate-900/50 backdrop-blur-md border border-slate-700/50 rounded-2xl p-3 sm:p-4 flex flex-col overflow-hidden group">
-          <div className="absolute top-0 right-0 -mr-8 -mt-8 w-20 h-20 bg-violet-500 rounded-full blur-[35px] pointer-events-none opacity-20" />
+        <div className="relative bg-slate-900/50 backdrop-blur-md border border-slate-700/50 rounded-2xl p-3 sm:p-4 flex flex-col overflow-hidden group shadow-[inset_0_50px_100px_-20px_rgba(139,92,246,0.15)]">
           <div className="flex justify-between items-start relative z-10 mb-2">
             <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground leading-tight">
               {selectedBudgetCategory === "OVERALL" ? "Budget Used" : `${selectedBudgetCategory} Budget`}
@@ -373,15 +372,13 @@ export function StatCards() {
 }
 
 // Extracted StatCard sub-component
-function StatCard({ title, value, sub, icon, color, data, index }: {
+const StatCard = React.memo(function StatCard({ title, value, sub, icon, color, data, index }: {
   title: string; value: string; sub: string;
   icon: React.ReactNode; color: string;
   data: { val: number; label: string }[]; index: number;
 }) {
   return (
-    <div className="relative bg-slate-900/50 backdrop-blur-md border border-slate-700/50 rounded-2xl p-3 sm:p-4 flex flex-col overflow-hidden">
-      <div className="absolute top-0 right-0 -mr-8 -mt-8 w-20 h-20 rounded-full blur-[35px] pointer-events-none opacity-20"
-        style={{ backgroundColor: color }} />
+    <div className="relative bg-slate-900/50 backdrop-blur-md border border-slate-700/50 rounded-2xl p-3 sm:p-4 flex flex-col overflow-hidden" style={{ boxShadow: `inset 0 40px 80px -20px ${color}25` }}>
       <div className="flex justify-between items-start relative z-10">
         <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground leading-tight">{title}</p>
         <div className="p-1 rounded-md shrink-0" style={{ backgroundColor: `${color}18` }}>
@@ -397,4 +394,4 @@ function StatCard({ title, value, sub, icon, color, data, index }: {
       </div>
     </div>
   );
-}
+});

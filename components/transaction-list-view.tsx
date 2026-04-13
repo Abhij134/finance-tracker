@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo, useTransition, useEffect, Fragment } from "react";
+import { useState, useMemo, useTransition, useEffect, useRef } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { PenLine, Cpu, FilterX, Search, Trash2, Loader2, CheckSquare, CalendarDays, ChevronDown } from "lucide-react";
 import { format } from "date-fns";
 import { deleteBulkTransactions, updateBulkTransactionsCategory, updateBulkTransactionsDate } from "@/app/actions/transactions";
@@ -27,6 +28,9 @@ export function TransactionListView({ initialTransactions }: { initialTransactio
     const [displayLimit, setDisplayLimit] = useState(10);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
 
+    const tableParentRef = useRef<HTMLDivElement>(null);
+    const listParentRef = useRef<HTMLDivElement>(null);
+
     useEffect(() => {
         setMounted(true);
     }, []);
@@ -50,6 +54,20 @@ export function TransactionListView({ initialTransactions }: { initialTransactio
     const paginatedTransactions = useMemo(() => {
         return filteredTransactions.slice(0, displayLimit);
     }, [filteredTransactions, displayLimit]);
+
+    const rowVirtualizer = useVirtualizer({
+        count: filteredTransactions.length,
+        getScrollElement: () => tableParentRef.current,
+        estimateSize: () => 48,
+        overscan: 5,
+    });
+
+    const listVirtualizer = useVirtualizer({
+        count: filteredTransactions.length,
+        getScrollElement: () => listParentRef.current,
+        estimateSize: () => 80,
+        overscan: 5,
+    });
 
     const handleLoadMore = () => {
         setIsLoadingMore(true);
@@ -196,9 +214,9 @@ export function TransactionListView({ initialTransactions }: { initialTransactio
                 </div>
             </div>
 
-            <div className="hidden sm:block pr-2 rounded-xl border border-border bg-card text-card-foreground shadow-md relative w-full overflow-hidden">
+            <div ref={tableParentRef} className="hidden sm:block pr-2 rounded-xl border border-border bg-card text-card-foreground shadow-md relative w-full overflow-y-auto" style={{ maxHeight: "70vh" }}>
                 <table className="min-w-full border-separate border-spacing-0 desktop-table">
-                    <thead className="text-left text-sm bg-muted/30">
+                    <thead className="text-left text-sm bg-muted/30 sticky top-0 z-10">
                         <tr className="text-left text-sm bg-muted/30">
                             {isSelectionMode && (
                                 <th className="sticky left-0 bg-card/95 backdrop-blur px-4 py-3 border-b border-border font-semibold w-12 text-center align-middle" />
@@ -222,99 +240,124 @@ export function TransactionListView({ initialTransactions }: { initialTransactio
                                 </td>
                             </tr>
                         ) : (
-                            filteredTransactions.map((tx) => {
-                                const isSelected = selectedIds.has(tx.id);
-                                return (
-                                    <tr key={tx.id} className={`text-sm transition-colors ${isSelected ? "bg-emerald-500/10" : "hover:bg-muted/50"}`}>
-                                        {isSelectionMode && (
-                                            <td className={`sticky left-0 border-b border-border px-4 py-3 text-center align-middle ${isSelected ? "bg-emerald-950/20" : "bg-card/95"} backdrop-blur`}>
-                                                <div className="flex items-center justify-center">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={isSelected}
-                                                        onChange={() => toggleSelect(tx.id)}
-                                                        className="rounded border-border accent-emerald-500 h-4 w-4 cursor-pointer"
-                                                    />
-                                                </div>
+                            <>
+                                {rowVirtualizer.getVirtualItems().length > 0 && rowVirtualizer.getVirtualItems()[0]?.start > 0 && (
+                                    <tr><td colSpan={6} style={{ height: `${rowVirtualizer.getVirtualItems()[0].start}px` }} /></tr>
+                                )}
+                                {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                                    const tx = filteredTransactions[virtualRow.index];
+                                    const isSelected = selectedIds.has(tx.id);
+                                    return (
+                                        <tr key={tx.id} data-index={virtualRow.index} ref={rowVirtualizer.measureElement} className={`text-sm transition-colors ${isSelected ? "bg-emerald-500/10" : "hover:bg-muted/50"}`}>
+                                            {isSelectionMode && (
+                                                <td className={`sticky left-0 border-b border-border px-4 py-3 text-center align-middle ${isSelected ? "bg-emerald-950/20" : "bg-card/95"} backdrop-blur`}>
+                                                    <div className="flex items-center justify-center">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={isSelected}
+                                                            onChange={() => toggleSelect(tx.id)}
+                                                            className="rounded border-border accent-emerald-500 h-4 w-4 cursor-pointer"
+                                                        />
+                                                    </div>
+                                                </td>
+                                            )}
+                                            <td className="px-4 py-3 border-b border-border whitespace-nowrap align-middle">
+                                                {mounted ? format(new Date(tx.date), 'dd MMM yyyy, hh:mm a') : '...'}
                                             </td>
-                                        )}
-                                        <td className="px-4 py-3 border-b border-border whitespace-nowrap align-middle">
-                                            {mounted ? format(new Date(tx.date), 'dd MMM yyyy, hh:mm a') : '...'}
-                                        </td>
-                                        <td className="px-4 py-3 border-b border-border font-medium align-middle">{tx.merchant}</td>
-                                        <td className="px-4 py-3 border-b border-border align-middle">
-                                            <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold tracking-wide text-white ${tx.category.color}`}>
-                                                {tx.category.label}
-                                            </span>
-                                        </td>
-                                        <td className="px-4 py-3 border-b border-border align-middle">
-                                            <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
-                                                {tx.method === "manual" ? <PenLine className="h-3 w-3" /> : <Cpu className="h-3 w-3 text-primary" />}
-                                                <span>{tx.method === "manual" ? "Manual" : "AI Scanned"}</span>
-                                            </span>
-                                        </td>
-                                        <td className={`px-4 py-3 border-b border-border text-right font-semibold align-middle ${tx.amount < 0 ? "text-foreground" : "text-emerald-500"}`}>
-                                            {formatAmount(tx.amount)}
-                                        </td>
-                                    </tr>
-                                );
-                            })
+                                            <td className="px-4 py-3 border-b border-border font-medium align-middle">{tx.merchant}</td>
+                                            <td className="px-4 py-3 border-b border-border align-middle">
+                                                <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold tracking-wide text-white ${tx.category.color}`}>
+                                                    {tx.category.label}
+                                                </span>
+                                            </td>
+                                            <td className="px-4 py-3 border-b border-border align-middle">
+                                                <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
+                                                    {tx.method === "manual" ? <PenLine className="h-3 w-3" /> : <Cpu className="h-3 w-3 text-primary" />}
+                                                    <span>{tx.method === "manual" ? "Manual" : "AI Scanned"}</span>
+                                                </span>
+                                            </td>
+                                            <td className={`px-4 py-3 border-b border-border text-right font-semibold align-middle ${tx.amount < 0 ? "text-foreground" : "text-emerald-500"}`}>
+                                                {formatAmount(tx.amount)}
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                                {rowVirtualizer.getVirtualItems().length > 0 && rowVirtualizer.getTotalSize() - (rowVirtualizer.getVirtualItems()[rowVirtualizer.getVirtualItems().length - 1]?.end || 0) > 0 && (
+                                    <tr><td colSpan={6} style={{ height: `${rowVirtualizer.getTotalSize() - rowVirtualizer.getVirtualItems()[rowVirtualizer.getVirtualItems().length - 1].end}px` }} /></tr>
+                                )}
+                            </>
                         )}
                     </tbody>
                 </table>
             </div>
 
             {/* Mobile View Card List - Separate from Table */}
-            <div className="sm:hidden space-y-3">
-                {filteredTransactions.length === 0 ? (
-                    <div className="text-center py-10 text-muted-foreground bg-card rounded-xl border border-border">
-                        No transactions found matching your filters.
-                    </div>
-                ) : (
-                    filteredTransactions.map((tx) => {
-                        const isSelected = selectedIds.has(tx.id);
-                        return (
-                            <div
-                                key={tx.id}
-                                onClick={() => isSelectionMode && toggleSelect(tx.id)}
-                                className={`flex items-center justify-between px-4 py-4 rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm transition-all ${isSelected ? "ring-2 ring-emerald-500 bg-emerald-500/10 border-emerald-500/30" : "active:scale-[0.98]"}`}
-                            >
-                                <div className="flex items-center gap-3 min-w-0 flex-1">
-                                    {isSelectionMode && (
-                                        <input
-                                            type="checkbox"
-                                            checked={isSelected}
-                                            onChange={() => toggleSelect(tx.id)}
-                                            className="rounded border-border accent-emerald-500 h-5 w-5 shrink-0"
-                                        />
-                                    )}
-                                    <div className="flex flex-col gap-1 min-w-0 flex-1">
-                                        <span className="text-sm font-semibold text-foreground truncate">
-                                            {tx.merchant}
-                                        </span>
-                                        <div className="flex items-center gap-2 flex-wrap">
-                                            <span className="text-[11px] text-muted-foreground whitespace-nowrap">
-                                                {mounted ? format(new Date(tx.date), 'dd MMM yyyy') : '...'}
+            <div ref={listParentRef} className="sm:hidden overflow-y-auto w-full" style={{ maxHeight: "70vh" }}>
+                <div style={{ height: `${listVirtualizer.getTotalSize()}px`, width: "100%", position: "relative" }}>
+                    {filteredTransactions.length === 0 ? (
+                        <div className="text-center py-10 text-muted-foreground bg-card rounded-xl border border-border mt-3">
+                            No transactions found matching your filters.
+                        </div>
+                    ) : (
+                        listVirtualizer.getVirtualItems().map((virtualRow) => {
+                            const tx = filteredTransactions[virtualRow.index];
+                            const isSelected = selectedIds.has(tx.id);
+                            return (
+                                <div
+                                    key={tx.id}
+                                    data-index={virtualRow.index}
+                                    ref={listVirtualizer.measureElement}
+                                    style={{
+                                        position: "absolute",
+                                        top: 0,
+                                        left: 0,
+                                        width: "100%",
+                                        transform: `translateY(${virtualRow.start}px)`,
+                                    }}
+                                    className="pb-3"
+                                >
+                                    <div
+                                        onClick={() => isSelectionMode && toggleSelect(tx.id)}
+                                        className={`flex items-center justify-between px-4 py-4 rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm transition-all ${isSelected ? "ring-2 ring-emerald-500 bg-emerald-500/10 border-emerald-500/30" : "active:scale-[0.98]"}`}
+                                    >
+                                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                                            {isSelectionMode && (
+                                                <input
+                                                    type="checkbox"
+                                                    checked={isSelected}
+                                                    onChange={() => toggleSelect(tx.id)}
+                                                    className="rounded border-border accent-emerald-500 h-5 w-5 shrink-0"
+                                                />
+                                            )}
+                                            <div className="flex flex-col gap-1 min-w-0 flex-1">
+                                                <span className="text-sm font-semibold text-foreground truncate">
+                                                    {tx.merchant}
+                                                </span>
+                                                <div className="flex items-center gap-2 flex-wrap">
+                                                    <span className="text-[11px] text-muted-foreground whitespace-nowrap">
+                                                        {mounted ? format(new Date(tx.date), 'dd MMM yyyy') : '...'}
+                                                    </span>
+                                                    <span className={`inline-flex items-center rounded-full px-1.5 py-0.5 text-[9px] font-bold text-white uppercase tracking-tighter ${tx.category.color}`}>
+                                                        {tx.category.label}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex flex-col items-end gap-1 shrink-0 ml-4">
+                                            <span className={`text-sm font-bold ${tx.amount < 0 ? "text-red-400" : "text-emerald-400"}`}>
+                                                {formatAmount(tx.amount)}
                                             </span>
-                                            <span className={`inline-flex items-center rounded-full px-1.5 py-0.5 text-[9px] font-bold text-white uppercase tracking-tighter ${tx.category.color}`}>
-                                                {tx.category.label}
+                                            <span className="text-[10px] text-muted-foreground bg-background/50 px-1.5 py-0.5 rounded border border-border/50">
+                                                {tx.method === "manual" ? "Manual" : "AI"}
                                             </span>
                                         </div>
                                     </div>
                                 </div>
-
-                                <div className="flex flex-col items-end gap-1 shrink-0 ml-4">
-                                    <span className={`text-sm font-bold ${tx.amount < 0 ? "text-red-400" : "text-emerald-400"}`}>
-                                        {formatAmount(tx.amount)}
-                                    </span>
-                                    <span className="text-[10px] text-muted-foreground bg-background/50 px-1.5 py-0.5 rounded border border-border/50">
-                                        {tx.method === "manual" ? "Manual" : "AI"}
-                                    </span>
-                                </div>
-                            </div>
-                        );
-                    })
-                )}
+                            );
+                        })
+                    )}
+                </div>
             </div>
 
             {/* Floating Action Bar */}

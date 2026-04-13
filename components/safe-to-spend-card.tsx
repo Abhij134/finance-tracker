@@ -44,13 +44,7 @@ export function SafeToSpendCard({ data }: SafeToSpendCardProps) {
     const projectedPct = budget > 0 ? Math.round((projectedMonthSpend / budget) * 100) : 0;
 
     return (
-        <div className="relative bg-slate-900/50 backdrop-blur-md border border-emerald-500/20 shadow-[0_8px_30px_rgb(16,185,129,0.05)] rounded-2xl flex flex-col h-full min-h-[350px] overflow-hidden group">
-            {/* Background Glow */}
-            <div
-                className={`absolute top-0 right-0 -mr-16 -mt-16 w-40 h-40 rounded-full blur-[60px] pointer-events-none transition-colors duration-500
-                    ${isExceeded ? 'bg-rose-500/15' : 'bg-emerald-500/15'}
-                `}
-            />
+        <div className={`relative bg-slate-900/50 backdrop-blur-md border border-emerald-500/20 rounded-2xl flex flex-col h-full min-h-[350px] overflow-hidden group transition-shadow duration-500 ${isExceeded ? 'shadow-[inset_0_50px_100px_-20px_rgba(244,63,94,0.15)]' : 'shadow-[inset_0_50px_100px_-20px_rgba(16,185,129,0.15)]'}`}>
 
             {/* Header */}
             <div className="px-5 pt-5 pb-2 z-10 shrink-0">

@@ -59,7 +59,10 @@ export function AiInsightsChatbox() {
     // Save chat history to session storage whenever it changes
     useEffect(() => {
         if (typeof window !== "undefined") {
-            sessionStorage.setItem("financeneo_chat_history", JSON.stringify(messages));
+            const handler = setTimeout(() => {
+                sessionStorage.setItem("financeneo_chat_history", JSON.stringify(messages));
+            }, 500);
+            return () => clearTimeout(handler);
         }
     }, [messages]);
     const [input, setInput] = useState("");

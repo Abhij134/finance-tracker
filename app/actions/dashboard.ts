@@ -12,31 +12,35 @@ export async function getSafeToSpendData() {
     }
 
     try {
-        // 1. Fetch total overall budget
-        const { data: budgetData, error: budgetError } = await supabase
-            .from('Budget')
-            .select('amount')
-            .eq('userId', userId)
-            .eq('category', 'OVERALL')
-            .single();
+        const today = new Date();
+        const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1).toISOString();
+        const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0, 23, 59, 59, 999).toISOString();
+
+        const [
+            { data: budgetData, error: budgetError },
+            { data: txData, error: txError }
+        ] = await Promise.all([
+            // 1. Fetch total overall budget
+            supabase
+                .from('Budget')
+                .select('amount')
+                .eq('userId', userId)
+                .eq('category', 'OVERALL')
+                .single(),
+            // 2. Fetch expenses for current month
+            supabase
+                .from('Transaction')
+                .select('amount')
+                .eq('userId', userId)
+                .lt('amount', 0) // expenses are negative
+                .gte('date', startOfMonth)
+                .lte('date', endOfMonth)
+        ]);
 
         let totalBudget = 0;
         if (!budgetError && budgetData) {
             totalBudget = budgetData.amount;
         }
-
-        // 2. Fetch expenses for current month
-        const today = new Date();
-        const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1).toISOString();
-        const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0, 23, 59, 59, 999).toISOString();
-
-        const { data: txData, error: txError } = await supabase
-            .from('Transaction')
-            .select('amount')
-            .eq('userId', userId)
-            .lt('amount', 0) // expenses are negative
-            .gte('date', startOfMonth)
-            .lte('date', endOfMonth);
 
         let totalSpent = 0;
         if (!txError && txData) {
