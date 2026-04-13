@@ -51,9 +51,10 @@ export default async function Home({
   searchParams: Promise<{ range?: string; from?: string; to?: string }>;
 }) {
   const params = await searchParams;
-  const rangeParam = (params.range as string) || "month";
+  const rangeParam = params.range as string | undefined;
+  const isDefault = !rangeParam;
   const preset = (
-    ["all", "7d", "30d", "month", "custom"].includes(rangeParam) ? rangeParam : "month"
+    rangeParam && ["all", "7d", "30d", "month", "custom"].includes(rangeParam) ? rangeParam : "month"
   ) as DatePreset;
   const { from, to } = deriveDateRange(preset, params.from as string, params.to as string);
 
@@ -90,6 +91,7 @@ export default async function Home({
   const initialFilter = {
     preset,
     range: { from: from ? toLocalISO(from) : "", to: to ? toLocalISO(to) : "" },
+    isDefault
   };
 
   return (

@@ -44,7 +44,7 @@ export function TransactionsProvider({
 }: {
     children: ReactNode,
     initialTransactions: Tx[],
-    initialFilter?: { preset: DatePreset; range: DateRange }
+    initialFilter?: { preset: DatePreset; range: DateRange; isDefault?: boolean }
 }) {
     const getPresetRange = useCallback((preset: DatePreset): DateRange => {
         const today = new Date();
@@ -78,12 +78,19 @@ export function TransactionsProvider({
 
     // Initialize filter from initialFilter prop if available
     const [dateFilter, setDateFilter] = useState<{ preset: DatePreset; range: DateRange }>(() => {
-        if (initialFilter) return initialFilter;
+        if (initialFilter) return { preset: initialFilter.preset, range: initialFilter.range };
         const today = new Date();
         const to = toLocalISO(today);
         const from = toLocalISO(new Date(today.getFullYear(), today.getMonth(), 1));
         return { preset: "month", range: { from, to } };
     });
+
+    const setDateFilterWrapper = useCallback((filter: { preset: DatePreset; range: DateRange }) => {
+        setDateFilter(filter);
+        if (typeof window !== "undefined") {
+            sessionStorage.setItem("finance_date_filter", JSON.stringify(filter));
+        }
+    }, []);
 
     const [startDate, setStartDateState] = useState<Date | null>(null);
 
@@ -108,12 +115,28 @@ export function TransactionsProvider({
         setHasMore(initialTransactions.length === 2000);
     }, [initialTransactions]);
 
-    // Sync dateFilter if initialFilter changes (URL updates)
+    // Sync dateFilter if initialFilter changes (URL updates) or on mount if no initialFilter
     useEffect(() => {
-        if (initialFilter) {
-            setDateFilter(initialFilter);
+        if (typeof window === "undefined") return;
+
+        if (!initialFilter || initialFilter.isDefault) {
+            const saved = sessionStorage.getItem("finance_date_filter");
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    setDateFilter(parsed);
+                    return;
+                } catch (e) { }
+            }
         }
-    }, [initialFilter]);
+
+        if (initialFilter) {
+            setDateFilter({ preset: initialFilter.preset, range: initialFilter.range });
+            if (!initialFilter.isDefault) {
+                sessionStorage.setItem("finance_date_filter", JSON.stringify({ preset: initialFilter.preset, range: initialFilter.range }));
+            }
+        }
+    }, [initialFilter?.preset, initialFilter?.range?.from, initialFilter?.range?.to, initialFilter?.isDefault]);
 
     const setStartDate = useCallback((date: Date | null) => {
         setStartDateState(date);
@@ -240,7 +263,7 @@ export function TransactionsProvider({
                 loadMore,
                 setStartDate,
                 dateFilter,
-                setDateFilter,
+                setDateFilter: setDateFilterWrapper,
                 isLoadingMore,
                 hasMore,
                 isAddModalOpen,
