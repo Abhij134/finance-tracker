@@ -32,6 +32,7 @@ function deriveDateRange(range: string, fromParam?: string, toParam?: string) {
         break;
       case "month":
         from = getLocalStartOfDay(new Date(now.getFullYear(), now.getMonth(), 1));
+        to = getLocalEndOfDay(new Date(now.getFullYear(), now.getMonth() + 1, 0));
         break;
       case "all":
         from = new Date(0);

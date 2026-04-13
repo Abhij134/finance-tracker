@@ -215,10 +215,11 @@ export function FinancialReportsDashboard() {
               key={p}
               onClick={() => {
                 const today = new Date();
-                const to = toLocalISO(today);
+                let to = toLocalISO(today);
                 let from = "";
                 if (p === "month") {
                   from = toLocalISO(new Date(today.getFullYear(), today.getMonth(), 1));
+                  to = toLocalISO(new Date(today.getFullYear(), today.getMonth() + 1, 0));
                 }
                 setDateFilter({ preset: p, range: { from, to } });
               }}

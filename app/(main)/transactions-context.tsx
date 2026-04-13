@@ -80,7 +80,7 @@ export function TransactionsProvider({
     const [dateFilter, setDateFilter] = useState<{ preset: DatePreset; range: DateRange }>(() => {
         if (initialFilter) return { preset: initialFilter.preset, range: initialFilter.range };
         const today = new Date();
-        const to = toLocalISO(today);
+        const to = toLocalISO(new Date(today.getFullYear(), today.getMonth() + 1, 0));
         const from = toLocalISO(new Date(today.getFullYear(), today.getMonth(), 1));
         return { preset: "month", range: { from, to } };
     });
