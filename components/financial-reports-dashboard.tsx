@@ -265,7 +265,7 @@ export function FinancialReportsDashboard() {
           </div>
 
           <div className="flex-1 w-full min-w-0 relative overflow-x-auto custom-scrollbar pb-6">
-            <div style={{ minWidth: Math.max(800, finalChartData.length * 120) + 'px', height: '100%' }}>
+            <div style={{ minWidth: `max(120%, ${finalChartData.length * (((finalChartData[0] as any)?.rawDate?.length === 7) ? 400 : 100)}px)`, height: '100%' }}>
               <ResponsiveContainer width="100%" height={200}>
                 <AreaChart data={finalChartData} margin={{ top: 10, right: 30, left: -20, bottom: 25 }}>
                   <defs>
