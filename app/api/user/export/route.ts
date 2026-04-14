@@ -16,8 +16,25 @@ async function getExportInsights(transactions: any[]): Promise<string> {
     const totalExpenses = transactions.filter(t => t.amount < 0).reduce((s, t) => s + Math.abs(t.amount), 0);
     const totalIncome = transactions.filter(t => t.amount > 0).reduce((s, t) => s + t.amount, 0);
 
-    const prompt = `You are an expert financial analyst. Analyze these transactions and provide a simplified, highly accurate, and logical 3-4 sentence paragraph summarizing the user's spending. 
-Break down the biggest expenses using accurate percentages (e.g. 40% on Dining). Keep it extremely professional and easy to understand. Do NOT use markdown bolding (**) or bullet points. Total Income: ₹${totalIncome}, Total Expenses: ₹${totalExpenses}, Transaction Count: ${transactions.length}.`;
+    const expensesByCategory = transactions
+        .filter(t => t.amount < 0)
+        .reduce((acc, t) => {
+            acc[t.category] = (acc[t.category] || 0) + Math.abs(t.amount);
+            return acc;
+        }, {} as Record<string, number>);
+
+    const categoryBreakdown = Object.entries(expensesByCategory)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([cat, amount]) => `${cat}: ₹${amount}`)
+        .join(', ');
+
+    const prompt = `You are an expert financial analyst. Provide a simplified, highly accurate, and logical 3-4 sentence paragraph summarizing the user's spending based strictly on the following factual data.
+- Total Income: ₹${totalIncome}
+- Total Expenses: ₹${totalExpenses}
+- Top Expense Categories: ${categoryBreakdown || "None"}
+
+Write an insightful summary that helps the user understand their spending habits, pointing out where they spend the most and their net savings (Income minus Expenses). You may generate accurate percentage breakdowns based on the provided category numbers versus total expenses. Keep it extremely professional, logical, and easy to understand. Do NOT hallucinate categories that are not listed. Do NOT use markdown bolding (**), asterisks, or bullet points.`;
 
     try {
         const response = await novita.chat.completions.create({
