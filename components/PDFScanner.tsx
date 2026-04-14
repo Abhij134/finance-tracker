@@ -178,6 +178,27 @@ export function PDFScanner({ onTransactionsExtracted, onLoadingChange }: PDFScan
     }
   };
 
+  const handleFileRef = useRef(handleFile);
+  useEffect(() => {
+    handleFileRef.current = handleFile;
+  }, [handleFile]);
+
+  useEffect(() => {
+    const handleGlobalPaste = async (e: ClipboardEvent) => {
+      const file = e.clipboardData?.files?.[0] || Array.from(e.clipboardData?.items || []).find(item => item.kind === 'file')?.getAsFile();
+      if (!file) return;
+
+      if (file.type === "application/pdf" || file.type.startsWith("image/")) {
+        e.preventDefault();
+        toast.info("Pasted file detected, processing...");
+        await handleFileRef.current(file);
+      }
+    };
+
+    document.addEventListener("paste", handleGlobalPaste);
+    return () => document.removeEventListener("paste", handleGlobalPaste);
+  }, []);
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) await handleFile(file);
@@ -236,7 +257,7 @@ export function PDFScanner({ onTransactionsExtracted, onLoadingChange }: PDFScan
         }`}>
         {isDragging ? <UploadCloud className="h-4 w-4" /> : <ScanLine className="h-4 w-4" />}
       </span>
-      <span className="truncate">{isDragging ? "Drop to scan" : "Upload Receipt"}</span>
+      <span className="truncate">{isDragging ? "Drop to scan" : "Upload or Paste Receipt"}</span>
     </div>
   );
 }
