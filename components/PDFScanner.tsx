@@ -264,7 +264,7 @@ export function PDFScanner({ onTransactionsExtracted, onLoadingChange }: PDFScan
       <div
         contentEditable
         suppressContentEditableWarning
-        data-placeholder="...or long-press here to Paste Files"
+        data-placeholder="...or Tap here to Paste Images"
         className="w-full text-center text-xs font-medium rounded-xl border border-dashed border-border bg-card/50 shadow-sm px-4 py-3 focus:outline-none focus:border-primary/50 focus:bg-background transition-colors cursor-text empty:before:content-[attr(data-placeholder)] before:text-muted-foreground/60 before:pointer-events-none outline-none"
         onPaste={async (e) => {
           e.preventDefault();
@@ -273,7 +273,7 @@ export function PDFScanner({ onTransactionsExtracted, onLoadingChange }: PDFScan
             toast.info("Pasted file detected, processing...");
             await handleFileRef.current(file);
           } else {
-            toast.error("No valid file found in clipboard. Copy a PDF or Image first!");
+            toast.error("iOS blocks pasting PDFs! Please paste an Image, or use 'Choose File' instead.", { duration: 6000 });
           }
           if (e.currentTarget) e.currentTarget.innerHTML = "";
         }}
