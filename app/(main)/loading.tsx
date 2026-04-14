@@ -4,7 +4,6 @@ import {
     AiInsightsSkeleton,
     GreetingHeaderSkeleton
 } from "@/components/skeletons";
-import { NavbarSkeleton } from "@/components/navbar-skeleton";
 
 export default function Loading() {
     return (
