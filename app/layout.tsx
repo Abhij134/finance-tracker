@@ -23,6 +23,7 @@ export const metadata: Metadata = {
       { url: "/logo.svg", type: "image/svg+xml" },
     ],
     shortcut: "/logo.svg",
+    apple: "/apple-touch-icon.png",
   },
   manifest: "/manifest.json",
   appleWebApp: {
