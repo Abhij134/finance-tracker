@@ -75,3 +75,26 @@ export const AiInsightsSkeleton = () => (
         </div>
     </div>
 );
+
+export const ChartSkeleton = ({ className }: { className?: string }) => (
+    <div className={`rounded-xl border border-border bg-card shadow-lg p-5 flex flex-col ${className ?? 'min-h-[350px]'}`}>
+        <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-2">
+                <Shimmer className="h-5 w-5 rounded-sm" />
+                <Shimmer className="h-6 w-32 rounded" />
+            </div>
+        </div>
+        <div className="flex-1 flex items-end gap-2 px-2 mt-auto">
+            <Shimmer className="w-8 h-full rounded-l" />
+            <div className="flex-1 flex items-end gap-[4px] h-full">
+                {[...Array(12)].map((_, i) => (
+                    <Shimmer
+                        key={i}
+                        className="flex-1 rounded-t-[3px] bg-white/[0.03]"
+                        style={{ height: `${20 + (i * 17) % 80}%` } as React.CSSProperties}
+                    />
+                ))}
+            </div>
+        </div>
+    </div>
+);
