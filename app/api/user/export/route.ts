@@ -24,9 +24,9 @@ async function getExportInsights(transactions: any[]): Promise<string> {
         }, {} as Record<string, number>);
 
     const categoryBreakdown = Object.entries(expensesByCategory)
-        .sort((a, b) => b[1] - a[1])
+        .sort((a, b) => (b[1] as number) - (a[1] as number))
         .slice(0, 5)
-        .map(([cat, amount]) => `${cat}: ₹${amount}`)
+        .map(([cat, amount]) => `${cat}: ₹${amount as number}`)
         .join(', ');
 
     const prompt = `You are an expert financial analyst. Provide a simplified, highly accurate, and logical 3-4 sentence paragraph summarizing the user's spending based strictly on the following factual data.
