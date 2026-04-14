@@ -261,23 +261,45 @@ export function PDFScanner({ onTransactionsExtracted, onLoadingChange }: PDFScan
         <span className="truncate">{isDragging ? "Drop to scan" : "Upload Receipt"}</span>
       </div>
 
-      <input
-        type="text"
-        placeholder="...or Tap here to Paste"
-        className="w-full text-center text-xs font-medium rounded-xl border border-dashed border-border bg-card/50 shadow-sm px-4 py-3 focus:outline-none focus:border-primary/50 focus:bg-background placeholder:text-muted-foreground/60 transition-colors cursor-text"
-        onPaste={async (e) => {
-          const file = e.clipboardData?.files?.[0] || Array.from(e.clipboardData?.items || []).find(item => item.kind === 'file')?.getAsFile();
-          if (file && (file.type === "application/pdf" || file.type.startsWith("image/"))) {
-            e.preventDefault();
-            toast.info("Pasted file detected, processing...");
-            await handleFileRef.current(file);
-          } else {
-            e.preventDefault();
-            toast.error("No valid file found in clipboard. Copy a PDF or Image first!");
+      <button
+        type="button"
+        onClick={async () => {
+          try {
+            if (!navigator.clipboard || !navigator.clipboard.read) {
+              toast.error("Browser does not support native clipboard reading. Please manually select the file.");
+              return;
+            }
+            const clipboardItems = await navigator.clipboard.read();
+            for (const item of clipboardItems) {
+              const types = item.types;
+              const pdfType = types.find(t => t === 'application/pdf');
+              const imgType = types.find(t => t.startsWith('image/'));
+
+              if (pdfType) {
+                const blob = await item.getType(pdfType);
+                const file = new File([blob], "pasted-receipt.pdf", { type: pdfType });
+                toast.info("Pasted PDF detected, processing...");
+                await handleFileRef.current(file);
+                return;
+              } else if (imgType) {
+                const blob = await item.getType(imgType);
+                const file = new File([blob], "pasted-receipt.png", { type: imgType });
+                toast.info("Pasted Image detected, processing...");
+                await handleFileRef.current(file);
+                return;
+              }
+            }
+            toast.error("No valid PDF or Image found in clipboard.");
+          } catch (err) {
+            console.error(err);
+            toast.error("Unable to read clipboard. Make sure you allow paste permissions.");
           }
         }}
-        onChange={(e) => e.target.value = ""}
-      />
+        className="w-full text-center text-xs font-semibold rounded-xl border border-dashed border-border bg-card/50 shadow-sm px-4 py-3 hover:bg-muted focus:outline-none focus:border-primary/50 transition-colors cursor-pointer text-muted-foreground flex items-center justify-center gap-2"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-70"><rect width="8" height="4" x="8" y="2" rx="1" ry="1" /><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" /></svg>
+        Tap here to Paste from Clipboard
+      </button>
     </div>
   );
 }
