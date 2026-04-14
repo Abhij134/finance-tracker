@@ -28,7 +28,7 @@ export default async function BudgetPage() {
 
   return (
     <main className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-6">
-      <TransactionsProvider initialTransactions={txs}>
+      <TransactionsProvider initialTransactions={txs} storageKey="finance_date_filter_charts">
         <BudgetProvider initialBudgets={budgets}>
           <FinancialReportsDashboard />
         </BudgetProvider>

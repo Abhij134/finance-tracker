@@ -84,6 +84,12 @@ export function FinancialReportsDashboard() {
       let startStr = dateFilter.range.from?.split('T')[0];
       let endStr = dateFilter.range.to?.split('T')[0];
 
+      // Fix Next.js "all" preset 1970 bug by defaulting startStr to empty if "all" timeframe
+      if (dateFilter.preset === "all") {
+        startStr = "";
+        endStr = "";
+      }
+
       if (!startStr && txs.length > 0) {
         startStr = txs[0].date.split('T')[0];
       }
@@ -98,78 +104,35 @@ export function FinancialReportsDashboard() {
       const start = new Date(startStr + 'T00:00:00');
       const end = new Date(endStr + 'T23:59:59');
 
-      // Calculate how many days are in the selected range
-      const dayDiff = Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-      const useMonths = dayDiff > 60 || dateFilter.preset === "all";
-
-      if (useMonths) {
-        // Group by Month (YYYY-MM)
-        const monthStart = new Date(start.getFullYear(), start.getMonth(), 1);
-        const monthEnd = new Date(end.getFullYear(), end.getMonth(), 1);
-
-        for (let d = new Date(monthStart); d <= monthEnd; d.setMonth(d.getMonth() + 1)) {
-          const yyyy = d.getFullYear();
-          const mm = String(d.getMonth() + 1).padStart(2, '0');
-          groups[`${yyyy}-${mm}`] = { income: 0, expenses: 0 };
-        }
-
-        txs.forEach(tx => {
-          let dateStr = "";
-          if (typeof tx.date === 'string') dateStr = tx.date;
-          else if (tx.date instanceof Date) dateStr = tx.date.toISOString();
-          else return;
-
-          const yyyyMm = dateStr.substring(0, 7);
-          if (groups[yyyyMm] !== undefined) {
-            if (tx.category.label === "Income") {
-              groups[yyyyMm].income += Math.abs(tx.amount);
-            } else {
-              groups[yyyyMm].expenses += Math.abs(tx.amount);
-            }
-          }
-        });
-
-        return Object.keys(groups).sort().map(key => {
-          const [y, m] = key.split('-');
-          const d = new Date(parseInt(y), parseInt(m) - 1, 1);
-          return {
-            name: d.toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }),
-            income: groups[key].income,
-            expenses: groups[key].expenses,
-            rawDate: key
-          };
-        });
-      } else {
-        // Group by Day (YYYY-MM-DD)
-        for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-          groups[toLocalISO(d)] = { income: 0, expenses: 0 };
-        }
-
-        txs.forEach(tx => {
-          let dateKey = "";
-          if (typeof tx.date === 'string') dateKey = tx.date.split('T')[0];
-          else if (tx.date instanceof Date) dateKey = tx.date.toISOString().split('T')[0];
-          else return;
-
-          if (groups[dateKey] !== undefined) {
-            if (tx.category.label === "Income") {
-              groups[dateKey].income += Math.abs(tx.amount);
-            } else {
-              groups[dateKey].expenses += Math.abs(tx.amount);
-            }
-          }
-        });
-
-        return Object.keys(groups).sort().map(key => {
-          const d = new Date(key);
-          return {
-            name: d.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' }),
-            income: groups[key].income,
-            expenses: groups[key].expenses,
-            rawDate: key
-          };
-        });
+      // Group by Day (YYYY-MM-DD)
+      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        groups[toLocalISO(d)] = { income: 0, expenses: 0 };
       }
+
+      txs.forEach(tx => {
+        let dateKey = "";
+        if (typeof tx.date === 'string') dateKey = tx.date.split('T')[0];
+        else if (tx.date instanceof Date) dateKey = tx.date.toISOString().split('T')[0];
+        else return;
+
+        if (groups[dateKey] !== undefined) {
+          if (tx.category.label === "Income") {
+            groups[dateKey].income += Math.abs(tx.amount);
+          } else {
+            groups[dateKey].expenses += Math.abs(tx.amount);
+          }
+        }
+      });
+
+      return Object.keys(groups).sort().map(key => {
+        const d = new Date(key);
+        return {
+          name: d.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' }),
+          income: groups[key].income,
+          expenses: groups[key].expenses,
+          rawDate: key
+        };
+      });
     };
 
     const aggregated = groupBy(filteredTransactions);
@@ -266,7 +229,7 @@ export function FinancialReportsDashboard() {
           </div>
 
           <div className="flex-1 w-full min-w-0 relative overflow-x-auto custom-scrollbar pb-6">
-            <div style={{ minWidth: `max(120%, ${finalChartData.length * (((finalChartData[0] as any)?.rawDate?.length === 7) ? 400 : 100)}px)`, height: '100%' }}>
+            <div style={{ minWidth: `max(120%, ${finalChartData.length * 100}px)`, height: '100%' }}>
               <ResponsiveContainer width="100%" height={200}>
                 <AreaChart data={finalChartData} margin={{ top: 10, right: 30, left: -20, bottom: 25 }}>
                   <defs>

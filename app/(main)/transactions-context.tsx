@@ -40,11 +40,13 @@ const TxContext = createContext<TxContextType | null>(null);
 export function TransactionsProvider({
     children,
     initialTransactions,
-    initialFilter
+    initialFilter,
+    storageKey = "finance_date_filter_dashboard"
 }: {
     children: ReactNode,
     initialTransactions: Tx[],
-    initialFilter?: { preset: DatePreset; range: DateRange; isDefault?: boolean }
+    initialFilter?: { preset: DatePreset; range: DateRange; isDefault?: boolean },
+    storageKey?: string
 }) {
     const getPresetRange = useCallback((preset: DatePreset): DateRange => {
         const today = new Date();
@@ -88,9 +90,9 @@ export function TransactionsProvider({
     const setDateFilterWrapper = useCallback((filter: { preset: DatePreset; range: DateRange }) => {
         setDateFilter(filter);
         if (typeof window !== "undefined") {
-            sessionStorage.setItem("finance_date_filter", JSON.stringify(filter));
+            sessionStorage.setItem(storageKey, JSON.stringify(filter));
         }
-    }, []);
+    }, [storageKey]);
 
     const [startDate, setStartDateState] = useState<Date | null>(null);
 
@@ -120,7 +122,7 @@ export function TransactionsProvider({
         if (typeof window === "undefined") return;
 
         if (!initialFilter || initialFilter.isDefault) {
-            const saved = sessionStorage.getItem("finance_date_filter");
+            const saved = sessionStorage.getItem(storageKey);
             if (saved) {
                 try {
                     const parsed = JSON.parse(saved);
@@ -133,10 +135,10 @@ export function TransactionsProvider({
         if (initialFilter) {
             setDateFilter({ preset: initialFilter.preset, range: initialFilter.range });
             if (!initialFilter.isDefault) {
-                sessionStorage.setItem("finance_date_filter", JSON.stringify({ preset: initialFilter.preset, range: initialFilter.range }));
+                sessionStorage.setItem(storageKey, JSON.stringify({ preset: initialFilter.preset, range: initialFilter.range }));
             }
         }
-    }, [initialFilter?.preset, initialFilter?.range?.from, initialFilter?.range?.to, initialFilter?.isDefault]);
+    }, [initialFilter?.preset, initialFilter?.range?.from, initialFilter?.range?.to, initialFilter?.isDefault, storageKey]);
 
     const setStartDate = useCallback((date: Date | null) => {
         setStartDateState(date);
