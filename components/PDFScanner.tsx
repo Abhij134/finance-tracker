@@ -239,7 +239,7 @@ export function PDFScanner({ onTransactionsExtracted, onLoadingChange }: PDFScan
       onClose={reset}
     />
   ) : (
-    <div className="flex flex-col gap-2 w-full">
+    <div className="flex flex-col gap-1.5 w-full">
       <div
         onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
         onDragLeave={() => setIsDragging(false)}
@@ -250,13 +250,13 @@ export function PDFScanner({ onTransactionsExtracted, onLoadingChange }: PDFScan
           if (file) await handleFile(file);
         }}
         onClick={() => fileInputRef.current?.click()}
-        className={`flex items-center gap-2.5 rounded-xl border bg-card px-4 py-3 text-sm font-semibold text-foreground shadow-sm hover:bg-muted hover:-translate-y-0.5 hover:shadow-md transition-all cursor-pointer w-full select-none ${isDragging ? "border-primary bg-primary/5 scale-[1.02]" : "border-border hover:border-primary/30"
+        className={`flex items-center gap-2 rounded-lg border bg-card px-3 py-2 text-xs font-semibold text-foreground shadow-sm hover:bg-muted hover:-translate-y-0.5 hover:shadow-md transition-all cursor-pointer w-full select-none ${isDragging ? "border-primary bg-primary/5 scale-[1.01]" : "border-border hover:border-primary/30"
           }`}
       >
         <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="application/pdf,image/*" className="hidden" />
-        <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg transition-colors ${isDragging ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+        <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md transition-colors ${isDragging ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
           }`}>
-          {isDragging ? <UploadCloud className="h-4 w-4" /> : <ScanLine className="h-4 w-4" />}
+          {isDragging ? <UploadCloud className="h-3.5 w-3.5" /> : <ScanLine className="h-3.5 w-3.5" />}
         </span>
         <span className="truncate">{isDragging ? "Drop to scan" : "Upload Receipt"}</span>
       </div>
@@ -265,7 +265,7 @@ export function PDFScanner({ onTransactionsExtracted, onLoadingChange }: PDFScan
         contentEditable
         suppressContentEditableWarning
         data-placeholder="...or Tap here to Paste Images"
-        className="w-full text-center text-xs font-medium rounded-xl border border-dashed border-border bg-card/50 shadow-sm px-4 py-3 focus:outline-none focus:border-primary/50 focus:bg-background transition-colors cursor-text empty:before:content-[attr(data-placeholder)] before:text-muted-foreground/60 before:pointer-events-none outline-none"
+        className="w-full text-center text-[10px] font-medium rounded-lg border border-dashed border-border bg-card/40 shadow-sm px-3 py-1.5 focus:outline-none focus:border-primary/40 focus:bg-background transition-colors cursor-text empty:before:content-[attr(data-placeholder)] before:text-muted-foreground/55 before:pointer-events-none outline-none"
         onPaste={async (e) => {
           e.preventDefault();
           const file = e.clipboardData?.files?.[0] || Array.from(e.clipboardData?.items || []).find(item => item.kind === 'file')?.getAsFile();

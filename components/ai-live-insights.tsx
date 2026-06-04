@@ -163,7 +163,15 @@ export function AiLiveInsights({
   };
 
   return (
-    <div className="rounded-2xl border border-slate-800 bg-slate-900/40 backdrop-blur-md shadow-[inset_0_50px_100px_-20px_rgba(16,185,129,0.05)] hover:shadow-[inset_0_50px_100px_-20px_rgba(16,185,129,0.1)] transition-shadow duration-1000 p-3.5 sm:p-5 h-full flex flex-col relative overflow-hidden group/container">
+    <div
+      className="rounded-2xl p-3.5 sm:p-5 h-full flex flex-col relative overflow-hidden group/container transition-shadow duration-1000"
+      style={{
+        background: "linear-gradient(135deg, rgba(16,185,129,0.08) 0%, rgba(255,255,255,0.04) 50%, rgba(0,0,0,0.22) 100%)",
+        border: "1px solid rgba(255,255,255,0.10)",
+        backdropFilter: "blur(20px)",
+        boxShadow: "inset 0 1px 0 rgba(255,255,255,0.10), 0 8px 32px rgba(0,0,0,0.4)",
+      }}
+    >
 
       {/* Header */}
       <div className="flex items-center justify-between border-b border-slate-800 pb-2.5 mb-3 sm:mb-4 shrink-0 relative z-10">
@@ -204,7 +212,7 @@ export function AiLiveInsights({
           return (
             <div
               key={idx}
-              className={`p-3 sm:p-5 rounded-xl border-l-[3px] bg-slate-900/30 backdrop-blur-sm hover:bg-slate-800/20 transition-all duration-300 group/insight relative overflow-hidden ${colorClasses}`}
+              className={`p-3 sm:p-5 rounded-xl border-l-[3px] bg-slate-900/30 backdrop-blur-sm hover:bg-slate-800/20 transition-all duration-300 group/insight relative overflow-hidden shrink-0 ${colorClasses}`}
             >
               <div className="flex items-start gap-3 sm:gap-4">
                 <div className={`h-8 w-8 sm:h-11 sm:w-11 rounded-lg shrink-0 bg-white/5 border border-white/5 flex items-center justify-center text-current`}>

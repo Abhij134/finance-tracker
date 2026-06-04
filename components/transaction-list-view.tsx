@@ -1,8 +1,9 @@
 "use client";
+import React from "react";
 
 import { useState, useMemo, useTransition, useEffect, useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { PenLine, Cpu, FilterX, Search, Trash2, Loader2, CheckSquare, CalendarDays, ChevronDown } from "lucide-react";
+import { PenLine, Cpu, X, Search, Trash2, Loader2, CheckSquare, CalendarDays, ChevronDown, ChevronUp } from "lucide-react";
 import { format } from "date-fns";
 import { deleteBulkTransactions, updateBulkTransactionsCategory, updateBulkTransactionsDate } from "@/app/actions/transactions";
 import { CATEGORIES } from "@/lib/constants";
@@ -27,6 +28,11 @@ export function TransactionListView({ initialTransactions }: { initialTransactio
     const [mounted, setMounted] = useState(false);
     const [displayLimit, setDisplayLimit] = useState(10);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
+    const [expandedId, setExpandedId] = useState<string | null>(null);
+
+    const toggleExpand = (id: string) => {
+        setExpandedId(prev => prev === id ? null : id);
+    };
 
     const tableParentRef = useRef<HTMLDivElement>(null);
     const listParentRef = useRef<HTMLDivElement>(null);
@@ -142,9 +148,8 @@ export function TransactionListView({ initialTransactions }: { initialTransactio
     return (
         <div className="space-y-6">
             {/* Filters Bar */}
-            <div className="flex flex-col sm:flex-row flex-wrap gap-4 items-end bg-card p-4 rounded-xl border border-border shadow-sm">
-                <div className="flex-1 min-w-[200px] w-full space-y-1.5">
-                    <label className="text-sm font-medium text-foreground">Search</label>
+            <div className="flex flex-col sm:flex-row flex-wrap gap-2 items-end">
+                <div className="flex-1 min-w-[200px] w-full">
                     <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <Search className="h-4 w-4 text-muted-foreground" />
@@ -154,82 +159,94 @@ export function TransactionListView({ initialTransactions }: { initialTransactio
                             placeholder="Search merchants or categories..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-9 pr-4 py-2 bg-background border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                            className="w-full pl-9 pr-9 py-2.5 bg-card border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
                         />
+                        {searchQuery && (
+                            <button
+                                onClick={() => setSearchQuery("")}
+                                className="absolute inset-y-0 right-0 pr-3 flex items-center text-muted-foreground hover:text-foreground transition-colors"
+                                aria-label="Clear search"
+                            >
+                                <X className="h-3.5 w-3.5" />
+                            </button>
+                        )}
                     </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2 w-full sm:w-auto sm:flex sm:gap-4">
-                    <div className="space-y-1 mt-1 sm:mt-0">
-                        <label className="text-xs text-muted-foreground mb-1 block">From</label>
-                        <input
-                            type="date"
-                            value={startDate}
-                            onChange={(e) => setStartDate(e.target.value)}
-                            className="w-full px-3 py-2 bg-background border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                        />
+                <div className="flex gap-2 w-full sm:w-auto items-end">
+                    <div className="flex gap-2">
+                        <div className="space-y-0">
+                            <label className="text-xs text-muted-foreground mb-0.5 block">From</label>
+                            <input
+                                type="date"
+                                value={startDate}
+                                onChange={(e) => setStartDate(e.target.value)}
+                                className="px-3 py-2.5 bg-card border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                            />
+                        </div>
+
+                        <div className="space-y-0">
+                            <label className="text-xs text-muted-foreground mb-0.5 block">To</label>
+                            <input
+                                type="date"
+                                value={endDate}
+                                onChange={(e) => setEndDate(e.target.value)}
+                                className="px-3 py-2.5 bg-card border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                            />
+                        </div>
                     </div>
 
-                    <div className="space-y-1 mt-1 sm:mt-0">
-                        <label className="text-xs text-muted-foreground mb-1 block">To</label>
-                        <input
-                            type="date"
-                            value={endDate}
-                            onChange={(e) => setEndDate(e.target.value)}
-                            className="w-full px-3 py-2 bg-background border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                        />
+                    {/* Select Transaction Button area */}
+                    <div className="flex items-end gap-2">
+                        {isSelectionMode && (
+                            <button
+                                onClick={handleSelectAll}
+                                className="px-3 py-2.5 flex items-center gap-1.5 border rounded-xl text-sm font-medium transition-colors bg-card hover:bg-muted text-foreground border-border whitespace-nowrap"
+                            >
+                                {filteredTransactions.length > 0 && selectedIds.size === filteredTransactions.length ? "Deselect All" : "Select All"}
+                            </button>
+                        )}
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={toggleSelectionMode}
+                                className={`px-3 py-2.5 flex items-center gap-1.5 border rounded-xl text-sm font-medium transition-colors whitespace-nowrap ${
+                                    isSelectionMode
+                                        ? "bg-emerald-500/20 text-emerald-500 border-emerald-500/30 hover:bg-emerald-500/30"
+                                        : "bg-card text-foreground border-border hover:bg-muted"
+                                }`}
+                            >
+                                <CheckSquare className="h-4 w-4" />
+                                Select Transactions
+                            </button>
+                            {isSelectionMode && (
+                                <button
+                                    onClick={toggleSelectionMode}
+                                    className="text-xs text-muted-foreground hover:text-foreground transition-colors px-1 py-1"
+                                >
+                                    Cancel
+                                </button>
+                            )}
+                        </div>
                     </div>
-                </div>
-
-                {(startDate || endDate || searchQuery) && (
-                    <button
-                        onClick={clearFilters}
-                        className="px-4 py-2 flex items-center gap-2 bg-muted hover:bg-muted/80 text-foreground border border-border rounded-md text-sm font-medium transition-colors h-[38px] w-full sm:w-auto justify-center"
-                    >
-                        <FilterX className="h-4 w-4" />
-                        Clear
-                    </button>
-                )}
-
-                {/* Select Transaction Button area */}
-                <div className="flex items-center gap-2 w-full sm:w-auto">
-                    {isSelectionMode && (
-                        <button
-                            onClick={handleSelectAll}
-                            className="px-4 py-2 flex items-center gap-2 border rounded-md text-sm font-medium transition-colors h-[38px] bg-muted hover:bg-muted/80 text-foreground border-border w-full justify-center"
-                        >
-                            {filteredTransactions.length > 0 && selectedIds.size === filteredTransactions.length ? "Deselect All" : "Select All"}
-                        </button>
-                    )}
-                    <button
-                        onClick={toggleSelectionMode}
-                        className={`px-4 py-2 flex items-center gap-2 border rounded-md text-sm font-medium transition-colors h-[38px] w-full sm:w-auto justify-center ${isSelectionMode
-                            ? "bg-emerald-500/20 text-emerald-500 border-emerald-500/30 hover:bg-emerald-500/30"
-                            : "bg-background text-foreground border-border hover:bg-muted"
-                            }`}
-                    >
-                        <CheckSquare className="h-4 w-4" />
-                        {isSelectionMode ? "Cancel Selection" : "Select Transactions"}
-                    </button>
                 </div>
             </div>
 
             <div ref={tableParentRef} className="hidden sm:block pr-2 rounded-xl border border-border bg-card text-card-foreground shadow-md relative w-full overflow-y-auto" style={{ maxHeight: "70vh" }}>
                 <table className="min-w-full border-separate border-spacing-0 desktop-table">
-                    <thead className="text-left text-sm bg-muted/30 sticky top-0 z-10">
-                        <tr className="text-left text-sm bg-muted/30">
+                    <thead className="text-left text-sm sticky top-0 z-20">
+                        <tr>
                             {isSelectionMode && (
-                                <th className="sticky left-0 bg-card/95 backdrop-blur px-4 py-3 border-b border-border font-semibold w-12 text-center align-middle" />
+                                <th className="sticky top-0 left-0 bg-[#0c101b] backdrop-blur px-4 py-3 border-b border-border font-semibold w-12 text-center align-middle z-30" />
                             )}
-                            <th className="px-4 py-3 border-b border-border font-semibold align-middle">Date</th>
-                            <th className="px-4 py-3 border-b border-border font-semibold align-middle">Merchant</th>
-                            <th className="px-4 py-3 border-b border-border font-semibold align-middle">
+                            <th className="sticky top-0 bg-[#0c101b] backdrop-blur px-4 py-3 border-b border-border font-semibold align-middle z-20 w-[180px] whitespace-nowrap">Date</th>
+                            <th className="sticky top-0 bg-[#0c101b] backdrop-blur px-4 py-3 border-b border-border font-semibold align-middle z-20 min-w-[200px]">Merchant</th>
+                            <th className="sticky top-0 bg-[#0c101b] backdrop-blur px-4 py-3 border-b border-border font-semibold align-middle z-20 w-[140px] whitespace-nowrap">
                                 <span className="pl-1.5">Category</span>
                             </th>
-                            <th className="px-4 py-3 border-b border-border font-semibold align-middle">
+                            <th className="sticky top-0 bg-[#0c101b] backdrop-blur px-4 py-3 border-b border-border font-semibold align-middle z-20 w-[120px] whitespace-nowrap">
                                 <span className="pl-1.5">Method</span>
                             </th>
-                            <th className="px-4 py-3 border-b border-border text-right font-semibold align-middle">Amount</th>
+                            <th className="sticky top-0 bg-[#0c101b] backdrop-blur px-4 py-3 border-b border-border text-right font-semibold align-middle z-20 w-[110px] whitespace-nowrap">Amount</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -247,39 +264,91 @@ export function TransactionListView({ initialTransactions }: { initialTransactio
                                 {rowVirtualizer.getVirtualItems().map((virtualRow) => {
                                     const tx = filteredTransactions[virtualRow.index];
                                     const isSelected = selectedIds.has(tx.id);
+                                    const isExpanded = expandedId === tx.id;
                                     return (
-                                        <tr key={tx.id} data-index={virtualRow.index} ref={rowVirtualizer.measureElement} className={`text-sm transition-colors ${isSelected ? "bg-emerald-500/10" : "hover:bg-muted/50"}`}>
-                                            {isSelectionMode && (
-                                                <td className={`sticky left-0 border-b border-border px-4 py-3 text-center align-middle ${isSelected ? "bg-emerald-950/20" : "bg-card/95"} backdrop-blur`}>
-                                                    <div className="flex items-center justify-center">
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={isSelected}
-                                                            onChange={() => toggleSelect(tx.id)}
-                                                            className="rounded border-border accent-emerald-500 h-4 w-4 cursor-pointer"
-                                                        />
+                                        <React.Fragment key={tx.id}>
+                                            <tr
+                                                data-index={virtualRow.index}
+                                                ref={rowVirtualizer.measureElement}
+                                                className={`text-sm transition-colors group ${isSelected ? "bg-emerald-500/10" : "hover:bg-muted/50"}`}
+                                            >
+                                                {isSelectionMode && (
+                                                    <td className={`sticky left-0 border-b border-border px-4 py-3 text-center align-middle ${isSelected ? "bg-emerald-950/20" : "bg-[#0c101b]"} backdrop-blur z-10`}>
+                                                        <div className="flex items-center justify-center">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={isSelected}
+                                                                onChange={() => toggleSelect(tx.id)}
+                                                                className="rounded border-border accent-emerald-500 h-4 w-4 cursor-pointer"
+                                                            />
+                                                        </div>
+                                                    </td>
+                                                )}
+                                                <td className="px-4 py-3 border-b border-border whitespace-nowrap align-middle w-[180px]">
+                                                    {mounted ? format(new Date(tx.date), 'dd MMM yyyy, hh:mm a') : '...'}
+                                                </td>
+                                                <td className="px-4 py-3 border-b border-border font-medium align-middle min-w-[200px]">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="truncate max-w-[240px]" title={tx.merchant}>{tx.merchant}</span>
+                                                        <button
+                                                            onClick={() => toggleExpand(tx.id)}
+                                                            className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-white/10 text-muted-foreground hover:text-foreground"
+                                                            title={isExpanded ? "Collapse" : "Expand details"}
+                                                        >
+                                                            {isExpanded
+                                                                ? <ChevronUp className="h-3.5 w-3.5" />
+                                                                : <ChevronDown className="h-3.5 w-3.5" />
+                                                            }
+                                                        </button>
                                                     </div>
                                                 </td>
+                                                <td className="px-4 py-3 border-b border-border align-middle w-[140px] whitespace-nowrap">
+                                                    <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold tracking-wide text-white whitespace-nowrap ${tx.category.color}`}>
+                                                        {tx.category.label}
+                                                    </span>
+                                                </td>
+                                                <td className="px-4 py-3 border-b border-border align-middle w-[120px] whitespace-nowrap">
+                                                    <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-2.5 py-1 text-[11px] font-medium text-muted-foreground whitespace-nowrap">
+                                                        {tx.method === "manual" ? <PenLine className="h-3 w-3" /> : <Cpu className="h-3 w-3 text-primary" />}
+                                                        <span>{tx.method === "manual" ? "Manual" : "AI Scanned"}</span>
+                                                    </span>
+                                                </td>
+                                                <td className={`px-4 py-3 border-b border-border text-right font-semibold align-middle w-[110px] whitespace-nowrap ${tx.amount < 0 ? "text-foreground" : "text-emerald-500"}`}>
+                                                    {formatAmount(tx.amount)}
+                                                </td>
+                                            </tr>
+                                            {isExpanded && (
+                                                <tr className="bg-muted/20">
+                                                    <td colSpan={isSelectionMode ? 6 : 5} className="px-6 py-4 border-b border-border">
+                                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
+                                                            <div>
+                                                                <p className="text-[11px] text-muted-foreground uppercase tracking-wider mb-1">Merchant</p>
+                                                                <p className="font-medium text-foreground">{tx.merchant}</p>
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-[11px] text-muted-foreground uppercase tracking-wider mb-1">Date &amp; Time</p>
+                                                                <p className="font-medium text-foreground">{mounted ? format(new Date(tx.date), 'dd MMM yyyy, hh:mm a') : '—'}</p>
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-[11px] text-muted-foreground uppercase tracking-wider mb-1">Category</p>
+                                                                <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold text-white ${tx.category.color}`}>{tx.category.label}</span>
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-[11px] text-muted-foreground uppercase tracking-wider mb-1">Amount</p>
+                                                                <p className={`font-bold text-base ${tx.amount < 0 ? 'text-foreground' : 'text-emerald-500'}`}>{formatAmount(tx.amount)}</p>
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-[11px] text-muted-foreground uppercase tracking-wider mb-1">Entry Method</p>
+                                                                <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                                                                    {tx.method === 'manual' ? <PenLine className="h-3 w-3" /> : <Cpu className="h-3 w-3 text-primary" />}
+                                                                    {tx.method === 'manual' ? 'Manual Entry' : 'AI Scanned'}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
                                             )}
-                                            <td className="px-4 py-3 border-b border-border whitespace-nowrap align-middle">
-                                                {mounted ? format(new Date(tx.date), 'dd MMM yyyy, hh:mm a') : '...'}
-                                            </td>
-                                            <td className="px-4 py-3 border-b border-border font-medium align-middle">{tx.merchant}</td>
-                                            <td className="px-4 py-3 border-b border-border align-middle">
-                                                <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold tracking-wide text-white ${tx.category.color}`}>
-                                                    {tx.category.label}
-                                                </span>
-                                            </td>
-                                            <td className="px-4 py-3 border-b border-border align-middle">
-                                                <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
-                                                    {tx.method === "manual" ? <PenLine className="h-3 w-3" /> : <Cpu className="h-3 w-3 text-primary" />}
-                                                    <span>{tx.method === "manual" ? "Manual" : "AI Scanned"}</span>
-                                                </span>
-                                            </td>
-                                            <td className={`px-4 py-3 border-b border-border text-right font-semibold align-middle ${tx.amount < 0 ? "text-foreground" : "text-emerald-500"}`}>
-                                                {formatAmount(tx.amount)}
-                                            </td>
-                                        </tr>
+                                        </React.Fragment>
                                     );
                                 })}
                                 {rowVirtualizer.getVirtualItems().length > 0 && rowVirtualizer.getTotalSize() - (rowVirtualizer.getVirtualItems()[rowVirtualizer.getVirtualItems().length - 1]?.end || 0) > 0 && (
@@ -317,41 +386,81 @@ export function TransactionListView({ initialTransactions }: { initialTransactio
                                     className="pb-3"
                                 >
                                     <div
-                                        onClick={() => isSelectionMode && toggleSelect(tx.id)}
-                                        className={`flex items-center justify-between px-4 py-4 rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm transition-all ${isSelected ? "ring-2 ring-emerald-500 bg-emerald-500/10 border-emerald-500/30" : "active:scale-[0.98]"}`}
+                                        onClick={() => isSelectionMode ? toggleSelect(tx.id) : toggleExpand(tx.id)}
+                                        className={`rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm transition-all cursor-pointer ${
+                                            isSelected ? "ring-2 ring-emerald-500 bg-emerald-500/10 border-emerald-500/30" : "active:scale-[0.98]"
+                                        }`}
                                     >
-                                        <div className="flex items-center gap-3 min-w-0 flex-1">
-                                            {isSelectionMode && (
-                                                <input
-                                                    type="checkbox"
-                                                    checked={isSelected}
-                                                    onChange={() => toggleSelect(tx.id)}
-                                                    className="rounded border-border accent-emerald-500 h-5 w-5 shrink-0"
-                                                />
-                                            )}
-                                            <div className="flex flex-col gap-1 min-w-0 flex-1">
-                                                <span className="text-sm font-semibold text-foreground truncate">
-                                                    {tx.merchant}
-                                                </span>
-                                                <div className="flex items-center gap-2 flex-wrap">
-                                                    <span className="text-[11px] text-muted-foreground whitespace-nowrap">
-                                                        {mounted ? format(new Date(tx.date), 'dd MMM yyyy') : '...'}
+                                        {/* Summary row */}
+                                        <div className="flex items-center justify-between px-4 py-4">
+                                            <div className="flex items-center gap-3 min-w-0 flex-1">
+                                                {isSelectionMode && (
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={isSelected}
+                                                        onChange={() => toggleSelect(tx.id)}
+                                                        className="rounded border-border accent-emerald-500 h-5 w-5 shrink-0"
+                                                    />
+                                                )}
+                                                <div className="flex flex-col gap-1 min-w-0 flex-1">
+                                                    <span className="text-sm font-semibold text-foreground truncate">
+                                                        {tx.merchant}
                                                     </span>
-                                                    <span className={`inline-flex items-center rounded-full px-1.5 py-0.5 text-[9px] font-bold text-white uppercase tracking-tighter ${tx.category.color}`}>
-                                                        {tx.category.label}
+                                                    <div className="flex items-center gap-2 flex-wrap">
+                                                        <span className="text-[11px] text-muted-foreground whitespace-nowrap">
+                                                            {mounted ? format(new Date(tx.date), 'dd MMM yyyy') : '...'}
+                                                        </span>
+                                                        <span className={`inline-flex items-center rounded-full px-1.5 py-0.5 text-[9px] font-bold text-white uppercase tracking-tighter ${tx.category.color}`}>
+                                                            {tx.category.label}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex items-center gap-2 shrink-0 ml-4">
+                                                <div className="flex flex-col items-end gap-1">
+                                                    <span className={`text-sm font-bold ${tx.amount < 0 ? "text-red-400" : "text-emerald-400"}`}>
+                                                        {formatAmount(tx.amount)}
                                                     </span>
+                                                    <span className="text-[10px] text-muted-foreground bg-background/50 px-1.5 py-0.5 rounded border border-border/50">
+                                                        {tx.method === "manual" ? "Manual" : "AI"}
+                                                    </span>
+                                                </div>
+                                                <div className="text-muted-foreground/50">
+                                                    {expandedId === tx.id
+                                                        ? <ChevronUp className="h-4 w-4" />
+                                                        : <ChevronDown className="h-4 w-4" />
+                                                    }
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <div className="flex flex-col items-end gap-1 shrink-0 ml-4">
-                                            <span className={`text-sm font-bold ${tx.amount < 0 ? "text-red-400" : "text-emerald-400"}`}>
-                                                {formatAmount(tx.amount)}
-                                            </span>
-                                            <span className="text-[10px] text-muted-foreground bg-background/50 px-1.5 py-0.5 rounded border border-border/50">
-                                                {tx.method === "manual" ? "Manual" : "AI"}
-                                            </span>
-                                        </div>
+                                        {/* Expanded detail panel */}
+                                        {expandedId === tx.id && (
+                                            <div className="px-4 pb-4 pt-0 border-t border-border/50">
+                                                <div className="grid grid-cols-2 gap-3 mt-3">
+                                                    <div>
+                                                        <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">Full Merchant</p>
+                                                        <p className="text-sm font-medium text-foreground">{tx.merchant}</p>
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">Date & Time</p>
+                                                        <p className="text-sm font-medium text-foreground">{mounted ? format(new Date(tx.date), 'dd MMM yy, hh:mm a') : '—'}</p>
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">Category</p>
+                                                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold text-white ${tx.category.color}`}>{tx.category.label}</span>
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">Entry</p>
+                                                        <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+                                                            {tx.method === 'manual' ? <PenLine className="h-3 w-3" /> : <Cpu className="h-3 w-3 text-primary" />}
+                                                            {tx.method === 'manual' ? 'Manual Entry' : 'AI Scanned'}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             );

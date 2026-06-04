@@ -44,8 +44,8 @@ function AnimatedModalBackdrop({ onClose, children, blur }: { onClose: () => voi
                 position: "fixed", inset: 0, zIndex: 99999,
                 display: "flex", alignItems: "center", justifyContent: "center",
                 padding: 16,
-                background: blur ? "rgba(0,0,0,0.85)" : "rgba(0,0,0,0.5)",
-                backdropFilter: blur ? "blur(16px)" : "blur(6px)",
+                background: blur ? "rgba(0,0,0,0.25)" : "rgba(0,0,0,0.15)",
+                backdropFilter: blur ? "blur(4px)" : "blur(2px)",
             }}
         >
             <motion.div
@@ -400,8 +400,8 @@ function SignOutModal({ onClose, onConfirm }: { onClose: () => void; onConfirm: 
             <div style={{ padding: 28, textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
                 <div style={{
                     height: 52, width: 52, borderRadius: "50%",
-                    background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.15)",
-                    display: "flex", alignItems: "center", justifyContent: "center", color: "#f87171",
+                    background: "rgba(161, 141, 141, 0.1)", border: "1px solid rgba(214, 195, 195, 0.15)",
+                    display: "flex", alignItems: "center", justifyContent: "center", color: "#c3ababff",
                 }}>
                     <LogOut size={22} />
                 </div>
@@ -438,7 +438,7 @@ function DropdownPortal({ open, rect, children }: { open: boolean; rect: DOMRect
             exit={{ opacity: 0, scale: 0.96, y: -5 }}
             transition={{ duration: 0.15, ease: "easeOut" }}
             style={{
-                position: "absolute",
+                position: "fixed",
                 top, left,
                 width: maxWidth,
                 minWidth,
@@ -509,8 +509,13 @@ export function UserDropdown({
             }
         };
         document.addEventListener("mousedown", handler);
+        window.addEventListener("scroll", updateRect, true);
         window.addEventListener("resize", updateRect);
-        return () => { document.removeEventListener("mousedown", handler); window.removeEventListener("resize", updateRect); };
+        return () => {
+            document.removeEventListener("mousedown", handler);
+            window.removeEventListener("scroll", updateRect, true);
+            window.removeEventListener("resize", updateRect);
+        };
     }, [updateRect]);
 
     const openModal = (type: ModalType) => { setOpen(false); setModal(type); };

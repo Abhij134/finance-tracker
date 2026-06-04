@@ -226,7 +226,7 @@ export function StatCards() {
   return (
     <div className="space-y-3">
       {/* Date Filter Bar */}
-      <div className="relative z-20 flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card/80 px-3 py-2.5 shadow-sm">
+      <div className="relative z-20 flex flex-wrap items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-md px-3 py-2.5 shadow-sm">
         <Calendar className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
         <span className="text-xs font-medium text-muted-foreground">Period:</span>
         <div className="flex items-center gap-1 flex-wrap">
@@ -293,7 +293,7 @@ export function StatCards() {
         />
 
         {/* Budget Card */}
-        <div className="relative bg-slate-900/50 backdrop-blur-md border border-slate-700/50 rounded-2xl p-3 sm:p-4 flex flex-col overflow-hidden group shadow-[inset_0_50px_100px_-20px_rgba(139,92,246,0.15)]">
+        <div className="relative rounded-2xl p-3 sm:p-4 flex flex-col overflow-hidden group" style={{ background: "linear-gradient(135deg, rgba(139,92,246,0.12) 0%, rgba(255,255,255,0.04) 60%, rgba(0,0,0,0.2) 100%)", border: "1px solid rgba(255,255,255,0.10)", backdropFilter: "blur(16px)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.10), 0 8px 32px rgba(0,0,0,0.4)" }}>
           <div className="flex justify-between items-start relative z-10 mb-2">
             <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground leading-tight">
               {selectedBudgetCategory === "OVERALL" ? "Budget Used" : `${selectedBudgetCategory} Budget`}
@@ -378,7 +378,15 @@ const StatCard = React.memo(function StatCard({ title, value, sub, icon, color, 
   data: { val: number; label: string }[]; index: number;
 }) {
   return (
-    <div className="relative bg-slate-900/50 backdrop-blur-md border border-slate-700/50 rounded-2xl p-3 sm:p-4 flex flex-col overflow-hidden" style={{ boxShadow: `inset 0 40px 80px -20px ${color}25` }}>
+    <div
+      className="relative rounded-2xl p-3 sm:p-4 flex flex-col overflow-hidden"
+      style={{
+        background: `linear-gradient(135deg, ${color}18 0%, rgba(255,255,255,0.04) 50%, rgba(0,0,0,0.25) 100%)`,
+        border: "1px solid rgba(255,255,255,0.10)",
+        backdropFilter: "blur(16px)",
+        boxShadow: `inset 0 1px 0 rgba(255,255,255,0.10), inset 0 -1px 0 rgba(0,0,0,0.2), 0 8px 32px rgba(0,0,0,0.4), inset 0 40px 80px -20px ${color}15`,
+      }}
+    >
       <div className="flex justify-between items-start relative z-10">
         <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground leading-tight">{title}</p>
         <div className="p-1 rounded-md shrink-0" style={{ backgroundColor: `${color}18` }}>

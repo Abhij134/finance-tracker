@@ -217,8 +217,7 @@ export default function AlertsPage() {
               })}
             </div>
           </div>
-        </section>
-      </div >
+        </section>      </div >
     </main >
   );
 }

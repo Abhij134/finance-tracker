@@ -43,15 +43,15 @@ export function ActionCenter() {
 
   return (
     <>
-      {/* ── Compact 2-column action row ───────────────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      {/* Stacking actions: Add Transaction on top, Upload Receipt below it */}
+      <div className="flex flex-col gap-2.5">
 
         {/* Add Transaction — compact button card */}
         <button
           onClick={() => setIsManualOpen(true)}
           disabled={isScanning}
           type="button"
-          className="flex items-center gap-2.5 rounded-xl border border-border bg-card px-4 py-3 text-sm font-semibold text-foreground shadow-sm hover:bg-muted hover:-translate-y-0.5 hover:shadow-md transition-all disabled:opacity-50 w-full"
+          className="flex items-center gap-2.5 rounded-xl border border-white/10 bg-white/[0.05] backdrop-blur-md px-4 py-3 text-sm font-semibold text-foreground shadow-sm hover:bg-white/[0.09] hover:-translate-y-0.5 hover:shadow-md transition-all disabled:opacity-50 w-full"
         >
           <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
             <Plus className="h-4 w-4" />

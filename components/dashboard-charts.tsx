@@ -96,14 +96,14 @@ export function DashboardCharts() {
             {/* ── Charts Grid ─────────────────────────────────────────────── */}
             <div className="grid grid-cols-1 gap-6 relative z-10 items-stretch">
                 {/* Spending Breakdown (Donut Chart) */}
-                <div className="bg-slate-900/50 backdrop-blur-md border border-emerald-500/20 shadow-[0_8px_30px_rgb(16,185,129,0.05)] rounded-2xl flex flex-col w-full h-full min-h-[350px]">
+                <div className="bg-slate-900/50 backdrop-blur-md border border-emerald-500/20 shadow-[0_8px_30px_rgb(16,185,129,0.05)] rounded-2xl flex flex-col w-full">
                     <div className="p-6 border-b border-border shrink-0">
-                        <h2 className="text-lg font-semibold">Spending Proportion</h2>
-                        <p className="text-sm text-muted-foreground mt-0.5">
-                            Relative proportion of total expenses by category.
+                        <h2 className="text-lg font-semibold text-zinc-100">Spending Proportion</h2>
+                        <p className="text-sm text-zinc-500 mt-0.5">
+                            Relative proportion of total expenses by category. Hover a slice to focus.
                         </p>
                     </div>
-                    <div className="p-6 flex-1 flex items-center justify-center">
+                    <div className="p-6 flex-1">
                         <CategoryDonutChart filteredTransactions={filtered} />
                     </div>
                 </div>

@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { LayoutDashboard, BarChart3, Clock, Mail } from "lucide-react";
 
 const navItems = [
-    { name: "Dashboard", href: "/", icon: LayoutDashboard },
+    { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { name: "Charts", href: "/dashboard/budget", icon: BarChart3 },
     { name: "Transactions", href: "/transactions", icon: Clock },
     { name: "Alerts", href: "/alerts", icon: Mail },
@@ -15,9 +15,9 @@ export function BottomNav() {
     const pathname = usePathname();
 
     return (
-        <nav className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around bg-[#0B0F19]/95 backdrop-blur-xl border-t border-border h-14 pb-[env(safe-area-inset-bottom)] box-content lg:hidden">
+        <nav className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around bg-black/40 backdrop-blur-xl border-t border-white/10 h-14 pb-[env(safe-area-inset-bottom)] box-content lg:hidden">
             {navItems.map((item) => {
-                const isActive = item.href === "/" ? pathname === item.href : pathname.startsWith(item.href);
+                const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
                 return (
                     <Link
                         key={item.name}

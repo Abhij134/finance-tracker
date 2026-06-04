@@ -12,7 +12,7 @@ import { TrendingUp, PieChart as PieIcon } from "lucide-react";
 
 const SafePie = Pie as any;
 
-// Category -> color mapping — matches FinanceNeo CATEGORIES constants
+// Category -> color mapping
 const CAT_COLORS: Record<string, string> = {
   UPI: "#3B82F6",
   "UPI Transfer": "#06B6D4",
@@ -21,32 +21,21 @@ const CAT_COLORS: Record<string, string> = {
   Entertainment: "#8B5CF6",
   Shopping: "#EC4899",
   Transport: "#F97316",
-  "Fuel & Auto": "#B45309",
+  "Fuel & Auto": "#F97316",
   Health: "#06B6D4",
-  "Health & Medical": "#14B8A6",
   Utilities: "#EAB308",
-  "Bills & Utilities": "#6B7280",
-  Groceries: "#84CC16",
-  Travel: "#0EA5E9",
-  Education: "#3B82F6",
-  Income: "#10B981",
-  Investment: "#6366F1",
-  Subscriptions: "#8B5CF6",
-  "Rent & Housing": "#E11D48",
   Other: "#64748B",
 };
 
 const FALLBACK_PALETTE = [
-  "#10B981",
   "#3B82F6",
+  "#10B981",
   "#EC4899",
   "#F97316",
   "#8B5CF6",
   "#EAB308",
   "#06B6D4",
   "#64748B",
-  "#84CC16",
-  "#E11D48",
 ];
 
 const fmt = (n: number) =>
@@ -68,7 +57,7 @@ interface CategoryDonutChartProps {
   filteredTransactions: any[];
 }
 
-// Renders the "exploded" / emphasized active segment with a glowing outer ring
+// Renders the "exploded" / emphasized active segment with a clean outer ring
 const renderActiveShape = (props: any) => {
   const {
     cx,
@@ -91,7 +80,6 @@ const renderActiveShape = (props: any) => {
         endAngle={endAngle}
         fill={fill}
       />
-      {/* Outer accent ring */}
       <Sector
         cx={cx}
         cy={cy}
@@ -106,12 +94,20 @@ const renderActiveShape = (props: any) => {
   );
 };
 
-// External labels — always visible, hidden for tiny slices
+// External labels — always visible (no hover required)
 const renderOuterLabel = (props: any) => {
   const RADIAN = Math.PI / 180;
-  const { cx, cy, midAngle, outerRadius, percent, name, fill } = props;
+  const {
+    cx,
+    cy,
+    midAngle,
+    outerRadius,
+    percent,
+    name,
+    fill,
+  } = props;
 
-  if (!percent || percent < 0.04) return null;
+  if (!percent || percent < 0.04) return null; // hide tiny slices
 
   const sin = Math.sin(-RADIAN * midAngle);
   const cos = Math.cos(-RADIAN * midAngle);
@@ -130,14 +126,14 @@ const renderOuterLabel = (props: any) => {
         stroke={fill}
         strokeWidth={1.25}
         fill="none"
-        opacity={0.6}
+        opacity={0.7}
       />
       <circle cx={ex} cy={ey} r={2.5} fill={fill} />
       <text
         x={ex + (cos >= 0 ? 6 : -6)}
         y={ey - 4}
         textAnchor={textAnchor}
-        fill="#f0f4f8"
+        fill="hsl(var(--foreground))"
         fontSize={11}
         fontWeight={600}
       >
@@ -147,7 +143,7 @@ const renderOuterLabel = (props: any) => {
         x={ex + (cos >= 0 ? 6 : -6)}
         y={ey + 10}
         textAnchor={textAnchor}
-        fill="#94a3b8"
+        fill="hsl(var(--muted-foreground))"
         fontSize={10}
       >
         {(percent * 100).toFixed(0)}%
@@ -174,8 +170,7 @@ export function CategoryDonutChart({
         name,
         value: (v as any).value as number,
         count: (v as any).count as number,
-        color:
-          CAT_COLORS[name] || FALLBACK_PALETTE[i % FALLBACK_PALETTE.length],
+        color: CAT_COLORS[name] || FALLBACK_PALETTE[i % FALLBACK_PALETTE.length],
       }))
       .sort((a, b) => b.value - a.value);
 
@@ -185,13 +180,12 @@ export function CategoryDonutChart({
 
   const [activeIndex, setActiveIndex] = useState(0);
 
-  // Empty state
   if (filteredTransactions.length === 0 || data.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-full flex-1 w-full text-zinc-500 border border-dashed border-slate-700/50 rounded-xl bg-slate-900/20 p-6 min-h-[350px]">
-        <PieIcon className="w-12 h-12 mb-4 opacity-20 text-zinc-600" />
-        <p className="text-sm font-medium">No expense data for this period.</p>
-        <p className="text-xs opacity-60 text-center max-w-xs mt-1">
+      <div className="flex flex-col items-center justify-center h-full flex-1 w-full text-muted-foreground border border-dashed border-border/50 rounded-xl bg-muted/10 p-6 min-h-[350px]">
+        <PieIcon className="w-12 h-12 mb-4 opacity-20" />
+        <p>No expense data for this period.</p>
+        <p className="text-sm opacity-70 text-center max-w-xs mt-1">
           Select a different date range or add transactions.
         </p>
       </div>
@@ -203,7 +197,7 @@ export function CategoryDonutChart({
 
   return (
     <div className="w-full">
-      {/* Chart with center summary overlay */}
+      {/* Chart with center summary */}
       <div className="relative" style={{ width: "100%", height: 360 }}>
         <ResponsiveContainer>
           <PieChart>
@@ -211,14 +205,14 @@ export function CategoryDonutChart({
               {data.map((d, i) => (
                 <linearGradient
                   key={`grad-${i}`}
-                  id={`donut-grad-${i}`}
+                  id={`grad-${i}`}
                   x1="0"
                   y1="0"
                   x2="1"
                   y2="1"
                 >
                   <stop offset="0%" stopColor={d.color} stopOpacity={1} />
-                  <stop offset="100%" stopColor={d.color} stopOpacity={0.7} />
+                  <stop offset="100%" stopColor={d.color} stopOpacity={0.72} />
                 </linearGradient>
               ))}
             </defs>
@@ -229,7 +223,7 @@ export function CategoryDonutChart({
               innerRadius={86}
               outerRadius={120}
               paddingAngle={2}
-              stroke="#0f172a"
+              stroke="hsl(var(--card))"
               strokeWidth={2}
               dataKey="value"
               activeIndex={activeIndex}
@@ -239,12 +233,11 @@ export function CategoryDonutChart({
               labelLine={false}
               isAnimationActive
               animationDuration={650}
-              animationEasing="ease-out"
             >
               {data.map((entry, index) => (
                 <Cell
                   key={`cell-${index}`}
-                  fill={`url(#donut-grad-${index})`}
+                  fill={`url(#grad-${index})`}
                   style={{
                     filter:
                       index === activeIndex
@@ -259,9 +252,9 @@ export function CategoryDonutChart({
           </PieChart>
         </ResponsiveContainer>
 
-        {/* Center overlay — active category summary */}
+        {/* Center overlay — always-visible context */}
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-[10px] uppercase tracking-[0.18em] text-zinc-500 font-medium">
+          <span className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
             {active.name}
           </span>
           <span
@@ -270,31 +263,31 @@ export function CategoryDonutChart({
           >
             {compactFmt(active.value)}
           </span>
-          <span className="mt-0.5 text-[11px] text-zinc-500">
+          <span className="mt-0.5 text-[11px] text-muted-foreground">
             {activePct.toFixed(1)}% · {active.count} txn
             {active.count !== 1 ? "s" : ""}
           </span>
-          <div className="mt-2 h-px w-10 bg-slate-700" />
-          <span className="mt-2 text-[10px] uppercase tracking-wider text-zinc-500">
+          <div className="mt-2 h-px w-10 bg-border/60" />
+          <span className="mt-2 text-[10px] uppercase tracking-wider text-muted-foreground">
             Total
           </span>
-          <span className="text-sm font-semibold text-zinc-100 tabular-nums">
+          <span className="text-sm font-semibold text-foreground tabular-nums">
             {fmt(total)}
           </span>
         </div>
       </div>
 
-      {/* Top category highlight */}
-      <div className="mt-2 flex items-center justify-center gap-2 text-xs text-zinc-500">
+      {/* Top category highlight chip */}
+      <div className="mt-4 flex items-center justify-center gap-2 text-xs text-muted-foreground">
         <TrendingUp className="h-3.5 w-3.5" style={{ color: top.color }} />
         <span>
           Top spend:{" "}
-          <span className="font-semibold text-zinc-200">{top.name}</span> ·{" "}
+          <span className="font-semibold text-foreground">{top.name}</span> ·{" "}
           {((top.value / total) * 100).toFixed(0)}% of total
         </span>
       </div>
 
-      {/* Interactive legend with progress bars */}
+      {/* Interactive legend with bars — visible context per category */}
       <div className="mt-4 grid gap-2">
         {data.map((d, i) => {
           const pct = total ? (d.value / total) * 100 : 0;
@@ -305,46 +298,46 @@ export function CategoryDonutChart({
               onMouseEnter={() => setActiveIndex(i)}
               onFocus={() => setActiveIndex(i)}
               onClick={() => setActiveIndex(i)}
-              className={`group w-full rounded-xl border px-3 py-2 text-left transition-all duration-200 ${
+              className={`group w-full rounded-lg border px-3 py-2 text-left transition-all ${
                 isActive
-                  ? "border-slate-600 bg-slate-800/60"
-                  : "border-slate-800/40 bg-transparent hover:bg-slate-800/30 hover:border-slate-700/60"
+                  ? "border-border bg-muted/40"
+                  : "border-border/40 bg-transparent hover:bg-muted/20"
               }`}
             >
               <div className="flex items-center justify-between gap-3">
                 <div className="flex min-w-0 items-center gap-2.5">
                   <span
-                    className="h-2.5 w-2.5 shrink-0 rounded-full transition-all duration-200"
+                    className="h-2.5 w-2.5 shrink-0 rounded-full"
                     style={{
                       background: d.color,
-                      boxShadow: isActive ? `0 0 8px ${d.color}99` : "none",
+                      boxShadow: isActive ? `0 0 8px ${d.color}` : "none",
                     }}
                   />
                   <div className="min-w-0">
-                    <div className="truncate text-sm font-medium text-zinc-200">
+                    <div className="truncate text-sm font-medium text-foreground">
                       {d.name}
                     </div>
-                    <div className="text-[11px] text-zinc-500">
+                    <div className="text-[11px] text-muted-foreground">
                       {d.count} transaction{d.count !== 1 ? "s" : ""}
                     </div>
                   </div>
                 </div>
-                <div className="text-right shrink-0">
-                  <div className="text-sm font-semibold tabular-nums text-zinc-100">
+                <div className="text-right">
+                  <div className="text-sm font-semibold tabular-nums text-foreground">
                     {fmt(d.value)}
                   </div>
-                  <div className="text-[11px] tabular-nums text-zinc-500">
+                  <div className="text-[11px] tabular-nums text-muted-foreground">
                     {pct.toFixed(1)}%
                   </div>
                 </div>
               </div>
-              {/* Animated progress bar */}
-              <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-slate-800">
+              {/* progress bar */}
+              <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-muted/40">
                 <div
-                  className="h-full rounded-full transition-all duration-500 ease-out"
+                  className="h-full rounded-full transition-all duration-500"
                   style={{
                     width: `${pct}%`,
-                    background: `linear-gradient(90deg, ${d.color}, ${d.color}88)`,
+                    background: `linear-gradient(90deg, ${d.color}, ${d.color}99)`,
                   }}
                 />
               </div>

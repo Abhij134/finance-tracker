@@ -228,7 +228,7 @@ function ExportPortal({ open, rect, children }: { open: boolean; rect: DOMRect |
 
     return createPortal(
         <div style={{
-            position: isMobile ? "fixed" : "absolute",
+            position: "fixed",
             top, left, right, transform,
             zIndex: 99998,
             animation: isMobile ? "fadeInMobile 0.2s ease-out" : "dropIn 0.18s cubic-bezier(0.34,1.4,0.64,1)",

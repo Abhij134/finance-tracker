@@ -5,7 +5,6 @@ import { Suspense, ReactNode } from "react";
 import { PageTransition } from "@/components/page-transition";
 import { FloatingAiChat } from "@/components/floating-ai-chat";
 
-// Main app layout — includes the sidebar for all dashboard/app routes
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   return (
     <ScanProvider>

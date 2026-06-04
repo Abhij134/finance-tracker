@@ -13,14 +13,14 @@ import {
 } from "lucide-react";
 
 const mainNavItems = [
-  { name: "Dashboard", href: "/", icon: LayoutDashboard },
-  { name: "Financial Charts", href: "/dashboard/budget", icon: BarChart3 },
+  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { name: "Financial Chart", href: "/dashboard/budget", icon: BarChart3 },
   { name: "Transactions", href: "/transactions", icon: Clock },
   { name: "Alerts", href: "/alerts", icon: Mail },
 ];
 
 function NavLink({ item, isOpen, pathname }: { item: { name: string; href: string; icon: React.ElementType }, isOpen: boolean, pathname: string }) {
-  const isActive = item.href === "/" ? pathname === item.href : pathname.startsWith(item.href);
+  const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
   return (
     <Link
       href={item.href}
@@ -47,7 +47,7 @@ export function Sidebar() {
 
   return (
     <div
-      className={`relative hidden lg:flex h-screen flex-col bg-card border-r border-border transition-all duration-300 ease-in-out ${isOpen ? "w-64" : "w-16"
+      className={`relative hidden lg:flex h-screen flex-col bg-white/[0.03] backdrop-blur-xl border-r border-white/10 transition-all duration-300 ease-in-out ${isOpen ? "w-64" : "w-16"
         }`}
     >
       <div className={`flex items-center justify-center p-4 border-b border-border h-14`}>

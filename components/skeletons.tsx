@@ -4,11 +4,22 @@ import React from 'react';
 // .skeleton-shimmer is defined in globals.css
 
 const Shimmer = ({ className, style }: { className?: string; style?: React.CSSProperties }) => (
-    <div style={style} className={`relative overflow-hidden bg-white/[0.04] rounded after:absolute after:inset-0 after:translate-x-[-100%] after:bg-gradient-to-r after:from-transparent after:via-white/[0.06] after:to-transparent after:animate-[shimmer_1.6s_ease-in-out_infinite] ${className ?? ''}`} />
+    <div 
+        style={style} 
+        className={`relative overflow-hidden bg-white/[0.07] rounded after:absolute after:inset-0 after:translate-x-[-100%] after:bg-gradient-to-r after:from-transparent after:via-white/[0.12] after:to-transparent after:animate-[shimmer_1.6s_ease-in-out_infinite] ${className ?? ''}`} 
+    />
 );
 
 export const StatCardSkeleton = () => (
-    <div className="relative rounded-2xl border border-border bg-card shadow-lg p-5 h-full min-h-[170px]">
+    <div 
+        className="relative rounded-2xl p-5 h-full min-h-[170px] overflow-hidden"
+        style={{
+            background: "linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 50%, rgba(0, 0, 0, 0.15) 100%)",
+            border: "1px solid rgba(255, 255, 255, 0.10)",
+            backdropFilter: "blur(16px)",
+            boxShadow: "inset 0 1px 0 rgba(255, 255, 255, 0.10), 0 8px 32px rgba(0, 0, 0, 0.4)",
+        }}
+    >
         <div className="flex items-center justify-between">
             <Shimmer className="h-3 w-20 rounded" />
             <Shimmer className="h-8 w-8 rounded-lg" />
@@ -37,8 +48,16 @@ export const GreetingHeaderSkeleton = () => (
 );
 
 export const RecentTransactionsSkeleton = () => (
-    <div className="rounded-xl border border-border bg-card shadow-md">
-        <div className="flex items-center justify-between border-b border-border px-4 py-3">
+    <div 
+        className="rounded-xl overflow-hidden"
+        style={{
+            background: "linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 50%, rgba(0, 0, 0, 0.15) 100%)",
+            border: "1px solid rgba(255, 255, 255, 0.10)",
+            backdropFilter: "blur(16px)",
+            boxShadow: "inset 0 1px 0 rgba(255, 255, 255, 0.10), 0 8px 32px rgba(0, 0, 0, 0.4)",
+        }}
+    >
+        <div className="flex items-center justify-between border-b border-border/40 px-4 py-3">
             <Shimmer className="h-5 w-40 rounded" />
             <Shimmer className="h-8 w-32 rounded-lg" />
         </div>
@@ -56,14 +75,22 @@ export const RecentTransactionsSkeleton = () => (
 );
 
 export const AiInsightsSkeleton = () => (
-    <div className="rounded-xl border border-border bg-card shadow-lg p-5 flex flex-col min-h-[280px]">
-        <div className="flex items-center justify-between border-b border-border pb-4 mb-5">
+    <div 
+        className="rounded-xl p-5 flex flex-col min-h-[280px] h-full overflow-hidden"
+        style={{
+            background: "linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 50%, rgba(0, 0, 0, 0.15) 100%)",
+            border: "1px solid rgba(255, 255, 255, 0.10)",
+            backdropFilter: "blur(16px)",
+            boxShadow: "inset 0 1px 0 rgba(255, 255, 255, 0.10), 0 8px 32px rgba(0, 0, 0, 0.4)",
+        }}
+    >
+        <div className="flex items-center justify-between border-b border-border/40 pb-4 mb-5">
             <Shimmer className="h-5 w-36 rounded" />
             <Shimmer className="h-6 w-14 rounded-full" />
         </div>
         <div className="flex-1 space-y-4">
             {[...Array(3)].map((_, i) => (
-                <div key={i} className="p-4 rounded-xl border border-border bg-white/[0.02] flex gap-4">
+                <div key={i} className="p-4 rounded-xl border border-border/30 bg-white/[0.02] flex gap-4">
                     <Shimmer className="h-10 w-10 rounded-lg shrink-0" />
                     <div className="flex-1 space-y-2">
                         <Shimmer className="h-3 w-24 rounded" />
@@ -77,7 +104,15 @@ export const AiInsightsSkeleton = () => (
 );
 
 export const ChartSkeleton = ({ className }: { className?: string }) => (
-    <div className={`rounded-xl border border-border bg-card shadow-lg p-5 flex flex-col ${className ?? 'min-h-[350px]'}`}>
+    <div 
+        className={`rounded-xl p-5 flex flex-col overflow-hidden ${className ?? 'min-h-[350px]'}`}
+        style={{
+            background: "linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 50%, rgba(0, 0, 0, 0.15) 100%)",
+            border: "1px solid rgba(255, 255, 255, 0.10)",
+            backdropFilter: "blur(16px)",
+            boxShadow: "inset 0 1px 0 rgba(255, 255, 255, 0.10), 0 8px 32px rgba(0, 0, 0, 0.4)",
+        }}
+    >
         <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-2">
                 <Shimmer className="h-5 w-5 rounded-sm" />

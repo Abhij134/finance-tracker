@@ -16,7 +16,7 @@ export function Navbar({ userName, userEmail, userBirthdate, userImage }: { user
   };
 
   return (
-    <header className="sticky top-0 z-30 w-full border-b border-border bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-30 w-full border-b border-white/10 bg-white/[0.03] backdrop-blur-xl shadow-[0_1px_0_0_rgba(255,255,255,0.05)]">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-3 py-2 sm:px-5">
         <Link href="/login" className="flex items-center gap-2.5">
           <Image
@@ -45,7 +45,7 @@ export function Navbar({ userName, userEmail, userBirthdate, userImage }: { user
             onSignOut={handleSignOut}
           />
           {/* AI Chat button is at fixed top-3 right-4 from FloatingAiChat — leave gap */}
-          <div className="w-14 sm:w-36" /> {/* reduced spacer for mobile to avoid crowding */}
+          <div className="w-12 sm:w-32" /> {/* reduced spacer for mobile to avoid crowding */}
         </div>
       </div>
     </header>
