@@ -16,9 +16,6 @@ import {
 import { toast } from "sonner";
 import Link from "next/link";
 import Lottie from "lottie-react";
-import chartAnimation from "@/324fb1da-7463-429b-9aec-1ece89e7c609.json";
-import scanAnimation from "@/lottieanimation/f3cb93c6-117b-11ee-9740-8fd622a3e828.json";
-import cubeAnimation from "@/lottieanimation/5edd70e4-7bc0-11ef-b1d3-8ba9f56519cf.json";
 import CalculatorModal from "./_calculator_modal";
 
 type AuthState = "login" | "signup" | "forgot_password_email" | "forgot_password_otp" | "forgot_userid_email" | "forgot_userid_otp" | "userid_recovered" | "privacy" | "terms";
@@ -56,6 +53,20 @@ export default function LandingAndLoginPage() {
     // Hero Modal State
     const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
     const [rotatingIdx, setRotatingIdx] = useState(0);
+
+    const [animations, setAnimations] = useState<any>({ chart: null, scan: null, cube: null });
+
+    useEffect(() => {
+        let mounted = true;
+        Promise.all([
+            import("@/public/lottie/chart.json").then(m => m.default),
+            import("@/public/lottie/scan.json").then(m => m.default),
+            import("@/public/lottie/cube.json").then(m => m.default)
+        ]).then(([chart, scan, cube]) => {
+            if (mounted) setAnimations({ chart, scan, cube });
+        }).catch(err => console.error("Error loading animations", err));
+        return () => { mounted = false; };
+    }, []);
 
     useEffect(() => {
         const t = setInterval(() => setRotatingIdx((i) => (i + 1) % ROTATING.length), 2200);
@@ -357,7 +368,7 @@ export default function LandingAndLoginPage() {
                             <div className="relative w-[100px] flex justify-center items-center">
                                 {/* Floating Cube Lottie */}
                                 <div className="absolute -left-12 top-[10%] z-10 w-11 h-11 pointer-events-none" style={{ animation: "devFloatPhone 5s ease-in-out infinite 0.8s" }}>
-                                    <Lottie animationData={cubeAnimation} loop={true} style={{ width: "100%", height: "100%" }} width={100} height={100} />
+                                    {animations.cube && <Lottie animationData={animations.cube} loop={true} style={{ width: "100%", height: "100%" }} width={100} height={100} />}
                                 </div>
                                 
                                 {/* The Phone frame (centered, scaled down further) */}
@@ -381,7 +392,7 @@ export default function LandingAndLoginPage() {
                                 {/* Scanning Lottie + Text Label */}
                                 <div className="absolute -right-17 bottom-[10%] z-10 flex flex-col items-center gap-1 pointer-events-none" style={{ animation: "devFloatScan 4s ease-in-out infinite 1.2s" }}>
                                     <div className="w-11 h-11">
-                                        <Lottie animationData={scanAnimation} loop={true} style={{ width: "100%", height: "100%" }} />
+                                        {animations.scan && <Lottie animationData={animations.scan} loop={true} style={{ width: "100%", height: "100%" }} />}
                                     </div>
                                     <div className="bg-emerald-500/10 backdrop-blur-md border border-emerald-500/20 px-1.5 py-0.5 rounded flex items-center justify-center shadow-[0_0_10px_rgba(16,185,129,0.15)]">
                                         <span className="text-[7px] font-bold text-emerald-400 uppercase tracking-widest whitespace-nowrap drop-shadow-[0_0_4px_rgba(16,185,129,0.8)]">
@@ -430,7 +441,7 @@ export default function LandingAndLoginPage() {
                             filter: "drop-shadow(0 0 20px rgba(16,185,129,0.28))",
                             pointerEvents: "none",
                         }}>
-                            <Lottie animationData={cubeAnimation} loop={true} style={{ width: "100%", height: "100%" }} />
+                            {animations.cube && <Lottie animationData={animations.cube} loop={true} style={{ width: "100%", height: "100%" }} />}
                         </div>
 
                         {/* LAPTOP (back, right-aligned) */}
@@ -512,11 +523,11 @@ export default function LandingAndLoginPage() {
 
                         {/* SCANNING ANIMATION — floating above the laptop on the right */}
                         <div style={{ position: "absolute", right: "40px", top: "-20px", zIndex: 40, width: 60, height: 60, animation: "popIn 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) both 0.4s, devFloatScan 4s ease-in-out infinite 1.6s" }}>
-                            <Lottie
-                                animationData={scanAnimation}
+                            {animations.scan && <Lottie
+                                animationData={animations.scan}
                                 loop={true}
                                 style={{ width: "100%", height: "100%" }}
-                            />
+                            />}
                             {/* Floating 'AI Scanning' inside the scanning lines */}
                             <div className="absolute top-[32%] left-1/2 -translate-x-1/2 text-[6px] font-black text-emerald-400 bg-[#070b13]/90 border border-emerald-500/40 px-1.5 py-0.2 rounded shadow-[0_0_6px_rgba(16,185,129,0.3)] tracking-wider uppercase whitespace-nowrap">
                                 AI Scanning
@@ -660,11 +671,11 @@ export default function LandingAndLoginPage() {
                             <div className="relative w-full max-w-[500px]">
                                 <div className="absolute -inset-6 bg-emerald-900/20 rounded-[3rem] blur-3xl pointer-events-none" />
                                 <div className="relative w-full flex items-center justify-center">
-                                    <Lottie
-                                        animationData={chartAnimation}
+                                    {animations.chart && <Lottie
+                                        animationData={animations.chart}
                                         loop={true}
                                         style={{ width: "100%", height: "auto", display: "block" }}
-                                    />
+                                    />}
                                 </div>
                             </div>
                         </motion.div>
