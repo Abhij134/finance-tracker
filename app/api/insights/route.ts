@@ -1,31 +1,28 @@
 import { auth } from "@/auth";
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import Groq from "groq-sdk";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export const maxDuration = 60;
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY || 'MISSING_KEY' });
+const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API_KEY || "");
+
+const insightsCache = new Map<string, { data: any; timestamp: number }>();
+const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
 
 interface InsightInput {
-    transactions: {
-        date: string;
-        description: string;
-        amount: number;
-        type: "credit" | "debit";
-        category: string;
-    }[];
-    budgets: {
-        category: string;
-        limit: number;
-        spent: number;
-    }[];
+    transactions: { date: string; description: string; amount: number; type: "credit" | "debit"; category: string; }[];
+    budgets: { category: string; limit: number; spent: number; }[];
     totalBudget: number;
     totalSpent: number;
     totalIncome: number;
     periodStart: string;
     periodEnd: string;
-    selectedPeriod: "this_month" | "last_month" | "custom" | "all_time" | string;
+    selectedPeriod: string;
+}
+
+function inr(n: number): string {
+    return `₹${Math.round(Math.abs(n)).toLocaleString("en-IN")}`;
 }
 
 function buildInsightsPrompt(data: InsightInput): string {
@@ -33,187 +30,220 @@ function buildInsightsPrompt(data: InsightInput): string {
     const start = new Date(data.periodStart);
     const end = new Date(data.periodEnd);
 
-    const totalDays = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
-    const daysElapsed = Math.max(1, Math.min(totalDays, Math.ceil((today.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))));
-    const remainingDays = Math.max(1, totalDays - daysElapsed);
-    const remainingBudget = Math.max(0, data.totalBudget - data.totalSpent);
-    const dailyAllowance = remainingDays > 0 ? remainingBudget / remainingDays : 0;
+    const totalDays = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / 86400000));
+    const daysElapsed = Math.max(1, Math.min(totalDays, Math.ceil((today.getTime() - start.getTime()) / 86400000)));
+    const daysRemaining = Math.max(0, totalDays - daysElapsed);
     const dailySpendRate = data.totalSpent / daysElapsed;
-    const netBalance = data.totalIncome - data.totalSpent;
-    const savingsRate = data.totalIncome > 0 ? ((netBalance / data.totalIncome) * 100) : 0;
+    const projectedMonthEnd = dailySpendRate * totalDays;
+    const estimatedSavings = data.totalBudget - projectedMonthEnd;
+    const topSpendCat = [...data.budgets].sort((a, b) => b.spent - a.spent)[0];
 
-    // Category spending breakdown
-    const categoryBreakdown = data.budgets
+    // Category context — human-readable, no raw percentages
+    const catContext = data.budgets
         .filter(b => b.spent > 0)
         .sort((a, b) => b.spent - a.spent)
-        .map(b => `${b.category}: ₹${b.spent.toLocaleString("en-IN")}${b.limit ? ` / ₹${b.limit.toLocaleString("en-IN")} budget (${Math.round((b.spent / b.limit) * 100)}% used)` : " (no budget set)"}`)
+        .slice(0, 12)
+        .map(b => {
+            const remaining = b.limit > 0 ? b.limit - b.spent : null;
+            const daysUntilExceeded = b.limit > 0 && dailySpendRate > 0
+                ? Math.round(remaining! / (b.spent / daysElapsed))
+                : null;
+            return `  ${b.category}: spent ${inr(b.spent)}${b.limit > 0
+                ? `, budget ${inr(b.limit)}, ${remaining! > 0 ? inr(remaining!) + " left" : inr(Math.abs(remaining!)) + " over"}`
+                : " (no budget)"}${daysUntilExceeded !== null && daysUntilExceeded > 0 && daysUntilExceeded <= daysRemaining ? `, may exceed in ~${daysUntilExceeded} days` : ""}`;
+        })
         .join("\n");
 
-    // Over-budget categories
     const overBudget = data.budgets.filter(b => b.limit > 0 && b.spent > b.limit);
     const nearLimit = data.budgets.filter(b => b.limit > 0 && b.spent >= b.limit * 0.8 && b.spent <= b.limit);
 
-    // Top merchants
-    const merchantSpend: Record<string, number> = {};
-    data.transactions
-        .filter(t => t.type === "debit")
-        .forEach(t => {
-            const key = t.description?.split(" ").slice(0, 3).join(" ") ?? "Unknown";
-            merchantSpend[key] = (merchantSpend[key] ?? 0) + t.amount;
-        });
-    const topMerchants = Object.entries(merchantSpend)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 5)
-        .map(([m, a]) => `${m}: ₹${a.toLocaleString("en-IN")}`)
-        .join(", ");
+    return `You are a smart personal finance advisor for an Indian user using FinanceNeo.
+Analyze their spending data and give SHORT, HUMAN, CONVERSATIONAL insights.
 
-    // Transaction frequency
-    const txByDay: Record<string, number> = {};
-    data.transactions.forEach(t => {
-        const day = t.date?.slice(0, 10) ?? "";
-        txByDay[day] = (txByDay[day] ?? 0) + 1;
-    });
-    const avgTxPerDay = (data.transactions.length / daysElapsed).toFixed(1);
+FINANCIAL SNAPSHOT:
+- Period: ${data.periodStart} to ${data.periodEnd} (${daysElapsed} days elapsed, ${daysRemaining} days left)
+- Total spent so far: ${inr(data.totalSpent)}
+- Daily spend rate: ${inr(dailySpendRate)}/day
+- Projected month-end total: ${inr(projectedMonthEnd)}
+- Total budget: ${inr(data.totalBudget)}
+- Estimated savings vs budget: ${estimatedSavings >= 0 ? inr(estimatedSavings) + " under" : inr(Math.abs(estimatedSavings)) + " over"}
+- Income this period: ${data.totalIncome > 0 ? inr(data.totalIncome) : "not tracked"}
+- Top spending category: ${topSpendCat?.category ?? "N/A"} at ${inr(topSpendCat?.spent ?? 0)}
 
-    // UPI transfers
-    const upiTransfers = data.transactions.filter(t =>
-        t.category === "UPI Transfer" && t.type === "debit"
-    );
-    const totalUPISent = upiTransfers.reduce((s, t) => s + t.amount, 0);
+CATEGORY BREAKDOWN:
+${catContext || "No spending yet"}
 
-    return `You are a personal finance AI for an Indian user. Analyze this financial data and generate 5-7 specific, actionable insights.
+ALERT FLAGS:
+- Over budget: ${overBudget.length > 0 ? overBudget.map(b => `${b.category} (${inr(b.spent - b.limit)} over)`).join(", ") : "none"}
+- Near limit: ${nearLimit.length > 0 ? nearLimit.map(b => b.category).join(", ") : "none"}
 
-PERIOD: ${data.periodStart} to ${data.periodEnd} (${totalDays} days total, ${daysElapsed} days elapsed, ${remainingDays} days remaining)
-SELECTED PERIOD TYPE: ${data.selectedPeriod}
+STRICT TONE RULES — YOU MUST FOLLOW THESE:
+1. Write like a smart friend, NOT like a spreadsheet
+2. NO percentage numbers in the message text AT ALL (not even "X% of your budget")
+3. NO "₹X out of ₹Y" breakdowns in message text
+4. Each message must be MAX 2 short sentences
+5. Be direct, warm, and specific with ₹ amounts only where it adds real value
+6. Focus on what the user should DO, not just what already happened
+7. NEVER generate vague advice like "consider setting a budget" or "track your expenses"
+8. Use Indian app names where natural: Swiggy, Zomato, Zepto, BigBasket, Amazon, Flipkart
 
-FINANCIAL SUMMARY:
-- Total Income: ₹${data.totalIncome.toLocaleString("en-IN")}
-- Total Expenses: ₹${data.totalSpent.toLocaleString("en-IN")}
-- Net Balance: ₹${netBalance.toLocaleString("en-IN")} (${savingsRate.toFixed(1)}% savings rate)
-- Total Budget: ₹${data.totalBudget.toLocaleString("en-IN")}
-- Remaining Budget: ₹${remainingBudget.toLocaleString("en-IN")}
-- Daily spend rate: ₹${dailySpendRate.toFixed(0)}/day
-- Correct daily allowance for remaining ${remainingDays} days: ₹${dailyAllowance.toFixed(0)}/day
-- Total transactions: ${data.transactions.length} (avg ${avgTxPerDay}/day)
-- Total UPI transfers sent: ₹${totalUPISent.toLocaleString("en-IN")} across ${upiTransfers.length} transfers
+INSIGHT TYPES — pick the most relevant 5-6 only:
 
-SPENDING BY CATEGORY:
-${categoryBreakdown || "No categorized spending yet"}
+1. MONTH FORECAST (always include)
+   Focus: Will they save or overspend? By how much?
+   Good example: "You're on track to save around ₹22,000 this month. Keep your daily spending under ₹300 to hit that goal."
+   Bad example:  "Projected spend is ₹7,388 which is 25% of your ₹30,000 budget."
 
-OVER-BUDGET CATEGORIES: ${overBudget.length > 0 ? overBudget.map(b => `${b.category} (${Math.round((b.spent / b.limit) * 100)}% of budget)`).join(", ") : "None"}
-NEAR LIMIT (80%+): ${nearLimit.length > 0 ? nearLimit.map(b => b.category).join(", ") : "None"}
+2. BIGGEST RISK (always include if any category is above 40% used)
+   Focus: Which category will blow the budget first?
+   Good example: "Shopping is your fastest-growing expense this month. At this pace, you'll exceed that budget in about 9 days."
+   Bad example:  "Shopping spend is 46% of your ₹1,000 budget with ₹536 remaining."
 
-TOP SPENDING MERCHANTS/PAYEES: ${topMerchants || "No data"}
+3. SMART SAVING TIP (always include)
+   Focus: One specific, actionable thing they can do THIS WEEK
+   Good example: "Cutting 2-3 UPI food orders this week could save you around ₹400-600 before month end."
+   Bad example:  "Consider reducing non-essential purchases."
 
-RULES FOR INSIGHTS:
-1. NEVER say "Start Tracking" if transactions.length > 0
-2. Use ACTUAL numbers from the data above — no generic advice
-3. Daily allowance = remaining budget ÷ remaining days = ₹${dailyAllowance.toFixed(0)}/day (NOT total budget ÷ 30)
-4. If period is "all_time" or custom with no end date, skip daily allowance insight
-5. Be specific: mention actual category names, actual amounts, actual merchants
-6. If no budget is set for a category, suggest setting one
-7. Detect patterns: is spending accelerating, stable, or slowing down?
-8. For UPI transfers > ₹5000 total, mention it
+4. POSITIVE WIN (include if any category is well under budget)
+   Focus: Celebrate something they're doing well — makes the app feel supportive
+   Good example: "Great job on Fuel this month — you're well within budget and still have plenty left for the rest of the month."
+   Bad example:  "Fuel & Auto is 14% of your ₹2,500 budget."
 
-Return ONLY a valid JSON array:
+5. SAVINGS FORECAST (only if income data is available)
+   Focus: End-of-month savings prediction in ₹, not %
+   Good example: "Based on your income and spending, you could save around ₹18,000 by the 31st if you stay consistent."
+   Bad example:  "Savings rate is -4145.8% indicating a deficit."
+
+6. OVERSPEND WARNING (only if a category has already exceeded budget)
+   Focus: What happened and quick recovery tip
+   Good example: "You've gone over your Education budget this month. Try pausing any new subscriptions or courses until next month."
+   Bad example:  "Education spend exceeded budget by 120%."
+
+NEVER generate:
+- Any insight with a % number in the message text
+- Any insight that just lists "₹X out of ₹Y remaining"
+- More than 6 insights total
+- Vague advice like "consider setting a budget" or "track your expenses"
+- Duplicate insights about the same category
+
+SEVERITY (used for card color/icon only, not shown in text):
+- "critical"  → already overspent OR forecast to overspend this month
+- "warning"   → within ₹500 of budget limit in any category  
+- "positive"  → saving well, on track
+- "info"      → neutral observation or tip
+
+RETURN ONLY a valid JSON array, no markdown wrapping:
 [
   {
-    "title": "SHORT TITLE IN CAPS",
-    "description": "Specific insight with actual ₹ amounts and percentages",
-    "type": "warning|success|info|danger|tip",
-    "icon": "trending_up|trending_down|savings|warning|category|calendar|transfer|food|shopping"
+    "type": "forecast" | "risk" | "tip" | "win" | "savings" | "overspend",
+    "title": "2-3 WORD TITLE IN CAPS",
+    "message": "Human, conversational insight. Max 2 sentences. No percentages.",
+    "severity": "critical" | "warning" | "positive" | "info",
+    "icon": "calendar" | "shopping-bag" | "piggy-bank" | "alert-triangle" | "trending-up" | "trending-down" | "arrow-left-right" | "tag" | "star"
   }
-]
-
-INSIGHT TYPES TO GENERATE (pick the most relevant 5-7):
-- Budget pacing: are they on track for the period?
-- Top spending category with actual amount
-- Over-budget alert (if any category exceeded)
-- Daily allowance (correct calculation for remaining days)
-- Savings rate analysis
-- UPI transfer pattern (if significant)
-- Unusual spike in spending day/week
-- Category with no budget set but high spending
-- Positive reinforcement if savings rate > 20%
-- Warning if projected spending will exceed budget`;
+]`;
 }
 
-// Fallback if AI fails — still uses real data
+// Deterministic fallback — no AI needed
 function getFallbackInsights(data: InsightInput) {
     const today = new Date();
     const start = new Date(data.periodStart);
     const end = new Date(data.periodEnd);
-    const totalDays = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
-    const daysElapsed = Math.max(1, Math.min(totalDays, Math.ceil((today.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))));
-    const remainingDays = Math.max(1, totalDays - daysElapsed);
-    const remainingBudget = Math.max(0, data.totalBudget - data.totalSpent);
-    const dailyAllowance = remainingDays > 0 ? remainingBudget / remainingDays : 0;
+    const totalDays = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / 86400000));
+    const daysElapsed = Math.max(1, Math.min(totalDays, Math.ceil((today.getTime() - start.getTime()) / 86400000)));
+    const daysRemaining = Math.max(0, totalDays - daysElapsed);
+    const dailySpendRate = data.totalSpent / daysElapsed;
+    const projectedSpend = dailySpendRate * totalDays;
     const netBalance = data.totalIncome - data.totalSpent;
-    const savingsRate = data.totalIncome > 0 ? ((netBalance / data.totalIncome) * 100) : 0;
-    const topCategory = data.budgets.sort((a, b) => b.spent - a.spent)[0];
+    const hasSavingsData = data.totalIncome > 0;
 
-    const insights = [];
+    const overBudgetCat = data.budgets.filter(b => b.limit > 0 && b.spent > b.limit)[0];
+    const insights: any[] = [];
 
-    if (remainingBudget > 0 && remainingDays > 0 && data.totalBudget > 0) {
+    // 1. Forecast (always)
+    if (data.totalBudget > 0 && daysRemaining > 0) {
+        const willSave = projectedSpend <= data.totalBudget;
+        const diff = Math.abs(projectedSpend - data.totalBudget);
         insights.push({
-            title: "DAILY ALLOWANCE",
-            description: `You have ₹${remainingBudget.toLocaleString("en-IN")} remaining over ${remainingDays} days — spend ₹${Math.round(dailyAllowance).toLocaleString("en-IN")}/day to stay on budget.`,
-            type: "info",
+            type: "forecast",
+            title: "MONTH FORECAST",
+            message: `You're on track to ${willSave ? "save" : "overspend by"} around ${inr(diff)} this month. Try to keep daily expenses under ${inr(dailySpendRate)} to stay steady.`,
+            severity: willSave ? "positive" : projectedSpend > data.totalBudget * 1.2 ? "critical" : "warning",
             icon: "calendar",
         });
     }
 
-    if (topCategory?.spent > 0) {
+    // 2. Over-budget alert
+    if (overBudgetCat) {
         insights.push({
-            title: "TOP SPENDING CATEGORY",
-            description: `${topCategory.category} is your biggest expense at ₹${topCategory.spent.toLocaleString("en-IN")}${topCategory.limit ? ` — ${Math.round((topCategory.spent / topCategory.limit) * 100)}% of your ₹${topCategory.limit.toLocaleString("en-IN")} budget` : ""}.`,
-            type: topCategory.limit && topCategory.spent > topCategory.limit ? "warning" : "info",
-            icon: "category",
+            type: "overspend",
+            title: "BUDGET EXCEEDED",
+            message: `You've gone over your ${overBudgetCat.category} limit. Hold off on extra spending here until the month resets.`,
+            severity: "critical",
+            icon: "alert-triangle",
         });
     }
 
-    if (savingsRate < 0) {
+    // 3. Savings (only if income exists)
+    if (hasSavingsData) {
+        const projectedSavings = data.totalIncome - projectedSpend;
         insights.push({
-            title: "NEGATIVE SAVINGS RATE",
-            description: `You've spent ₹${Math.abs(netBalance).toLocaleString("en-IN")} more than your income this period. Review your ${topCategory?.category ?? "top"} expenses.`,
-            type: "danger",
-            icon: "warning",
-        });
-    } else if (savingsRate > 20) {
-        insights.push({
-            title: "GREAT SAVINGS",
-            description: `You're saving ${savingsRate.toFixed(1)}% of your income this period — ₹${netBalance.toLocaleString("en-IN")} saved so far.`,
-            type: "success",
-            icon: "savings",
+            type: "savings",
+            title: projectedSavings < 0 ? "SAVINGS ALERT" : "SAVINGS FORECAST",
+            message: projectedSavings < 0
+                ? `You're projected to spend more than you earn by month end. See where you can cut back quickly.`
+                : `Based on your income, you could stash away ${inr(projectedSavings)} by month end if you keep this up.`,
+            severity: projectedSavings < 0 ? "critical" : "positive",
+            icon: projectedSavings >= 0 ? "piggy-bank" : "trending-down",
         });
     }
 
     return insights;
 }
 
+function safeParseInsights(raw: string): any[] | null {
+    try {
+        const s = raw.indexOf("[");
+        const e = raw.lastIndexOf("]");
+        if (s === -1 || e === -1 || e <= s) return null;
+        const parsed = JSON.parse(raw.slice(s, e + 1));
+        if (!Array.isArray(parsed) || parsed.length === 0) return null;
+        return parsed;
+    } catch {
+        return null;
+    }
+}
+
 export async function GET(req: Request) {
     try {
         const session = await auth();
         const userId = session?.user?.id;
-
-        if (!userId) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
+        if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
         const dbUser = await prisma.user.findUnique({ where: { id: userId } });
-        if (!dbUser) {
-            return NextResponse.json({ error: "User not found in database" }, { status: 404 });
-        }
+        if (!dbUser) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
-        // Parse filters
+        // Parse date params
         const url = new URL(req.url);
         const fromParam = url.searchParams.get("from");
         const toParam = url.searchParams.get("to");
         const rangeParam = url.searchParams.get("range") || "month";
 
-        let dateFilter = {};
-        let periodStart = new Date().toISOString().slice(0, 10);
-        let periodEnd = new Date().toISOString().slice(0, 10);
+        const hour = new Date().toISOString().slice(0, 13);
+        const cacheKey = `insights:${fromParam || 'none'}:${toParam || 'none'}:${hour}`;
+
+        const cached = insightsCache.get(cacheKey);
+        if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+            return NextResponse.json(cached.data, {
+                headers: {
+                    "Cache-Control": "private, max-age=3600, stale-while-revalidate=7200",
+                }
+            });
+        }
+
+        let dateFilter: any = {};
+        let periodStart: string;
+        let periodEnd: string;
 
         if (fromParam && toParam) {
             const start = new Date(fromParam);
@@ -223,7 +253,6 @@ export async function GET(req: Request) {
             periodStart = start.toISOString().slice(0, 10);
             periodEnd = end.toISOString().slice(0, 10);
         } else {
-            // Default: Current month
             const now = new Date();
             const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
             const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
@@ -232,13 +261,11 @@ export async function GET(req: Request) {
             periodEnd = endOfMonth.toISOString().slice(0, 10);
         }
 
-        // Fetch filtered transactions and budgets in parallel
         const [allTxs, dbBudgets] = await Promise.all([
-            prisma.transaction.findMany({ where: { userId: dbUser.id, ...dateFilter }, orderBy: { date: 'desc' } }),
-            prisma.budget.findMany({ where: { userId: dbUser.id } })
+            prisma.transaction.findMany({ where: { userId: dbUser.id, ...dateFilter }, orderBy: { date: "desc" } }),
+            prisma.budget.findMany({ where: { userId: dbUser.id } }),
         ]);
 
-        // Transform data to InsightInput format
         const totalIncome = allTxs.filter(t => t.amount > 0).reduce((s, t) => s + t.amount, 0);
         const totalSpent = allTxs.filter(t => t.amount < 0).reduce((s, t) => s + Math.abs(t.amount), 0);
 
@@ -247,15 +274,15 @@ export async function GET(req: Request) {
             catSpent[t.category] = (catSpent[t.category] || 0) + Math.abs(t.amount);
         });
 
-        const formattedBudgets = dbBudgets.filter(b => b.category !== 'OVERALL').map(b => ({
+        const formattedBudgets = dbBudgets.filter(b => b.category !== "OVERALL").map(b => ({
             category: b.category,
             limit: b.amount,
             spent: catSpent[b.category] || 0,
         }));
 
-        // Add categories with spending but no budget set
+        // Add unbudgeted categories with spending > ₹500
         Object.entries(catSpent).forEach(([cat, amount]) => {
-            if (!formattedBudgets.some(b => b.category === cat)) {
+            if (!formattedBudgets.some(b => b.category === cat) && amount > 500) {
                 formattedBudgets.push({ category: cat, limit: 0, spent: amount });
             }
         });
@@ -263,14 +290,17 @@ export async function GET(req: Request) {
         const overallBudget = dbBudgets.find(b => b.category === "OVERALL")?.amount || 0;
         const totalBudget = overallBudget > 0 ? overallBudget : formattedBudgets.reduce((s, b) => s + b.limit, 0);
 
+        // Summarize transactions (max 50) for AI
+        const txSummary = allTxs.slice(0, 50).map(t => ({
+            date: t.date.toISOString().slice(0, 10),
+            description: t.merchant || "Unknown",
+            amount: Math.abs(t.amount),
+            type: t.amount < 0 ? "debit" as const : "credit" as const,
+            category: t.category,
+        }));
+
         const data: InsightInput = {
-            transactions: allTxs.map(t => ({
-                date: t.date.toISOString(),
-                description: t.merchant || "Unknown",
-                amount: Math.abs(t.amount),
-                type: t.amount < 0 ? "debit" : "credit",
-                category: t.category,
-            })),
+            transactions: txSummary,
             budgets: formattedBudgets,
             totalBudget,
             totalSpent,
@@ -280,12 +310,13 @@ export async function GET(req: Request) {
             selectedPeriod: rangeParam,
         };
 
-        if (data.transactions.length === 0) {
+        if (allTxs.length === 0) {
             return NextResponse.json({
                 insights: [{
-                    title: "NO TRANSACTIONS YET",
-                    description: `Upload a bank statement or add transactions manually to get personalized insights for this period.`,
                     type: "info",
+                    title: "NO TRANSACTIONS YET",
+                    message: "Upload a bank statement or add transactions manually to get personalized AI insights.",
+                    severity: "info",
                     icon: "calendar",
                 }]
             });
@@ -294,42 +325,47 @@ export async function GET(req: Request) {
         const prompt = buildInsightsPrompt(data);
 
         try {
-            const response = await groq.chat.completions.create({
-                model: "llama-3.1-8b-instant",
-                messages: [
-                    {
-                        role: "system",
-                        content: "You are a precise financial analyst. Always use exact numbers from the data provided. Return only valid JSON.",
-                    },
-                    {
-                        role: "user",
-                        content: prompt,
-                    },
-                ],
-                temperature: 0.3,
-                max_tokens: 2048,
+            const model = genAI.getGenerativeModel({
+                model: "gemini-2.5-flash-lite",
+                generationConfig: { temperature: 0.4 },
             });
-
-            const raw = response.choices?.[0]?.message?.content ?? "[]";
-            const s = raw.indexOf("[");
-            const e = raw.lastIndexOf("]");
-
-            let insights = [];
-            if (s !== -1 && e !== -1 && e > s) {
-                const parsed = JSON.parse(raw.slice(s, e + 1));
-                insights = Array.isArray(parsed) ? parsed : getFallbackInsights(data);
-            } else {
-                insights = getFallbackInsights(data);
+            const result = await model.generateContent(prompt);
+            const raw = result.response.text();
+            const parsed = safeParseInsights(raw);
+            const insights = parsed ?? getFallbackInsights(data);
+            
+            const resultData = { insights };
+            insightsCache.set(cacheKey, { data: resultData, timestamp: Date.now() });
+            
+            for (const [key, val] of insightsCache.entries()) {
+                if (Date.now() - val.timestamp > CACHE_TTL_MS * 2) {
+                    insightsCache.delete(key);
+                }
             }
 
-            return NextResponse.json({ insights });
-        } catch (err) {
-            console.error("[generateInsights] error:", err);
+            return NextResponse.json(resultData, {
+                headers: {
+                    "Cache-Control": "private, max-age=3600, stale-while-revalidate=7200",
+                }
+            });
+        } catch (err: any) {
+            console.error("[insights route] Gemini error:", err);
+            if (err.status === 429) {
+                return NextResponse.json({ 
+                    insights: getFallbackInsights(data), 
+                    cached: false, 
+                    rateLimited: true 
+                }, {
+                    headers: {
+                        "Cache-Control": "private, max-age=3600, stale-while-revalidate=7200",
+                    }
+                });
+            }
             return NextResponse.json({ insights: getFallbackInsights(data) });
         }
 
     } catch (error) {
-        console.error("AI Insights route error:", error);
-        return NextResponse.json({ error: "Internal Server Error." }, { status: 500 });
+        console.error("[insights route] fatal:", error);
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }

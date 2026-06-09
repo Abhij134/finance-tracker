@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
                 };
 
                 console.log("[extract API] File received:", file?.name, file?.size, "bytes");
-                console.log("[extract API] GROQ_API_KEY present:", !!process.env.GROQ_API_KEY);
+                console.log("[extract API] GOOGLE_GEMINI_API_KEY present:", !!process.env.GOOGLE_GEMINI_API_KEY);
 
                 if (imageBase64) {
                     const transactions = await extractFromImage(

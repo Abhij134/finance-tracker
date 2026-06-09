@@ -20,10 +20,11 @@ export async function getEmailPreferences() {
                 largeTxEmailEnabled: true,
                 largeTxThreshold: true,
                 periodicSummaryEmailEnabled: true,
+                summaryDay: true,
                 unusualSpendingEmailEnabled: true,
                 unusualSpendingThreshold: true,
-            }
-        });
+            } as any
+        }) as any;
 
         if (!user) {
             return { success: false, error: "User not found" };
@@ -36,7 +37,10 @@ export async function getEmailPreferences() {
     }
 }
 
-export async function updateEmailPreference(key: "largeTxEmailEnabled" | "largeTxThreshold" | "periodicSummaryEmailEnabled" | "unusualSpendingEmailEnabled" | "unusualSpendingThreshold", value: boolean | number) {
+export async function updateEmailPreference(
+    key: "largeTxEmailEnabled" | "largeTxThreshold" | "periodicSummaryEmailEnabled" | "unusualSpendingEmailEnabled" | "unusualSpendingThreshold",
+    value: boolean | number
+) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     const userId = user?.id;
@@ -56,5 +60,33 @@ export async function updateEmailPreference(key: "largeTxEmailEnabled" | "largeT
     } catch (error: any) {
         console.error("Error updating email preference:", error);
         return { success: false, error: "Failed to update preference" };
+    }
+}
+
+export async function updateSummaryDay(day: string) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    const userId = user?.id;
+
+    if (!userId) {
+        return { success: false, error: "Unauthorized" };
+    }
+
+    const validDays = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"];
+    if (!validDays.includes(day)) {
+        return { success: false, error: "Invalid day of week" };
+    }
+
+    try {
+        await prisma.user.update({
+            where: { id: userId },
+            data: { summaryDay: day as any }
+        });
+
+        revalidatePath("/alerts");
+        return { success: true };
+    } catch (error: any) {
+        console.error("Error updating summary day:", error);
+        return { success: false, error: "Failed to update summary day" };
     }
 }

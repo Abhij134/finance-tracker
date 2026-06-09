@@ -1,107 +1,89 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { UploadCloud, Loader2, CheckCircle2, AlertCircle, StopCircle, ScanLine, X } from "lucide-react";
+import { UploadCloud, ScanLine } from "lucide-react";
 import { useScanContext } from "./scan-context";
 import { ScanProgress } from "./ScanProgress";
 import { toast } from "sonner";
-import { useExtract } from "@/hooks/useExtract";
-
-type UploadState = "idle" | "extracting" | "analyzing" | "success" | "error";
 
 interface PDFScannerProps {
   onTransactionsExtracted: (data: any[] | ((prev: any[]) => any[])) => void;
   onLoadingChange?: (loading: boolean) => void;
 }
 
+function mapToAppCategory(aiCategory: string): string {
+  const validCategories = [
+    "Food & Dining", "Groceries", "Shopping", "Transport",
+    "Fuel & Auto", "Travel", "Health & Medical", "Bills & Utilities",
+    "Entertainment", "Education", "UPI Transfer", "Investment",
+    "Subscriptions", "Rent & Housing", "Income", "Other",
+  ];
+  return validCategories.includes(aiCategory) ? aiCategory : "Other";
+}
+
 export function PDFScanner({ onTransactionsExtracted, onLoadingChange }: PDFScannerProps) {
   const [isDragging, setIsDragging] = useState(false);
 
-  // Legacy states (kept to satisfy original UI conditions without breaking anything)
-  const [uploadState, setUploadState] = useState<UploadState>("idle");
-  const [progress, setProgress] = useState(0);
-  const [statusText, setStatusText] = useState("");
+  const {
+    extract,
+    extractPDF,
+    extractImage,
+    pauseExtract,
+    resumeExtract,
+    stopExtract,
+    resetExtract,
+    onTransactionsReady,
+    cancelScan,
+    isScanning: isGlobalScanning,
+    setExternalScanState,
+    resetExternalScanState,
+  } = useScanContext();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const extractionCancelledRef = useRef(false);
-  const { startScan, cancelScan, scanState: globalScanState, isScanning: isGlobalScanning, setExternalScanState, resetExternalScanState } = useScanContext();
 
-  // Bind to new useExtract interface
-  const {
-    scanState, progress: newProgress, message, currentPage, totalPages,
-    transactions, error: extractError, extractPDF, extractImage,
-    pause, resume, stop, reset,
-    isScanning: isExtracting,
-  } = useExtract();
-
-  const effectiveState = isGlobalScanning || globalScanState.status === "success"
-    ? (globalScanState.status as UploadState)
-    : uploadState;
-  const effectiveProgress = isGlobalScanning || globalScanState.status === "success"
-    ? globalScanState.progress
-    : progress;
-  const effectiveStatusText = isGlobalScanning || globalScanState.status === "success"
-    ? globalScanState.statusText
-    : statusText;
-
-  const isActivelyWorking =
-    effectiveState === "extracting" ||
-    effectiveState === "analyzing" ||
-    isGlobalScanning ||
-    isExtracting;
-
-  function mapToAppCategory(aiCategory: string): string {
-    // Direct passthrough — categorize.ts now outputs exact app category names
-    const validCategories = [
-      "Food & Dining", "Groceries", "Shopping", "Transport",
-      "Fuel & Auto", "Travel", "Health & Medical", "Bills & Utilities",
-      "Entertainment", "Education", "UPI Transfer", "Investment",
-      "Subscriptions", "Rent & Housing", "Income", "Other",
-    ];
-    return validCategories.includes(aiCategory) ? aiCategory : "Other";
-  }
-
+  // Register a callback so when the scan finishes (even on another page),
+  // the transactions are passed back to the action-center handler
   useEffect(() => {
-    if ((scanState !== "done" && scanState !== "stopped") || transactions.length === 0) {
-      return;
-    }
-    const mapped = transactions.map(t => {
-      let category = mapToAppCategory(t.category ?? "Other");
+    onTransactionsReady((finalTxs) => {
+      const mapped = finalTxs
+        // Bug 2 fix: drop zero/falsy amounts before they reach Prisma
+        .filter(t => !!t.amount && t.amount !== 0)
+        .map(t => {
+          // Bug 2 fix: validate date; fall back to today if malformed
+          const rawDate = t.date;
+          const parsedDate = rawDate ? new Date(rawDate) : null;
+          const safeDate = parsedDate && !isNaN(parsedDate.getTime())
+            ? rawDate
+            : new Date().toISOString();
 
-      return {
-        date: t.date,
-        merchant: t.description || 'Unknown',
-        amount: Math.abs(t.amount || 0),
-        category,
-        type: (t.type === 'debit' || !t.type) ? 'Expense' : 'Income',
-        referenceId: t.referenceId || null,
-      };
+          return {
+            date: safeDate,
+            merchant: t.description || "Unknown",
+            amount: Math.abs(t.amount || 0),
+            category: mapToAppCategory(t.category ?? "Other"),
+            type: (t.type === "debit" || !t.type) ? "Expense" : "Income",
+            referenceId: t.referenceId || null,
+          };
+        });
+      onTransactionsExtracted(mapped);
     });
-    onTransactionsExtracted(mapped);
+  }, [onTransactionsReady, onTransactionsExtracted]);
 
-    if (scanState === "done") {
-      // Mimic success state for the old UI hooks
-      setUploadState("success");
-      setProgress(100);
-      setStatusText(`Complete! ${transactions.length} transactions extracted.`);
-      setTimeout(() => { setUploadState("idle"); setProgress(0); setStatusText(""); reset(); }, 3000);
-    }
-  }, [scanState]); // only depends on scanState — not transactions array
-
-  // Sync useExtract state to the global floating widget
+  // Sync global extract state into the legacy ScanContext floating widget
   useEffect(() => {
     if (!setExternalScanState || !resetExternalScanState) return;
+
+    const { scanState, progress, message, transactions } = extract;
 
     if (scanState === "scanning" || scanState === "paused") {
       setExternalScanState({
         status: "analyzing",
-        progress: newProgress,
+        progress,
         statusText: message || "Extracting text and analyzing...",
         totalChunks: 1,
         currentChunk: 1,
         extractedCount: transactions.length,
-        recentMerchants: transactions.map(t => t.description || 'Unknown').slice(-5)
+        recentMerchants: transactions.map(t => t.description || "Unknown").slice(-5),
       });
     } else if (scanState === "done") {
       setExternalScanState({
@@ -111,90 +93,56 @@ export function PDFScanner({ onTransactionsExtracted, onLoadingChange }: PDFScan
         totalChunks: 1,
         currentChunk: 1,
         extractedCount: transactions.length,
-        recentMerchants: transactions.map(t => t.description || 'Unknown').slice(-5)
+        recentMerchants: transactions.map(t => t.description || "Unknown").slice(-5),
       });
-      setTimeout(() => resetExternalScanState(), 5000);
+      setTimeout(() => resetExternalScanState?.(), 5000);
     } else if (scanState === "error") {
       setExternalScanState({
         status: "error",
-        progress: newProgress,
-        statusText: extractError || "Extraction failed.",
+        progress,
+        statusText: extract.error || "Extraction failed.",
         totalChunks: 1,
         currentChunk: 1,
         extractedCount: 0,
-        recentMerchants: []
+        recentMerchants: [],
       });
-      setTimeout(() => resetExternalScanState(), 5000);
+      setTimeout(() => resetExternalScanState?.(), 5000);
     }
-  }, [scanState, newProgress]); // only re-run when scanState or progress changes
-
-  useEffect(() => {
-    if (extractError) {
-      setUploadState("error");
-      setStatusText(extractError || "Failed to process file.");
-      setTimeout(() => { setUploadState("idle"); setProgress(0); setStatusText(""); }, 3000);
-    }
-  }, [extractError]);
-
-  const handleCancel = () => {
-    if (isGlobalScanning) {
-      cancelScan();
-      toast.info("Scan stopped. Already-imported transactions are saved.");
-    }
-    stop(); // stop new extract
-    extractionCancelledRef.current = true;
-    setUploadState("idle");
-    setProgress(0);
-    setStatusText("");
-    onLoadingChange?.(false);
-  };
-
-  const handlePDFUpload = async (file: File) => {
-    setUploadState("extracting"); // Trigger old UI loading state
-    onLoadingChange?.(true);
-    await extractPDF(file);
-    onLoadingChange?.(false);
-  };
-
-  const handleImageUpload = async (file: File) => {
-    setUploadState("extracting");
-    onLoadingChange?.(true);
-    const reader = new FileReader();
-    reader.onloadend = async () => {
-      const base64String = reader.result as string;
-      await extractImage(base64String);
-      onLoadingChange?.(false);
-    }
-    reader.readAsDataURL(file);
-  }
+  }, [extract.scanState, extract.progress]);
 
   const handleFile = async (file: File) => {
     if (file.type === "application/pdf") {
-      await handlePDFUpload(file);
+      onLoadingChange?.(true);
+      await extractPDF(file);
+      onLoadingChange?.(false);
     } else if (file.type.startsWith("image/")) {
-      await handleImageUpload(file);
+      onLoadingChange?.(true);
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        await extractImage(reader.result as string);
+        onLoadingChange?.(false);
+      };
+      reader.readAsDataURL(file);
     } else {
       toast.error("Please upload a valid PDF or Image file.");
     }
   };
 
   const handleFileRef = useRef(handleFile);
-  useEffect(() => {
-    handleFileRef.current = handleFile;
-  }, [handleFile]);
+  useEffect(() => { handleFileRef.current = handleFile; }, [handleFile]);
 
+  // Global paste listener (works from any page since PDFScanner is in the layout indirectly via action-center)
   useEffect(() => {
     const handleGlobalPaste = async (e: ClipboardEvent) => {
-      const file = e.clipboardData?.files?.[0] || Array.from(e.clipboardData?.items || []).find(item => item.kind === 'file')?.getAsFile();
+      const file = e.clipboardData?.files?.[0] ||
+        Array.from(e.clipboardData?.items || []).find(item => item.kind === "file")?.getAsFile();
       if (!file) return;
-
       if (file.type === "application/pdf" || file.type.startsWith("image/")) {
         e.preventDefault();
         toast.info("Pasted file detected, processing...");
         await handleFileRef.current(file);
       }
     };
-
     document.addEventListener("paste", handleGlobalPaste);
     return () => document.removeEventListener("paste", handleGlobalPaste);
   }, []);
@@ -206,37 +154,28 @@ export function PDFScanner({ onTransactionsExtracted, onLoadingChange }: PDFScan
   };
 
   const handleStop = React.useCallback(() => {
-    cancelScan();        // stops ScanContext fetch to /api/scan
-    stop();              // sets scanState to "stopped", NOT "idle" — keeps UI visible
-  }, [cancelScan, stop]);
+    cancelScan();
+    stopExtract();
+  }, [cancelScan, stopExtract]);
 
-  const handlePause = React.useCallback(() => {
-    pause();
-  }, [pause]);
+  const isActive = isGlobalScanning || (extract.scanState !== "idle");
 
-  const handleResume = React.useCallback(() => {
-    resume();
-  }, [resume]);
-
-  const isActive = isGlobalScanning || (scanState !== "idle");
-
-  /* ── Permanent layout — compact button or inline progress ───────────────────────────────────── */
   return isActive ? (
     <ScanProgress
       isVisible={isActive}
-      scanState={isGlobalScanning && scanState === "idle" ? "scanning" : scanState}
-      progress={newProgress}
-      message={message}
-      currentPage={currentPage}
-      totalPages={totalPages}
-      transactions={transactions}
-      error={extractError}
+      scanState={isGlobalScanning && extract.scanState === "idle" ? "scanning" : extract.scanState}
+      progress={extract.progress}
+      message={extract.message}
+      currentPage={extract.currentPage}
+      totalPages={extract.totalPages}
+      transactions={extract.transactions}
+      error={extract.error}
       mode="pdf"
       onStop={handleStop}
-      onPause={handlePause}
-      onResume={handleResume}
-      onReset={reset}
-      onClose={reset}
+      onPause={pauseExtract}
+      onResume={resumeExtract}
+      onReset={resetExtract}
+      onClose={resetExtract}
     />
   ) : (
     <div className="flex flex-col gap-1.5 w-full">
@@ -268,7 +207,8 @@ export function PDFScanner({ onTransactionsExtracted, onLoadingChange }: PDFScan
         className="w-full text-center text-[10px] font-medium rounded-lg border border-dashed border-border bg-card/40 shadow-sm px-3 py-1.5 focus:outline-none focus:border-primary/40 focus:bg-background transition-colors cursor-text empty:before:content-[attr(data-placeholder)] before:text-muted-foreground/55 before:pointer-events-none outline-none"
         onPaste={async (e) => {
           e.preventDefault();
-          const file = e.clipboardData?.files?.[0] || Array.from(e.clipboardData?.items || []).find(item => item.kind === 'file')?.getAsFile();
+          const file = e.clipboardData?.files?.[0] ||
+            Array.from(e.clipboardData?.items || []).find(item => item.kind === "file")?.getAsFile();
           if (file && (file.type === "application/pdf" || file.type.startsWith("image/"))) {
             toast.info("Pasted file detected, processing...");
             await handleFileRef.current(file);
@@ -277,9 +217,7 @@ export function PDFScanner({ onTransactionsExtracted, onLoadingChange }: PDFScan
           }
           if (e.currentTarget) e.currentTarget.innerHTML = "";
         }}
-        onInput={(e) => {
-          if (e.currentTarget) e.currentTarget.innerHTML = "";
-        }}
+        onInput={(e) => { if (e.currentTarget) e.currentTarget.innerHTML = ""; }}
       />
     </div>
   );

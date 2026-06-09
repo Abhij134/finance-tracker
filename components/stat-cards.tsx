@@ -9,6 +9,7 @@ import { useBudgets } from "../app/(main)/budget-context";
 import { CustomDateRangePicker } from "./custom-date-picker";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CATEGORY_LABELS } from "@/lib/constants";
+import { StatCardSkeleton } from "@/components/skeletons";
 
 function fmt(n: number) {
   return Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(Math.abs(n));
@@ -84,6 +85,11 @@ export function StatCards() {
 
   const preset = dateFilter.preset;
   const dateRange = dateFilter.range;
+
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const [isEditingBudget, setIsEditingBudget] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -222,6 +228,14 @@ export function StatCards() {
       incomeHist, expenseHist, savingsHist,
     };
   }, [filtered, budgetLimit, selectedBudgetCategory, dateRange]);
+
+  if (!mounted) {
+    return (
+      <div className="grid grid-cols-2 gap-2.5">
+        {[...Array(4)].map((_, i) => <StatCardSkeleton key={i} />)}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-3">

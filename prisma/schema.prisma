@@ -7,6 +7,16 @@ datasource db {
   url       = env("DATABASE_URL")        // pooler URL (6543)
 }
 
+enum DayOfWeek {
+  SUNDAY
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+}
+
 model Transaction {
   id          String   @id @default(uuid())
   userId      String
@@ -52,6 +62,7 @@ model User {
   largeTxEmailEnabled         Boolean            @default(true)
   largeTxThreshold            Float              @default(500)
   periodicSummaryEmailEnabled Boolean            @default(true)
+  summaryDay                  DayOfWeek          @default(MONDAY)
   unusualSpendingEmailEnabled Boolean            @default(true)
   unusualSpendingThreshold    Float              @default(80)
   lastUnusualSpendAlert       DateTime?

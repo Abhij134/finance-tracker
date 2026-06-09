@@ -1,8 +1,8 @@
-import Groq from "groq-sdk";
+import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 import { extractText } from "unpdf";
 import { categorizeAll } from "./categorize";
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY! });
+const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API_KEY!);
 
 const TRANSACTION_PROMPT = `You are a financial transaction extractor for Indian UPI/bank statements.
 
@@ -40,30 +40,82 @@ DATE & TIME RULES (CRITICAL):
 - Parse dates and exact times from the text into ISO 8601 format with explicit IST timezone: YYYY-MM-DDTHH:MM:SS+05:30. 
 - If the time is present (e.g. 04:30 PM), convert it strictly to 24-hr format (e.g. 16:30:00+05:30). If time is absolutely missing, default to 12:00:00+05:30.
 
-Return ONLY valid JSON array, no markdown:
+Return ONLY a valid JSON array, no markdown:
 [{"date":"YYYY-MM-DDTHH:MM:SS+05:30","description":"full description","amount":0.00,"type":"credit or debit","category":"exact category name","referenceId":"Unique Txn ID or UTR (null if not found)"}]
 
 Rules:
 - amount always positive number
 - Return [] if no transactions found`;
 
+// ── Gemini model setup ──────────────────────────────────────────────────────
+const RESPONSE_SCHEMA = {
+    type: SchemaType.ARRAY,
+    items: {
+        type: SchemaType.OBJECT,
+        properties: {
+            date:        { type: SchemaType.STRING },
+            description: { type: SchemaType.STRING },
+            amount:      { type: SchemaType.NUMBER },
+            type:        { type: SchemaType.STRING },
+            category:    { type: SchemaType.STRING },
+            referenceId: { type: SchemaType.STRING },
+        },
+        required: ["date", "description", "amount", "type", "category"],
+    },
+};
+
+function getModel() {
+    return genAI.getGenerativeModel({
+        model: "gemini-2.5-flash-lite",
+        generationConfig: {
+            responseMimeType: "application/json",
+            responseSchema: RESPONSE_SCHEMA as any,
+            temperature: 0,
+        },
+    });
+}
+
+// ── Text utilities ──────────────────────────────────────────────────────────
+
+function cleanPDFText(raw: string): string {
+    return raw
+        .replace(/\r\n|\r/g, "\n")
+        .replace(/[^\x20-\x7E\n₹]/g, " ")   // strip non-printable chars
+        .replace(/\s{3,}/g, "  ")             // collapse 3+ spaces → 2
+        .replace(/^\s*[-=]{3,}\s*$/gm, "")   // strip separator lines
+        .trim();
+}
+
+function cleanDescription(desc: string): string {
+    return desc
+        .replace(/\s*Tag:\s*#\s*[^\n|]*/gi, "")
+        .replace(/\s*Note:\s*UPIIntent/gi, "")
+        .replace(/\s*on\s+UPI\s+Ref\s+No:\s*\d+/gi, "")
+        .replace(/\s*UPI\s+Ref\s+No:\s*\d+/gi, "")
+        .trim();
+}
+
 function safeParseJSON(raw: string): any[] {
     if (!raw || raw.trim() === "") return [];
     try {
-        const s = raw.indexOf("[");
-        const e = raw.lastIndexOf("]");
-        if (s === -1 || e === -1 || e <= s) return [];
-        const parsed = JSON.parse(raw.slice(s, e + 1));
+        const parsed = JSON.parse(raw);
         return Array.isArray(parsed) ? parsed : [];
-    } catch (err) {
-        console.error("[safeParseJSON] failed:", String(err));
-        console.error("[safeParseJSON] raw sample:", raw.slice(0, 300));
-        return [];
+    } catch {
+        // Fallback: find the JSON array manually
+        try {
+            const s = raw.indexOf("[");
+            const e = raw.lastIndexOf("]");
+            if (s === -1 || e === -1 || e <= s) return [];
+            return JSON.parse(raw.slice(s, e + 1));
+        } catch (err) {
+            console.error("[safeParseJSON] failed:", String(err));
+            return [];
+        }
     }
 }
 
-// Split text into chunks of ~3000 chars with overlap to avoid cutting transactions
-function splitTextIntoChunks(text: string, chunkSize = 3000, overlap = 200): string[] {
+// Split text into chunks of ~25,000 chars with overlap
+function splitTextIntoChunks(text: string, chunkSize = 25000, overlap = 500): string[] {
     const chunks: string[] = [];
     let i = 0;
     while (i < text.length) {
@@ -74,15 +126,38 @@ function splitTextIntoChunks(text: string, chunkSize = 3000, overlap = 200): str
     return chunks;
 }
 
-// Add this function near the top of extractTransactions.ts
-function cleanDescription(desc: string): string {
-    return desc
-        .replace(/\s*Tag:\s*#\s*[^\n|]*/gi, "")      // remove Tag: # Food
-        .replace(/\s*Note:\s*UPIIntent/gi, "")       // remove UPIIntent
-        .replace(/\s*on\s+UPI\s+Ref\s+No:\s*\d+/gi, "") // remove UPI Ref No
-        .replace(/\s*UPI\s+Ref\s+No:\s*\d+/gi, "")    // remove UPI Ref No variant
-        .trim();
+// ── Single chunk processor ──────────────────────────────────────────────────
+
+async function processChunk(
+    chunk: string,
+    headerContext: string,
+    approxPage: number,
+    signal?: AbortSignal
+): Promise<any[]> {
+    if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+
+    const model = getModel();
+    const prompt = `${TRANSACTION_PROMPT}\n\nSTATEMENT HEADER CONTEXT (Use this to find the exact statement year):\n\`\`\`\n${headerContext}\n\`\`\`\n\nStatement text chunk to extract transactions from:\n\`\`\`\n${chunk}\n\`\`\``;
+
+    const result = await model.generateContent(prompt);
+    const raw = result.response.text();
+    const txs = safeParseJSON(raw).map((tx: any) => ({
+        ...tx,
+        page: tx.page ?? approxPage,
+    }));
+
+    const categorized = categorizeAll(txs);
+    return categorized.map((tx: any) => ({
+        ...tx,
+        description: cleanDescription(tx.description ?? ""),
+    }));
 }
+
+// ── PDF extractor ───────────────────────────────────────────────────────────
+
+const BATCH_SIZE = 25;        // max parallel Gemini calls per batch
+const BATCH_DELAY_MS = 1500;  // delay between batches (stays under 30 RPM)
+
 export async function extractFromPDF(
     pdfBytes: ArrayBuffer,
     onProgress?: (data: {
@@ -96,135 +171,87 @@ export async function extractFromPDF(
 ): Promise<any[]> {
     if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
 
-    onProgress?.({
-        percent: 5,
-        message: "Reading PDF text...",
-        currentPage: 0,
-        totalPages: 0,
-    });
+    onProgress?.({ percent: 5, message: "Reading PDF text...", currentPage: 0, totalPages: 0 });
 
-    // Extract all text from PDF natively using unpdf
     const buffer = new Uint8Array(pdfBytes);
     const { text, totalPages } = await extractText(buffer, { mergePages: true });
-    const fullText = Array.isArray(text) ? text.join("\n") : text;
+    const rawText = Array.isArray(text) ? text.join("\n") : text;
+    const fullText = cleanPDFText(rawText);
 
-    // Grab the first 1000 characters which usually contains the statement year/date range
+    // First 1000 chars typically contain the statement date range / year
     const headerContext = fullText.slice(0, 1000);
 
     console.log(`[extractFromPDF] Extracted ${fullText.length} chars from ${totalPages} pages`);
-    console.log(`[extractFromPDF] Text sample: ${fullText.slice(0, 300)}`);
 
     if (!fullText || fullText.trim().length < 50) {
-        onProgress?.({
-            percent: 100,
-            message: "Could not extract text — PDF may be scanned/image-based",
-            currentPage: totalPages,
-            totalPages,
-        });
+        onProgress?.({ percent: 100, message: "Could not extract text — PDF may be scanned/image-based", currentPage: totalPages, totalPages });
         return [];
     }
 
-    onProgress?.({
-        percent: 15,
-        message: `Extracted text from ${totalPages} pages. Sending to AI...`,
-        currentPage: 0,
-        totalPages,
-    });
+    onProgress?.({ percent: 15, message: `Extracted text from ${totalPages} pages. Sending to Gemini AI...`, currentPage: 0, totalPages });
 
     if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
 
-    // Split into chunks and process
-    const chunks = splitTextIntoChunks(fullText, 2500, 150);
+    const chunks = splitTextIntoChunks(fullText, 25000, 500);
     const totalChunks = chunks.length;
-
-    console.log(`[extractFromPDF] Split into ${totalChunks} text chunks`);
+    console.log(`[extractFromPDF] Split into ${totalChunks} chunks`);
 
     const allTransactions: any[] = [];
-    const seenKeys = new Set<string>(); // dedup by date+amount+description
+    const seenKeys = new Set<string>();
 
-    for (let i = 0; i < chunks.length; i++) {
+    // Process chunks in parallel batches of BATCH_SIZE
+    for (let batchStart = 0; batchStart < totalChunks; batchStart += BATCH_SIZE) {
         if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
 
-        const chunk = chunks[i];
-        const approxPage = Math.round((i / totalChunks) * totalPages) + 1;
+        const batchEnd = Math.min(batchStart + BATCH_SIZE, totalChunks);
+        const batch = chunks.slice(batchStart, batchEnd);
 
-        try {
-            const response = await groq.chat.completions.create(
-                {
-                    model: "llama-3.3-70b-versatile",
-                    messages: [
-                        {
-                            role: "system",
-                            content: "You are a financial transaction extractor. Return only valid JSON arrays.",
-                        },
-                        {
-                            role: "user",
-                            content: `${TRANSACTION_PROMPT}\n\nSTATEMENT HEADER CONTEXT (Use this to find the exact statement year for transactions that lack a year):\n\`\`\`\n${headerContext}\n\`\`\`\n\nStatement chunk text to extract transactions from:\n\`\`\`\n${chunk}\n\`\`\``,
-                        },
-                    ],
-                    temperature: 0,
-                    max_tokens: 2048,
-                },
-                { signal }
-            );
+        const batchResults = await Promise.all(
+            batch.map(async (chunk, idx) => {
+                const i = batchStart + idx;
+                const approxPage = Math.round((i / totalChunks) * totalPages) + 1;
+                try {
+                    return await processChunk(chunk, headerContext, approxPage, signal);
+                } catch (err: any) {
+                    if (err.name === "AbortError") throw err;
+                    console.error(`[extractFromPDF] Chunk ${i + 1} error:`, err.message);
+                    return [];
+                }
+            })
+        );
 
-            const raw = response.choices?.[0]?.message?.content ?? "[]";
-            const txs = safeParseJSON(raw).map((tx: any) => ({
-                ...tx,
-                page: tx.page ?? approxPage,
-            }));
-
-            // Categorize with FULL description first (Tag: # hints are useful)
-            const categorizedTxs = categorizeAll(txs);
-
-            // Then clean description for display
-            const cleanedTxs = categorizedTxs.map((tx: any) => ({
-                ...tx,
-                description: cleanDescription(tx.description ?? ""),
-            }));
-
-            // Deduplicate
-            const newTxs = cleanedTxs.filter((tx: any) => {
-                const key = `${tx.date}|${tx.amount}|${tx.description?.slice(0, 20)}`;
-                if (seenKeys.has(key)) return false;
-                seenKeys.add(key);
-                return true;
-            });
-
-            allTransactions.push(...newTxs);
-
-            const percent = 15 + Math.round(((i + 1) / totalChunks) * 80);
-            const approxPageDone = Math.round(((i + 1) / totalChunks) * totalPages);
-
-            console.log(`[extractFromPDF] Chunk ${i + 1}/${totalChunks}: found ${newTxs.length} transactions (total: ${allTransactions.length})`);
-
-            onProgress?.({
-                percent,
-                message: `Chunk ${i + 1} of ${totalChunks} — ${allTransactions.length} transactions found`,
-                currentPage: approxPageDone,
-                totalPages,
-                transactions: newTxs.length > 0 ? newTxs : undefined,
-            });
-
-        } catch (err: any) {
-            if (err.name === "AbortError") throw err;
-            console.error(`[extractFromPDF] Chunk ${i + 1} error:`, err.message);
-            onProgress?.({
-                percent: 15 + Math.round(((i + 1) / totalChunks) * 80),
-                message: `Chunk ${i + 1} failed, continuing...`,
-                currentPage: Math.round(((i + 1) / totalChunks) * totalPages),
-                totalPages,
-            });
+        // Merge batch results, deduplicating
+        const batchTxs: any[] = [];
+        for (const txs of batchResults) {
+            for (const tx of txs) {
+                const key = `${tx.date}|${tx.amount}|${(tx.description ?? "").slice(0, 20)}`;
+                if (!seenKeys.has(key)) {
+                    seenKeys.add(key);
+                    batchTxs.push(tx);
+                }
+            }
         }
 
-        // Rate limit delay — llama-3.3-70b has generous limits but be safe
-        if (i < chunks.length - 1 && !signal?.aborted) {
+        allTransactions.push(...batchTxs);
+
+        const percent = 15 + Math.round((batchEnd / totalChunks) * 80);
+        const approxPageDone = Math.round((batchEnd / totalChunks) * totalPages);
+
+        console.log(`[extractFromPDF] Batch ${batchStart / BATCH_SIZE + 1}: chunks ${batchStart + 1}-${batchEnd}/${totalChunks} → ${batchTxs.length} new txs (total: ${allTransactions.length})`);
+
+        onProgress?.({
+            percent,
+            message: `Chunks ${batchStart + 1}–${batchEnd} of ${totalChunks} — ${allTransactions.length} transactions found`,
+            currentPage: approxPageDone,
+            totalPages,
+            transactions: batchTxs.length > 0 ? batchTxs : undefined,
+        });
+
+        // Inter-batch delay to stay within 30 RPM (only if more batches remain)
+        if (batchEnd < totalChunks && !signal?.aborted) {
             await new Promise<void>((resolve, reject) => {
-                const t = setTimeout(resolve, 300);
-                signal?.addEventListener("abort", () => {
-                    clearTimeout(t);
-                    reject(new DOMException("Aborted", "AbortError"));
-                });
+                const t = setTimeout(resolve, BATCH_DELAY_MS);
+                signal?.addEventListener("abort", () => { clearTimeout(t); reject(new DOMException("Aborted", "AbortError")); });
             });
         }
     }
@@ -241,6 +268,8 @@ export async function extractFromPDF(
     return allTransactions;
 }
 
+// ── Image extractor — keeps Gemini Vision ──────────────────────────────────
+
 export async function extractFromImage(
     base64Image: string,
     onProgress?: (data: {
@@ -254,60 +283,27 @@ export async function extractFromImage(
 ): Promise<any[]> {
     if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
 
-    onProgress?.({
-        percent: 20,
-        message: "Scanning image with Groq Vision...",
-        currentPage: 0,
-        totalPages: 1,
-    });
+    onProgress?.({ percent: 20, message: "Scanning image with Gemini Vision...", currentPage: 0, totalPages: 1 });
 
-    const imageData = base64Image.includes(",")
-        ? base64Image.split(",")[1]
-        : base64Image;
-
+    const imageData = base64Image.includes(",") ? base64Image.split(",")[1] : base64Image;
     const mimeMatch = base64Image.match(/data:([^;]+);base64/);
-    const mimeType = mimeMatch?.[1] ?? "image/jpeg";
+    const mimeType = (mimeMatch?.[1] ?? "image/jpeg") as any;
 
-    const response = await groq.chat.completions.create(
-        {
-            model: "meta-llama/llama-4-scout-17b-16e-instruct",
-            messages: [{
-                role: "user",
-                content: [
-                    {
-                        type: "image_url",
-                        image_url: {
-                            url: `data:${mimeType};base64,${imageData}`,
-                            detail: "high",
-                        },
-                    },
-                    { type: "text", text: TRANSACTION_PROMPT },
-                ],
-            }],
-            temperature: 0,
-            max_tokens: 4096,
-        },
-        { signal }
-    );
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
+    const result = await model.generateContent([
+        { inlineData: { data: imageData, mimeType } },
+        TRANSACTION_PROMPT,
+    ]);
 
-    onProgress?.({
-        percent: 85,
-        message: "Processing results...",
-        currentPage: 1,
-        totalPages: 1,
-    });
+    onProgress?.({ percent: 85, message: "Processing results...", currentPage: 1, totalPages: 1 });
 
-    const raw = response.choices?.[0]?.message?.content ?? "[]";
-    const transactions = safeParseJSON(raw as string);
-    const categorized = categorizeAll(transactions);
+    const raw = result.response.text();
+    const transactions = safeParseJSON(raw);
+    const categorized = categorizeAll(transactions).map((tx: any) => ({
+        ...tx,
+        description: cleanDescription(tx.description ?? ""),
+    }));
 
-    onProgress?.({
-        percent: 100,
-        message: `Found ${categorized.length} transactions`,
-        currentPage: 1,
-        totalPages: 1,
-        transactions: categorized,
-    });
-
+    onProgress?.({ percent: 100, message: `Found ${categorized.length} transactions`, currentPage: 1, totalPages: 1, transactions: categorized });
     return categorized;
 }

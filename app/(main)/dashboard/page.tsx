@@ -115,10 +115,10 @@ export default async function Home({
             </Suspense>
 
             {/* Grid structure placing Actions and AI Insights on the left, Category Breakdown on the right */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
               <div className="flex flex-col gap-4 sm:gap-6">
                 <ActionCenter />
-                <div className="h-[420px] sm:h-[480px] lg:h-[540px]">
+                <div className="flex-1 min-h-[420px] sm:min-h-[480px] lg:min-h-[540px]">
                   <Suspense fallback={<AiInsightsSkeleton />}>
                     <AiLiveInsights
                       range={preset}
@@ -128,7 +128,7 @@ export default async function Home({
                   </Suspense>
                 </div>
               </div>
-              <div>
+              <div className="flex flex-col">
                 <CategoryBreakdown />
               </div>
             </div>

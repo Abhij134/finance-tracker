@@ -3,7 +3,6 @@
 import { createClient } from "@/utils/supabase/server"
 import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai"
 
-// Initialize Gemini SDK
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API_KEY || "");
 
 const ALLOWED_CATEGORIES = [
@@ -13,40 +12,76 @@ const ALLOWED_CATEGORIES = [
     'Rent & Housing', 'Other'
 ];
 
+// Shared schema for both PDF and image
+const RESPONSE_SCHEMA = {
+    type: SchemaType.ARRAY,
+    items: {
+        type: SchemaType.OBJECT,
+        properties: {
+            merchant: { type: SchemaType.STRING },
+            amount:   { type: SchemaType.NUMBER },
+            date:     { type: SchemaType.STRING },
+            time:     { type: SchemaType.STRING },
+            category: { type: SchemaType.STRING },
+            type:     { type: SchemaType.STRING }
+        },
+        required: ["merchant", "amount", "date", "category", "type"]
+    }
+};
+
+// Flash-Lite: 30 RPM free, fastest, perfect for extraction
+function getModel() {
+    return genAI.getGenerativeModel({
+        model: "gemini-2.5-flash-lite",
+        generationConfig: {
+            responseMimeType: "application/json",
+            responseSchema: RESPONSE_SCHEMA as any
+        }
+    });
+}
+
+// Clean up pdf2json garbage before sending to Gemini
+function cleanPDFText(raw: string): string {
+    return raw
+        .replace(/\r\n|\r/g, '\n')
+        .replace(/[^\x20-\x7E\n₹]/g, ' ')  // strip non-printable chars
+        .replace(/\s{3,}/g, '  ')           // collapse excessive whitespace
+        .replace(/^\s*[\-=]{3,}\s*$/gm, '') // strip separator lines
+        .trim();
+}
+
+// Process a single chunk — pure function, easy to parallelize
+async function processChunk(chunk: string, chunkIndex: number): Promise<any[]> {
+    const model = getModel();
+    const prompt = `Extract ALL financial transactions from this bank statement text.
+Rules:
+- "- Rs." or "Dr" = Expense (debit), "+ Rs." or "Cr" = Income (credit)  
+- Date format: YYYY-MM-DD. Time format: HH:mm:ss or null if missing.
+- Categories: ${ALLOWED_CATEGORIES.join(", ")}
+- Skip non-transaction lines (headers, footers, balance summaries)
+- Return empty array [] if no transactions found in this chunk
+
+TEXT:
+${chunk}`;
+
+    try {
+        const result = await model.generateContent(prompt);
+        const text = result.response.text();
+        const parsed = JSON.parse(text);
+        return Array.isArray(parsed) ? parsed : [];
+    } catch (err) {
+        console.error(`Chunk ${chunkIndex} failed:`, err);
+        return []; // don't fail the whole batch
+    }
+}
+
 export async function scanReceipt(base64Image: string) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    const userId = user?.id;
-    if (!userId) {
-        throw new Error("Unauthorized");
-    }
+    if (!user?.id) throw new Error("Unauthorized");
+    if (!process.env.GOOGLE_GEMINI_API_KEY) throw new Error("Missing GOOGLE_GEMINI_API_KEY");
 
-    if (!process.env.GOOGLE_GEMINI_API_KEY) {
-        throw new Error("Missing GOOGLE_GEMINI_API_KEY in environment");
-    }
-
-    const model = genAI.getGenerativeModel({
-        model: "gemini-1.5-flash",
-        generationConfig: {
-            responseMimeType: "application/json",
-            responseSchema: {
-                type: SchemaType.ARRAY,
-                items: {
-                    type: SchemaType.OBJECT,
-                    properties: {
-                        merchant: { type: SchemaType.STRING },
-                        amount: { type: SchemaType.NUMBER },
-                        date: { type: SchemaType.STRING },
-                        time: { type: SchemaType.STRING },
-                        category: { type: SchemaType.STRING },
-                        type: { type: SchemaType.STRING }
-                    },
-                    required: ["merchant", "amount", "date", "category", "type"]
-                }
-            }
-        }
-    });
-
+    // ── PDF Path ──────────────────────────────────────────────
     if (base64Image.startsWith('data:application/pdf;base64,')) {
         const base64Data = base64Image.replace('data:application/pdf;base64,', '');
         const buffer = Buffer.from(base64Data, 'base64');
@@ -55,119 +90,82 @@ export async function scanReceipt(base64Image: string) {
         try {
             const PDFParser = require('pdf2json');
             const pdfParser = new PDFParser(null, 1);
-
             extractedText = await new Promise((resolve, reject) => {
-                pdfParser.on("pdfParser_dataError", (errData: any) => reject(new Error("Failed to parse PDF document.")));
+                pdfParser.on("pdfParser_dataError", (e: any) => reject(new Error("Failed to parse PDF")));
                 pdfParser.on("pdfParser_dataReady", () => resolve(pdfParser.getRawTextContent()));
                 pdfParser.parseBuffer(buffer);
             });
         } catch (err) {
-            console.error("PDF Parsing Error:", err);
             return { success: false, error: "Failed to read PDF. Make sure it's a valid document." };
         }
 
-        const chunkSize = 14000;
-        const textChunks = [];
-        for (let i = 0; i < extractedText.length; i += chunkSize) {
-            textChunks.push(extractedText.substring(i, i + chunkSize));
+        // Clean text BEFORE chunking — reduces token count significantly
+        const cleanedText = cleanPDFText(extractedText as string);
+
+        // Larger chunks = fewer API calls (Flash-Lite handles 1M tokens)
+        const CHUNK_SIZE = 25000; // was 14000, safe to increase
+        const chunks: string[] = [];
+        for (let i = 0; i < cleanedText.length; i += CHUNK_SIZE) {
+            chunks.push(cleanedText.substring(i, i + CHUNK_SIZE));
         }
 
-        let allParsedTransactions: any[] = [];
+        // Flash-Lite is 30 RPM — safe to run up to 25 chunks in parallel
+        // For 100 pages, ~4 chunks of 25k chars = 4 parallel calls = ~3-5s total
+        const PARALLEL_LIMIT = 25; // stay under 30 RPM
+        const results: any[][] = [];
 
-        for (let i = 0; i < textChunks.length; i++) {
-            const chunk = textChunks[i];
-            const prompt = `
-                Extract transactions from this bank statement text.
-                Categories to use: ${ALLOWED_CATEGORIES.join(", ")}.
-                Note: "- Rs." is Expense, "+ Rs." is Income. 
-                Categorize intelligently.
-                Format the Date as YYYY-MM-DD and Time as HH:mm:ss (if available, else null).
-                TEXT:
-                ${chunk}
-            `;
+        for (let i = 0; i < chunks.length; i += PARALLEL_LIMIT) {
+            const batch = chunks.slice(i, i + PARALLEL_LIMIT);
+            const batchResults = await Promise.all(
+                batch.map((chunk, idx) => processChunk(chunk, i + idx))
+            );
+            results.push(...batchResults);
 
-            try {
-                const result = await model.generateContent(prompt);
-                const response = await result.response;
-                const text = response.text();
-                const parsed = JSON.parse(text);
-                if (Array.isArray(parsed)) {
-                    allParsedTransactions.push(...parsed);
-                }
-            } catch (err) {
-                console.error(`Error processing chunk ${i + 1}:`, err);
-            }
-
-            if (i < textChunks.length - 1) {
-                await new Promise(resolve => setTimeout(resolve, 2000)); // Rate limiting
+            // Only throttle if there are MORE batches after this
+            if (i + PARALLEL_LIMIT < chunks.length) {
+                await new Promise(r => setTimeout(r, 1500)); // wait 1.5s between batches
             }
         }
 
-        if (allParsedTransactions.length === 0) {
-            return { success: false, error: "No transactions could be extracted from this document." };
+        const allTransactions = results.flat();
+
+        if (allTransactions.length === 0) {
+            return { success: false, error: "No transactions found in this document." };
         }
-        return { success: true, transactions: allParsedTransactions };
-    } else {
-        const mimeTypeMatch = base64Image.match(/^data:(image\/[^;]+);base64,/);
-        const mimeType = mimeTypeMatch ? mimeTypeMatch[1] : "image/jpeg";
-        const base64Data = base64Image.replace(/^data:image\/[^;]+;base64,/, "");
+        return { success: true, transactions: allTransactions };
+    }
 
-        const prompt = `
-            Extract receipt details into a JSON array of objects. 
-            Even if there is only one receipt, return an array with one object.
-            
-            Fields:
-            - merchant: Store/Merchant name
-            - amount: Total amount (positive number)
-            - date: Transaction date (YYYY-MM-DD). If not found, use today's date: ${new Date().toISOString().split('T')[0]}
-            - time: Transaction time (HH:mm:ss). If not found, return null.
-            - category: Best fit from: ${ALLOWED_CATEGORIES.join(", ")}
-            - type: Always "Expense" for receipts unless it's clearly an income document.
-            
-            If the image is too blurry to read or doesn't look like a receipt/invoice, return an empty array.
-        `;
+    // ── Image Path (unchanged logic, updated model) ───────────
+    const mimeTypeMatch = base64Image.match(/^data:(image\/[^;]+);base64,/);
+    const mimeType = mimeTypeMatch ? mimeTypeMatch[1] : "image/jpeg";
+    const base64Data = base64Image.replace(/^data:image\/[^;]+;base64,/, "");
 
-        try {
-            const result = await model.generateContent([
-                { text: prompt },
-                {
-                    inlineData: {
-                        mimeType: mimeType,
-                        data: base64Data
-                    }
-                }
-            ]);
+    const prompt = `Extract receipt details into a JSON array.
+Fields: merchant, amount (positive number), date (YYYY-MM-DD), time (HH:mm:ss or null), 
+category (from: ${ALLOWED_CATEGORIES.join(", ")}), type ("Expense" or "Income").
+Today's date if not found: ${new Date().toISOString().split('T')[0]}
+Return empty array [] if image is not a receipt.`;
 
-            const response = await result.response;
-            const text = response.text();
-            let parsedTransactions = JSON.parse(text);
+    try {
+        const model = getModel();
+        const result = await model.generateContent([
+            { text: prompt },
+            { inlineData: { mimeType, data: base64Data } }
+        ]);
 
-            if (!Array.isArray(parsedTransactions)) {
-                parsedTransactions = [parsedTransactions];
-            }
-
-            if (parsedTransactions.length === 0) {
-                return { success: false, error: "We couldn't find any clear transaction details. Please ensure the image is well-lit and not blurry." };
-            }
-
-            const transactionsWithFullDate = parsedTransactions.map((tx: any) => {
-                const dateOnly = tx.date || new Date().toISOString().split("T")[0];
-                // Normalize to 12:00 PM UTC to avoid timezone bleed
-                const normalizedDate = `${dateOnly}T12:00:00.000Z`;
-                return {
-                    ...tx,
-                    date: normalizedDate
-                };
-            });
-
-            return { success: true, transactions: transactionsWithFullDate };
-        } catch (err: any) {
-            console.error("Failed to scan receipt with Gemini SDK:", err);
-            if (err.message?.includes("blurry") || err.message?.includes("Safety")) {
-                return { success: false, error: "The AI was unable to process this image safely or it might be too blurry." };
-            }
-            return { success: false, error: "Failed to process the receipt image. Please try again." };
+        let parsed = JSON.parse(result.response.text());
+        if (!Array.isArray(parsed)) parsed = [parsed];
+        if (parsed.length === 0) {
+            return { success: false, error: "No transaction details found. Check the image is clear." };
         }
+
+        const transactions = parsed.map((tx: any) => ({
+            ...tx,
+            date: `${tx.date || new Date().toISOString().split('T')[0]}T12:00:00.000Z`
+        }));
+
+        return { success: true, transactions };
+    } catch (err: any) {
+        return { success: false, error: "Failed to process the receipt image. Please try again." };
     }
 }
-

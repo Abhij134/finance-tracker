@@ -142,7 +142,13 @@ export function buildUnusualSpendingHTML(predictedMonthly: number, budgetLimit: 
 /**
  * Template: Weekly Summary
  */
-export function buildWeeklySummaryHTML(totalSpent: number, budgetLimit: number | null, name: string = "User") {
+export function buildWeeklySummaryHTML(
+  totalSpent: number, 
+  budgetLimit: number | null, 
+  name: string = "User",
+  topCategories: { name: string, amount: number }[] = [],
+  aiAdvice: string = ""
+) {
   const formattedSpent = new Intl.NumberFormat('en-IN', {
     style: 'currency',
     currency: 'INR',
@@ -201,8 +207,38 @@ export function buildWeeklySummaryHTML(totalSpent: number, budgetLimit: number |
           ${budgetSection}
         </table>
       </div>
+
+      ${topCategories.length > 0 ? `
+      <div style="background-color: #0f172a; padding: 25px; border-radius: 12px; border: 1px solid #334155; margin-top: 16px;">
+        <h3 style="color: #cbd5e1; margin-top: 0; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px;">Where your money went</h3>
+        <table style="width: 100%; border-collapse: collapse;">
+          ${topCategories.map(cat => `
+            <tr>
+              <td style="padding: 10px 0; border-bottom: 1px solid #1e293b; color: #94a3b8; font-size: 15px; font-weight: 500;">
+                <span style="display: inline-block; width: 8px; height: 8px; background-color: #10b981; border-radius: 50%; margin-right: 8px;"></span>
+                ${cat.name}
+              </td>
+              <td style="padding: 10px 0; border-bottom: 1px solid #1e293b; color: #f8fafc; font-size: 15px; font-weight: 600; text-align: right;">
+                ${new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(cat.amount)}
+              </td>
+            </tr>
+          `).join('')}
+        </table>
+      </div>
+      ` : ''}
+
+      ${aiAdvice ? `
+      <div style="background: linear-gradient(145deg, #0f172a, #020617); padding: 25px; border-radius: 12px; border: 1px solid #10b981; margin-top: 16px; border-left: 4px solid #10b981;">
+        <h3 style="color: #10b981; margin-top: 0; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; display: flex; align-items: center;">
+          <span style="margin-right: 6px;">✨</span> AI Financial Advisor
+        </h3>
+        <p style="color: #e2e8f0; font-size: 15px; line-height: 1.6; margin: 0; font-style: italic;">
+          "${aiAdvice}"
+        </p>
+      </div>
+      ` : ''}
       
-      <div style="margin-top: 20px; text-align: center;">
+      <div style="margin-top: 30px; text-align: center;">
         <a href="https://financeneo.vercel.app/" style="display: inline-block; background-color: #10b981; color: #020617; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; font-size: 15px; border: 1px solid #059669;">View Full Dashboard</a>
       </div>
       

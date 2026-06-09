@@ -1,9 +1,10 @@
 import { Sidebar } from "@/components/sidebar";
 import { BottomNav } from "@/components/bottom-nav";
 import { ScanProvider } from "@/components/scan-context";
-import { Suspense, ReactNode } from "react";
+import { ReactNode } from "react";
 import { PageTransition } from "@/components/page-transition";
 import { FloatingAiChat } from "@/components/floating-ai-chat";
+import { FloatingScanProgress } from "@/components/floating-scan-progress";
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -15,6 +16,8 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         </div>
       </div>
       <BottomNav />
+      {/* Floating scan progress — visible on ALL pages while scanning */}
+      <FloatingScanProgress />
       {/* Floating AI Chatbox — available on all pages */}
       <FloatingAiChat />
     </ScanProvider>

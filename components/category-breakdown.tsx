@@ -199,7 +199,7 @@ export function CategoryBreakdown() {
 
   return (
     <div
-      className="rounded-2xl p-4 sm:p-2 flex flex-col relative overflow-hidden"
+      className="rounded-2xl p-4 sm:p-2 flex flex-col relative overflow-hidden h-full"
       style={{
         background: "linear-gradient(135deg, rgba(155, 197, 183, 0.1) 0%, rgba(0, 0, 0, 0.05) 50%, rgba(66, 75, 40, 0.2) 100%)",
         border: "1px solid rgba(240, 208, 208, 0.1)",
@@ -301,7 +301,7 @@ export function CategoryBreakdown() {
     
 
       {/* ── Interactive legend: progress bars + expandable transactions ──── */}
-      <div className="flex flex-col gap-2 mt-1">
+      <div className="flex-1 overflow-y-auto custom-scrollbar mt-1 pr-1 flex flex-col gap-2">
         {data.map((d, i) => {
           const pct       = total ? (d.value / total) * 100 : 0;
           const isActive  = i === activeIndex;

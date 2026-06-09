@@ -160,7 +160,7 @@ export function FloatingAiChat() {
       {/* ── Chat panel — drops down from top-right ─────────────────── */}
       <div
         className={`fixed z-50 w-[calc(100vw-2rem)] sm:w-[420px] left-4 right-4 sm:left-auto sm:right-6 transition-all duration-300
-          top-[4.5rem] sm:top-auto sm:bottom-[6rem] origin-top sm:origin-bottom-right`}
+          top-[4.5rem] sm:top-auto sm:bottom-[7.5rem] origin-top sm:origin-bottom-right`}
         style={{
           transform: isOpen ? "translateY(0) scale(1)" : "translateY(-12px) scale(0.92)",
           opacity: isOpen ? 1 : 0,
@@ -323,8 +323,8 @@ export function FloatingAiChat() {
           px-3 sm:px-4 py-2 sm:py-2.5 text-sm font-medium tracking-wide
           border transition-all duration-300 active:scale-95
           ${isOpen
-            ? "top-14 right-4 sm:top-auto sm:bottom-6 sm:right-6 bg-white/10 border-white/20 text-white shadow-xl opacity-0 pointer-events-none scale-90"
-            : "top-14 right-4 sm:top-auto sm:bottom-6 sm:right-6 bg-[#06150e]/80 backdrop-blur-md border-emerald-500/30 text-emerald-400 hover:bg-[#081c13] hover:border-emerald-500/60 hover:shadow-[0_0_24px_rgba(16,185,129,0.35)] shadow-md"
+            ? "top-20 right-4 sm:top-auto sm:bottom-10 sm:right-6 bg-white/10 border-white/20 text-white shadow-xl opacity-0 pointer-events-none scale-90"
+            : "top-20 right-4 sm:top-auto sm:bottom-10 sm:right-6 bg-[#06150e]/80 backdrop-blur-md border-emerald-500/30 text-emerald-400 hover:bg-[#081c13] hover:border-emerald-500/60 hover:shadow-[0_0_24px_rgba(16,185,129,0.35)] shadow-md"
           }
         `}
       >

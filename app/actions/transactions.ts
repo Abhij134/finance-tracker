@@ -167,8 +167,19 @@ export async function addBulkTransactions(transactions: any[]) {
             referenceId: tx.referenceId || null,
         }));
 
-        const minDate = new Date(Math.min(...rows.map(r => r.date.getTime())));
-        const maxDate = new Date(Math.max(...rows.map(r => r.date.getTime())));
+        // Bug 1 fix: filter out rows with invalid dates (e.g. from empty AI chunks)
+        const validRows = rows.filter(r => !isNaN(r.date.getTime()));
+        if (validRows.length === 0) {
+            return { success: false, addedCount: 0, error: "No valid transactions to import." };
+        }
+
+        const minDate = new Date(Math.min(...validRows.map(r => r.date.getTime())));
+        const maxDate = new Date(Math.max(...validRows.map(r => r.date.getTime())));
+
+        // Safety guard in case all dates were still invalid
+        if (isNaN(minDate.getTime()) || isNaN(maxDate.getTime())) {
+            return { success: false, addedCount: 0, error: "Could not determine date range." };
+        }
 
         const existingTxs = await prisma.transaction.findMany({
             where: {
@@ -181,7 +192,7 @@ export async function addBulkTransactions(transactions: any[]) {
             select: { date: true, merchant: true, amount: true, referenceId: true }
         });
 
-        const uniqueRows = rows.filter(newTx => {
+        const uniqueRows = validRows.filter(newTx => {
             // First deduplicate by explicitly provided transaction ID
             if (newTx.referenceId) {
                 const matchIndex = existingTxs.findIndex(ex => ex.referenceId === newTx.referenceId);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useBudgets } from "@/app/(main)/budget-context";
 import { useTransactions } from "@/app/(main)/transactions-context";
 import { CATEGORIES } from "@/lib/constants";
@@ -16,9 +16,14 @@ export function BudgetProgress() {
     const { budgets, updateBudget } = useBudgets();
     const { transactions, dateFilter } = useTransactions();
 
+    const [mounted, setMounted] = useState(false);
     const [editingCategory, setEditingCategory] = useState<string | null>(null);
     const [editAmount, setEditAmount] = useState<string>("");
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     const handleEdit = (category: string, currentAmount: number) => {
         setEditingCategory(category);
@@ -71,25 +76,50 @@ export function BudgetProgress() {
         .filter(b => b.category !== "OVERALL" && b.category !== "Income")
         .reduce((s, b) => s + b.amount, 0);
     const totalSpent = expenses.reduce((s, t) => s + Math.abs(t.amount), 0);
+    const totalRemaining = totalBudgeted - totalSpent;
+    const isOverall = totalSpent > totalBudgeted;
     const categoriesWithBudget = EXPENSE_CATEGORIES.filter(cat => {
         const b = budgets.find(b => b.category === cat.label);
         return b && b.amount > 0;
     }).length;
+
+    if (!mounted) {
+        return (
+            <div className="space-y-4 animate-pulse">
+                <div className="h-16 bg-primary/5 border border-primary/20 rounded-xl" />
+                {[1, 2, 3, 4].map(i => (
+                    <div key={i} className="h-20 bg-background/50 border border-border rounded-xl" />
+                ))}
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-4">
             {/* Summary row */}
             {totalBudgeted > 0 && (
                 <div className="flex flex-col gap-2">
-                    <div className="flex items-center gap-3 p-3 rounded-xl bg-primary/5 border border-primary/20">
-                        <TrendingUp className="h-4 w-4 text-primary shrink-0" />
-                        <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                            <span className="font-semibold text-foreground">{fmt(totalSpent)}</span> spent of{" "}
-                            <span className="font-semibold text-foreground">{fmt(totalBudgeted)}</span>
-                            <br className="sm:hidden" />
-                            {" "}budgeted across{" "}
-                            {categoriesWithBudget} {categoriesWithBudget === 1 ? "category" : "categories"}
-                        </p>
+                    <div className="flex items-start justify-between gap-3 p-3 rounded-xl bg-primary/5 border border-primary/20">
+                        <div className="flex items-center gap-3 min-w-0">
+                            <TrendingUp className="h-4 w-4 text-primary shrink-0" />
+                            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                                <span className="font-semibold text-foreground">{fmt(totalSpent)}</span> spent of{" "}
+                                <span className="font-semibold text-foreground">{fmt(totalBudgeted)}</span>
+                                <br className="sm:hidden" />
+                                {" "}across {categoriesWithBudget} {categoriesWithBudget === 1 ? "category" : "categories"}
+                            </p>
+                        </div>
+                        {/* Overall remaining */}
+                        <div className={`shrink-0 text-right px-2.5 py-1 rounded-lg text-xs font-bold ${
+                            isOverall
+                                ? "bg-red-500/15 text-red-400"
+                                : "bg-emerald-500/15 text-emerald-400"
+                        }`}>
+                            <div className="text-[9px] font-normal uppercase tracking-wide opacity-70 mb-0.5">
+                                {isOverall ? "Over by" : "Remaining"}
+                            </div>
+                            {fmt(Math.abs(totalRemaining))}
+                        </div>
                     </div>
                 </div>
             )}
