@@ -66,10 +66,12 @@ export default async function Home({
   const userBirthdate = dbUser?.birthdate ? new Date(dbUser.birthdate).toISOString() : undefined;
   const userImage = dbUser?.image || undefined;
 
-  const [dbTransactions, dbBudgets] = await Promise.all([
-    getTransactions(),
+  const [transactionsData, dbBudgets] = await Promise.all([
+    getTransactions({ limit: 100 }),
     getBudgets(),
   ]);
+
+  const dbTransactions = Array.isArray(transactionsData) ? transactionsData : transactionsData?.transactions || [];
 
   const txs = dbTransactions.map((d: any) => {
     const dateObj = new Date(d.date);

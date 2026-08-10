@@ -95,14 +95,14 @@ export function BudgetProgress() {
     }
 
     return (
-        <div className="space-y-4">
+        <div className="space-y-2 sm:space-y-3">
             {/* Summary row */}
             {totalBudgeted > 0 && (
                 <div className="flex flex-col gap-2">
-                    <div className="flex items-start justify-between gap-3 p-3 rounded-xl bg-primary/5 border border-primary/20">
-                        <div className="flex items-center gap-3 min-w-0">
-                            <TrendingUp className="h-4 w-4 text-primary shrink-0" />
-                            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                    <div className="flex items-start justify-between gap-2 p-2.5 sm:p-3 rounded-xl bg-primary/5 border border-primary/20">
+                        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                            <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary shrink-0" />
+                            <p className="text-[11px] sm:text-sm text-muted-foreground leading-relaxed">
                                 <span className="font-semibold text-foreground">{fmt(totalSpent)}</span> spent of{" "}
                                 <span className="font-semibold text-foreground">{fmt(totalBudgeted)}</span>
                                 <br className="sm:hidden" />
@@ -110,12 +110,12 @@ export function BudgetProgress() {
                             </p>
                         </div>
                         {/* Overall remaining */}
-                        <div className={`shrink-0 text-right px-2.5 py-1 rounded-lg text-xs font-bold ${
+                        <div className={`shrink-0 text-right px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg text-[11px] sm:text-xs font-bold ${
                             isOverall
                                 ? "bg-red-500/15 text-red-400"
                                 : "bg-emerald-500/15 text-emerald-400"
                         }`}>
-                            <div className="text-[9px] font-normal uppercase tracking-wide opacity-70 mb-0.5">
+                            <div className="text-[8px] sm:text-[9px] font-normal uppercase tracking-wide opacity-70 mb-0.5">
                                 {isOverall ? "Over by" : "Remaining"}
                             </div>
                             {fmt(Math.abs(totalRemaining))}
@@ -126,7 +126,7 @@ export function BudgetProgress() {
 
             {/* Error Message */}
             {errorMsg && (
-                <div className="p-3 text-sm rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 font-medium">
+                <div className="p-2.5 text-xs sm:text-sm rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 font-medium">
                     {errorMsg}
                 </div>
             )}
@@ -153,25 +153,25 @@ export function BudgetProgress() {
                             : "bg-primary";
 
                 return (
-                    <div key={cat.label} className="p-4 border border-border rounded-xl bg-background/50 hover:bg-background/80 transition-colors">
-                        <div className="flex items-center justify-between gap-2 mb-2.5">
-                            <div className="flex items-center gap-2 min-w-0">
-                                <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${cat.color}`} />
-                                <span className="font-medium text-sm text-foreground truncate">{cat.label}</span>
+                    <div key={cat.label} className="p-2.5 sm:p-3.5 border border-border rounded-xl bg-background/50 hover:bg-background/80 transition-colors">
+                        <div className="flex items-center justify-between gap-2 mb-1.5 sm:mb-2">
+                            <div className="flex items-center gap-1.5 min-w-0">
+                                <span className={`w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full shrink-0 ${cat.color}`} />
+                                <span className="font-semibold text-xs sm:text-sm text-foreground truncate">{cat.label}</span>
                                 {spending > 0 && limit === 0 && (
-                                    <span className="text-[10px] text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded-full font-medium whitespace-nowrap">No limit</span>
+                                    <span className="text-[9px] sm:text-[10px] text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded-full font-medium whitespace-nowrap">No limit</span>
                                 )}
                             </div>
 
                             {editingCategory === cat.label ? (
-                                <div className="flex items-center gap-2 shrink-0">
+                                <div className="flex items-center gap-1.5 shrink-0">
                                     <div className="relative">
-                                        <span className="absolute left-2 top-1.5 text-muted-foreground text-[10px]">₹</span>
+                                        <span className="absolute left-2 top-1 text-muted-foreground text-[10px]">₹</span>
                                         <input
                                             type="number"
                                             value={editAmount}
                                             onChange={(e) => setEditAmount(e.target.value)}
-                                            className="w-20 pl-4 pr-1 py-1 text-sm bg-background border border-border rounded-lg focus:ring-1 focus:ring-primary focus:outline-none"
+                                            className="w-16 sm:w-20 pl-3.5 pr-1 py-0.5 sm:py-1 text-xs sm:text-sm bg-background border border-border rounded-lg focus:ring-1 focus:ring-primary focus:outline-none"
                                             placeholder="0"
                                             autoFocus
                                             onKeyDown={(e) => {
@@ -185,8 +185,8 @@ export function BudgetProgress() {
                                     </button>
                                 </div>
                             ) : (
-                                <div className="flex items-center gap-1.5 shrink-0">
-                                    <div className="text-sm font-medium text-foreground text-right whitespace-nowrap">
+                                <div className="flex items-center gap-1 shrink-0">
+                                    <div className="text-xs sm:text-sm font-medium text-foreground text-right whitespace-nowrap">
                                         {fmt(spending)}
                                         <span className="text-muted-foreground font-normal ml-1">
                                             / {limit > 0 ? fmt(limit) : "—"}

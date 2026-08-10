@@ -47,7 +47,7 @@ export function Sidebar() {
 
   return (
     <div
-      className={`relative hidden lg:flex h-screen flex-col bg-white/[0.03] backdrop-blur-xl border-r border-white/10 transition-all duration-300 ease-in-out ${isOpen ? "w-64" : "w-16"
+      className={`relative hidden lg:flex h-screen flex-col bg-white/[0.03] backdrop-blur-xl border-r border-white/10 transition-all duration-300 ease-in-out ${isOpen ? "w-48" : "w-16"
         }`}
     >
       <div className={`flex items-center justify-center p-4 border-b border-border h-14`}>

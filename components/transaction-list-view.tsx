@@ -17,7 +17,15 @@ type Tx = {
     amount: number;
 };
 
-export function TransactionListView({ initialTransactions }: { initialTransactions: Tx[] }) {
+export function TransactionListView({
+    initialTransactions,
+    totalPages,
+    totalCount,
+}: {
+    initialTransactions: Tx[];
+    totalPages?: number;
+    totalCount?: number;
+}) {
     const [startDate, setStartDate] = useState<string>("");
     const [endDate, setEndDate] = useState<string>("");
     const [searchQuery, setSearchQuery] = useState<string>("");
@@ -146,9 +154,9 @@ export function TransactionListView({ initialTransactions }: { initialTransactio
     }
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4">
             {/* Filters Bar */}
-            <div className="flex flex-col sm:flex-row flex-wrap gap-2 items-end">
+            <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-2 items-end">
                 <div className="flex-1 min-w-[200px] w-full">
                     <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -173,15 +181,15 @@ export function TransactionListView({ initialTransactions }: { initialTransactio
                     </div>
                 </div>
 
-                <div className="flex gap-2 w-full sm:w-auto items-end">
-                    <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2 w-full sm:w-auto items-end">
+                    <div className="flex gap-2 flex-1 sm:flex-none">
                         <div className="space-y-0">
                             <label className="text-xs text-muted-foreground mb-0.5 block">From</label>
                             <input
                                 type="date"
                                 value={startDate}
                                 onChange={(e) => setStartDate(e.target.value)}
-                                className="px-3 py-2.5 bg-card border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                className="px-2 sm:px-3 py-2 sm:py-2.5 bg-card border border-border rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 w-full"
                             />
                         </div>
 
@@ -191,37 +199,37 @@ export function TransactionListView({ initialTransactions }: { initialTransactio
                                 type="date"
                                 value={endDate}
                                 onChange={(e) => setEndDate(e.target.value)}
-                                className="px-3 py-2.5 bg-card border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                className="px-2 sm:px-3 py-2 sm:py-2.5 bg-card border border-border rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 w-full"
                             />
                         </div>
                     </div>
 
                     {/* Select Transaction Button area */}
-                    <div className="flex items-end gap-2">
+                    <div className="flex items-end gap-2 w-full sm:w-auto">
                         {isSelectionMode && (
                             <button
                                 onClick={handleSelectAll}
-                                className="px-3 py-2.5 flex items-center gap-1.5 border rounded-xl text-sm font-medium transition-colors bg-card hover:bg-muted text-foreground border-border whitespace-nowrap"
+                                className="px-2.5 sm:px-3 py-2 sm:py-2.5 flex items-center gap-1 sm:gap-1.5 border rounded-xl text-xs sm:text-sm font-medium transition-colors bg-card hover:bg-muted text-foreground border-border whitespace-nowrap flex-1 sm:flex-none justify-center"
                             >
                                 {filteredTransactions.length > 0 && selectedIds.size === filteredTransactions.length ? "Deselect All" : "Select All"}
                             </button>
                         )}
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-1 sm:flex-none">
                             <button
                                 onClick={toggleSelectionMode}
-                                className={`px-3 py-2.5 flex items-center gap-1.5 border rounded-xl text-sm font-medium transition-colors whitespace-nowrap ${
+                                className={`px-2.5 sm:px-3 py-2 sm:py-2.5 flex items-center gap-1 sm:gap-1.5 border rounded-xl text-xs sm:text-sm font-medium transition-colors whitespace-nowrap flex-1 sm:flex-none justify-center ${
                                     isSelectionMode
                                         ? "bg-emerald-500/20 text-emerald-500 border-emerald-500/30 hover:bg-emerald-500/30"
                                         : "bg-card text-foreground border-border hover:bg-muted"
                                 }`}
                             >
-                                <CheckSquare className="h-4 w-4" />
-                                Select Transactions
+                                <CheckSquare className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+                                <span>Select Transactions</span>
                             </button>
                             {isSelectionMode && (
                                 <button
                                     onClick={toggleSelectionMode}
-                                    className="text-xs text-muted-foreground hover:text-foreground transition-colors px-1 py-1"
+                                    className="text-xs text-muted-foreground hover:text-foreground transition-colors px-1 py-1 shrink-0"
                                 >
                                     Cancel
                                 </button>
@@ -392,8 +400,8 @@ export function TransactionListView({ initialTransactions }: { initialTransactio
                                         }`}
                                     >
                                         {/* Summary row */}
-                                        <div className="flex items-center justify-between px-4 py-4">
-                                            <div className="flex items-center gap-3 min-w-0 flex-1">
+                                        <div className="flex items-center justify-between px-3 py-2.5">
+                                            <div className="flex items-center gap-2 min-w-0 flex-1">
                                                 {isSelectionMode && (
                                                     <input
                                                         type="checkbox"
@@ -402,12 +410,12 @@ export function TransactionListView({ initialTransactions }: { initialTransactio
                                                         className="rounded border-border accent-emerald-500 h-5 w-5 shrink-0"
                                                     />
                                                 )}
-                                                <div className="flex flex-col gap-1 min-w-0 flex-1">
-                                                    <span className="text-sm font-semibold text-foreground truncate">
+                                                <div className="flex flex-col gap-0.5 min-w-0 flex-1">
+                                                    <span className="text-xs font-semibold text-foreground truncate">
                                                         {tx.merchant}
                                                     </span>
-                                                    <div className="flex items-center gap-2 flex-wrap">
-                                                        <span className="text-[11px] text-muted-foreground whitespace-nowrap">
+                                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                                        <span className="text-[10px] text-muted-foreground whitespace-nowrap">
                                                             {mounted ? format(new Date(tx.date), 'dd MMM yyyy') : '...'}
                                                         </span>
                                                         <span className={`inline-flex items-center rounded-full px-1.5 py-0.5 text-[9px] font-bold text-white uppercase tracking-tighter ${tx.category.color}`}>
@@ -417,9 +425,9 @@ export function TransactionListView({ initialTransactions }: { initialTransactio
                                                 </div>
                                             </div>
 
-                                            <div className="flex items-center gap-2 shrink-0 ml-4">
-                                                <div className="flex flex-col items-end gap-1">
-                                                    <span className={`text-sm font-bold ${tx.amount < 0 ? "text-red-400" : "text-emerald-400"}`}>
+                                            <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                                                <div className="flex flex-col items-end gap-0.5">
+                                                    <span className={`text-xs font-bold ${tx.amount < 0 ? "text-red-400" : "text-emerald-400"}`}>
                                                         {formatAmount(tx.amount)}
                                                     </span>
                                                     <span className="text-[10px] text-muted-foreground bg-background/50 px-1.5 py-0.5 rounded border border-border/50">
@@ -428,8 +436,8 @@ export function TransactionListView({ initialTransactions }: { initialTransactio
                                                 </div>
                                                 <div className="text-muted-foreground/50">
                                                     {expandedId === tx.id
-                                                        ? <ChevronUp className="h-4 w-4" />
-                                                        : <ChevronDown className="h-4 w-4" />
+                                                        ? <ChevronUp className="h-3.5 w-3.5" />
+                                                        : <ChevronDown className="h-3.5 w-3.5" />
                                                     }
                                                 </div>
                                             </div>

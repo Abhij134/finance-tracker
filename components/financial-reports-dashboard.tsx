@@ -123,11 +123,11 @@ export function FinancialReportsDashboard() {
 
 
   return (
-    <div className="min-h-screen text-zinc-100 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen text-zinc-100 p-2.5 sm:p-4 lg:p-8 max-w-7xl mx-auto space-y-3 sm:space-y-6">
       {/* Date Filter Bar — Same style as Dashboard */}
-      <div className="relative z-50 flex flex-wrap items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-md px-3 py-2.5 shadow-sm">
-        <Calendar className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-        <span className="text-xs font-medium text-muted-foreground">Period:</span>
+      <div className="relative z-50 flex flex-wrap items-center gap-1.5 sm:gap-2 rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-md px-2.5 sm:px-3 py-2 sm:py-2.5 shadow-sm">
+        <Calendar className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-muted-foreground shrink-0" />
+        <span className="text-[11px] sm:text-xs font-medium text-muted-foreground">Period:</span>
         <div className="flex items-center gap-1 flex-wrap">
           {(["all", "month"] as DatePreset[]).map((p) => (
             <button
@@ -142,7 +142,7 @@ export function FinancialReportsDashboard() {
                 }
                 setDateFilter({ preset: p, range: { from, to } });
               }}
-              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${dateFilter.preset === p
+              className={`px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg text-[11px] sm:text-xs font-semibold transition-all ${dateFilter.preset === p
                 ? "border border-primary/60 bg-primary/10 text-primary shadow-[0_0_10px_rgba(16,185,129,0.15)]"
                 : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
                 }`}
@@ -168,17 +168,17 @@ export function FinancialReportsDashboard() {
       </div>
 
       {/* Top Grid: Cash Flow Trend (Full Width) */}
-      <div className="grid grid-cols-1 gap-6 relative z-10">
-        <div className="bg-white/[0.04] backdrop-blur-md border border-white/10 shadow-[0_8px_30px_rgba(16,185,129,0.05)] rounded-2xl p-4 sm:p-6 flex flex-col min-h-[240px] sm:min-h-[380px]">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold text-zinc-100">Cash Flow Trend</h2>
-            <div className="flex items-center gap-4 text-xs font-medium text-zinc-400">
-              <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>
+      <div className="grid grid-cols-1 gap-3 sm:gap-6 relative z-10">
+        <div className="bg-white/[0.04] backdrop-blur-md border border-white/10 shadow-[0_8px_30px_rgba(16,185,129,0.05)] rounded-xl sm:rounded-2xl p-3 sm:p-6 flex flex-col min-h-[160px] sm:min-h-[380px]">
+          <div className="flex justify-between items-center mb-2.5 sm:mb-6">
+            <h2 className="text-sm sm:text-xl font-bold text-zinc-100">Cash Flow Trend</h2>
+            <div className="flex items-center gap-2.5 sm:gap-4 text-[11px] sm:text-xs font-medium text-zinc-400">
+              <div className="flex items-center gap-1">
+                <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>
                 Income
               </div>
-              <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-zinc-400"></span>
+              <div className="flex items-center gap-1">
+                <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-zinc-400"></span>
                 Expenses
               </div>
             </div>
@@ -230,9 +230,9 @@ export function FinancialReportsDashboard() {
       <div className="relative z-10">
 
         {/* Customizable Budget Category Tracker */}
-        <div className="bg-[#1A2229]/80 backdrop-blur-md border border-emerald-500/10 shadow-[0_8px_30px_rgb(16,185,129,0.03)] rounded-2xl p-6 flex flex-col min-h-[380px]">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold text-zinc-100">Budget Progress</h2>
+        <div className="bg-[#1A2229]/80 backdrop-blur-md border border-emerald-500/10 shadow-[0_8px_30px_rgb(16,185,129,0.03)] rounded-2xl p-3.5 sm:p-6 flex flex-col min-h-[300px]">
+          <div className="flex justify-between items-center mb-3 sm:mb-6">
+            <h2 className="text-base sm:text-xl font-bold text-zinc-100">Budget Progress</h2>
             <p className="text-xs font-medium text-zinc-400 max-w-[200px] text-right hidden sm:block">
               Track limits. Click ✏️ to customize your budget category limit.
             </p>

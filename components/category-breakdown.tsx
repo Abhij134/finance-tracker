@@ -17,23 +17,23 @@ const SafePie = Pie as any;
 // ── Color map ─────────────────────────────────────────────────────────────────
 const getCategoryHex = (label: string): string => {
   switch (label) {
-    case "Food & Dining":     return "#EAB308";
-    case "Groceries":         return "#84CC16";
-    case "Shopping":          return "#EC4899";
-    case "Transport":         return "#F97316";
-    case "Fuel & Auto":       return "#F97316";
-    case "Travel":            return "#0EA5E9";
-    case "Health & Medical":  return "#14B8A6";
+    case "Food & Dining": return "#EAB308";
+    case "Groceries": return "#84CC16";
+    case "Shopping": return "#EC4899";
+    case "Transport": return "#F97316";
+    case "Fuel & Auto": return "#F97316";
+    case "Travel": return "#0EA5E9";
+    case "Health & Medical": return "#14B8A6";
     case "Bills & Utilities": return "#6B7280";
-    case "Entertainment":     return "#A855F7";
-    case "Education":         return "#3B82F6";
-    case "UPI Transfer":      return "#06B6D4";
-    case "Income":            return "#10B981";
-    case "Investment":        return "#6366F1";
-    case "Subscriptions":     return "#8B5CF6";
-    case "Rent & Housing":    return "#E11D48";
-    case "Other":             return "#64748B";
-    default:                  return "#64748B";
+    case "Entertainment": return "#A855F7";
+    case "Education": return "#3B82F6";
+    case "UPI Transfer": return "#06B6D4";
+    case "Income": return "#10B981";
+    case "Investment": return "#6366F1";
+    case "Subscriptions": return "#8B5CF6";
+    case "Rent & Housing": return "#E11D48";
+    case "Other": return "#64748B";
+    default: return "#64748B";
   }
 };
 
@@ -85,8 +85,8 @@ const renderOuterLabel = (props: any) => {
 
   const sin = Math.sin(-RADIAN * midAngle);
   const cos = Math.cos(-RADIAN * midAngle);
-  const sx = cx + (outerRadius + 4)  * cos;
-  const sy = cy + (outerRadius + 4)  * sin;
+  const sx = cx + (outerRadius + 4) * cos;
+  const sy = cy + (outerRadius + 4) * sin;
   const mx = cx + (outerRadius + 22) * cos;
   const my = cy + (outerRadius + 22) * sin;
   const ex = mx + (cos >= 0 ? 1 : -1) * 16;
@@ -129,7 +129,7 @@ const renderOuterLabel = (props: any) => {
 // ── Main component ────────────────────────────────────────────────────────────
 export function CategoryBreakdown() {
   const { transactions, dateFilter } = useTransactions();
-  const [activeIndex, setActiveIndex]       = useState(0);
+  const [activeIndex, setActiveIndex] = useState(0);
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
 
   // Filter by date
@@ -194,7 +194,7 @@ export function CategoryBreakdown() {
     );
   }
 
-  const active    = data[activeIndex] ?? top;
+  const active = data[activeIndex] ?? top;
   const activePct = total ? (active.value / total) * 100 : 0;
 
   return (
@@ -232,7 +232,7 @@ export function CategoryBreakdown() {
                   id={`cb-grad-${i}`}
                   x1="0" y1="0" x2="1" y2="1"
                 >
-                  <stop offset="0%"   stopColor={d.color} stopOpacity={1}    />
+                  <stop offset="0%" stopColor={d.color} stopOpacity={1} />
                   <stop offset="100%" stopColor={d.color} stopOpacity={0.65} />
                 </linearGradient>
               ))}
@@ -298,23 +298,22 @@ export function CategoryBreakdown() {
         </div>
       </div>
 
-    
+
 
       {/* ── Interactive legend: progress bars + expandable transactions ──── */}
       <div className="flex-1 overflow-y-auto custom-scrollbar mt-1 pr-1 flex flex-col gap-2">
         {data.map((d, i) => {
-          const pct       = total ? (d.value / total) * 100 : 0;
-          const isActive  = i === activeIndex;
+          const pct = total ? (d.value / total) * 100 : 0;
+          const isActive = i === activeIndex;
           const isExpanded = expandedCategory === d.name;
 
           return (
             <div
               key={d.name}
-              className={`rounded-xl border transition-all duration-200 overflow-hidden ${
-                isActive || isExpanded
+              className={`rounded-xl border transition-all duration-200 overflow-hidden ${isActive || isExpanded
                   ? "border-slate-600/80 bg-slate-800/60"
                   : "border-slate-800/50 bg-transparent hover:bg-slate-800/30 hover:border-slate-700/60"
-              }`}
+                }`}
             >
               {/* Row header — hover syncs chart, click expands transactions */}
               <button
@@ -353,9 +352,8 @@ export function CategoryBreakdown() {
                       </p>
                     </div>
                     <ChevronDown
-                      className={`h-3.5 w-3.5 text-zinc-600 transition-transform duration-300 group-hover:text-zinc-400 ${
-                        isExpanded ? "rotate-180 text-emerald-400" : ""
-                      }`}
+                      className={`h-3.5 w-3.5 text-zinc-600 transition-transform duration-300 group-hover:text-zinc-400 ${isExpanded ? "rotate-180 text-emerald-400" : ""
+                        }`}
                     />
                   </div>
                 </div>

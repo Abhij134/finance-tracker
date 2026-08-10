@@ -315,39 +315,67 @@ export async function addBulkTransactions(transactions: any[]) {
     }
 }
 
-export async function getTransactions(options: { limit?: number; offset?: number; startDate?: Date } = {}) {
+export async function getTransactions(options: { limit?: number; offset?: number; page?: number; startDate?: Date } = {}) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     const userId = user?.id;
-    if (!userId) return [];
+    if (!userId) {
+        return {
+            transactions: [],
+            totalPages: 0,
+            totalCount: 0,
+            page: 1,
+            hasMore: false,
+        };
+    }
 
-    const { limit = 2000, offset = 0, startDate } = options;
+    const limit = options.limit ?? 20;
+    const offset = options.offset ?? (options.page ? (options.page - 1) * limit : 0);
+    const startDate = options.startDate;
 
     try {
-        const transactions = await prisma.transaction.findMany({
-            where: {
-                userId: userId,
-                ...(startDate ? { date: { gte: startDate } } : {})
-            },
-            orderBy: { date: 'desc' },
-            take: limit,
-            skip: offset,
-            select: {
-                id: true,
-                date: true,
-                merchant: true,
-                amount: true,
-                category: true,
-                isAiScanned: true,
-            }
-        });
+        const whereClause = {
+            userId: userId,
+            ...(startDate ? { date: { gte: startDate } } : {})
+        };
 
-        return transactions;
+        const [transactions, totalCount] = await Promise.all([
+            prisma.transaction.findMany({
+                where: whereClause,
+                orderBy: { date: 'desc' },
+                take: limit,
+                skip: offset,
+                select: {
+                    id: true,
+                    date: true,
+                    merchant: true,
+                    amount: true,
+                    category: true,
+                    isAiScanned: true,
+                }
+            }),
+            prisma.transaction.count({
+                where: whereClause
+            })
+        ]);
+
+        const totalPages = Math.ceil(totalCount / limit);
+        const currentPage = Math.floor(offset / limit) + 1;
+        const hasMore = offset + transactions.length < totalCount;
+
+        return {
+            transactions,
+            totalPages,
+            totalCount,
+            page: currentPage,
+            hasMore,
+        };
     } catch (e) {
         console.error('getTransactions failed:', e);
         throw e; // Throw so that error boundaries or callers can handle it properly
     }
 }
+
 
 export async function deleteTransaction(transactionId: string) {
     const supabase = await createClient();

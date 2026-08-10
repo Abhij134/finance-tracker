@@ -3,7 +3,7 @@
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 import { useState, FormEvent, useRef, useEffect } from "react";
-import { Shield, Wallet, Activity, Target, ArrowRight, X, Eye, EyeOff, ChevronLeft, User, LayoutDashboard } from "lucide-react";
+import { Shield, Wallet, Activity, Target, ArrowRight, X, Eye, EyeOff, ChevronLeft, ChevronUp, User, LayoutDashboard, TrendingUp, ArrowDownRight, CircleDollarSign, Battery, Wifi, Signal } from "lucide-react";
 import Image from "next/image";
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import {
@@ -21,6 +21,41 @@ import CalculatorModal from "./_calculator_modal";
 type AuthState = "login" | "signup" | "forgot_password_email" | "forgot_password_otp" | "forgot_userid_email" | "forgot_userid_otp" | "userid_recovered" | "privacy" | "terms";
 
 const ROTATING = ["Expenses", "Subscriptions", "Statements", "Budgets", "Insights"];
+
+function FaqItem({ question, answer }: { question: string; answer: string }) {
+    const [open, setOpen] = useState(false);
+    return (
+        <div className={`group rounded-xl border transition-all duration-300 ${open ? 'border-emerald-500/40 bg-[#10182b] shadow-[0_8px_24px_rgba(0,0,0,0.5),0_0_16px_rgba(16,185,129,0.1)]' : 'border-white/10 bg-[#0c1220]/90 hover:border-emerald-500/30 hover:bg-[#101728] shadow-sm'}`}>
+            <button
+                type="button"
+                onClick={() => setOpen(!open)}
+                className="w-full flex items-center justify-between px-3.5 py-2.5 sm:px-4 sm:py-3 text-left font-semibold text-white transition-colors gap-3"
+            >
+                <span className={`text-xs sm:text-sm font-semibold transition-colors leading-snug ${open ? 'text-emerald-400' : 'text-zinc-100 group-hover:text-emerald-400'}`}>
+                    {question}
+                </span>
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center transition-all duration-300 shrink-0 ${open ? 'bg-emerald-500/20 text-emerald-400' : 'bg-white/5 text-zinc-400 group-hover:bg-emerald-500/15 group-hover:text-emerald-400'}`}>
+                    <ChevronLeft className={`w-3.5 h-3.5 transition-transform duration-300 ${open ? '-rotate-90' : 'rotate-0'}`} />
+                </div>
+            </button>
+            <AnimatePresence>
+                {open && (
+                    <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="overflow-hidden"
+                    >
+                        <div className="px-3.5 pb-3.5 pt-0 sm:px-4 text-xs sm:text-sm text-zinc-300 leading-relaxed border-t border-white/[0.04] mt-1 pt-2.5">
+                            {answer}
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
+    );
+}
 
 export default function LandingAndLoginPage() {
     const router = useRouter();
@@ -54,16 +89,17 @@ export default function LandingAndLoginPage() {
     const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
     const [rotatingIdx, setRotatingIdx] = useState(0);
 
-    const [animations, setAnimations] = useState<any>({ chart: null, scan: null, cube: null });
+
+
+    const [animations, setAnimations] = useState<any>({ chart: null, scan: null });
 
     useEffect(() => {
         let mounted = true;
         Promise.all([
             import("@/public/lottie/chart.json").then(m => m.default),
-            import("@/public/lottie/scan.json").then(m => m.default),
-            import("@/public/lottie/cube.json").then(m => m.default)
-        ]).then(([chart, scan, cube]) => {
-            if (mounted) setAnimations({ chart, scan, cube });
+            import("@/public/lottie/scan.json").then(m => m.default)
+        ]).then(([chart, scan]) => {
+            if (mounted) setAnimations({ chart, scan });
         }).catch(err => console.error("Error loading animations", err));
         return () => { mounted = false; };
     }, []);
@@ -260,40 +296,44 @@ export default function LandingAndLoginPage() {
 
 
     return (
-        <div className="relative min-h-screen text-white overflow-hidden selection:bg-emerald-500/30 font-sans">
+        <div className="relative min-h-screen text-white overflow-x-clip selection:bg-emerald-500/30 font-sans bg-[#050811]">
             {/* Landing Page Content */}
             <motion.div
-                className="relative z-10 w-full min-h-screen flex flex-col will-change-transform"
+                className="relative z-10 w-full min-h-screen flex flex-col"
                 initial={false}
                 animate={{
                     x: showLogin ? "-100vw" : "0vw",
                     pointerEvents: showLogin ? "none" : "auto",
                 }}
+                style={{
+                    transform: showLogin ? undefined : "none",
+                }}
                 transition={{ duration: 0.5, ease: [0.32, 0.72, 0, 1] }}
             >
-                {/* Header Navbar with Top and Bottom Borders */}
-                <header className="w-full border-t border-b border-white/[0.08] bg-[#070b13]/40 backdrop-blur-md z-50">
-                    <div className="flex items-center justify-between px-8 lg:px-16 py-4 max-w-[1600px] mx-auto w-full">
-                        <div className="flex items-center gap-3 cursor-pointer">
+                {/* Header Navbar Sticky on Scroll with Top and Bottom Borders */}
+                <header className="sticky top-0 w-full border-t border-b border-white/[0.08] bg-[#070b13]/85 backdrop-blur-xl z-50 shadow-lg transition-all duration-300">
+                    <div className="flex items-center justify-between gap-6 sm:gap-10 px-6 lg:px-16 py-2.5 lg:py-3.5 max-w-[1600px] mx-auto w-full">
+                        <div className="flex items-center gap-2 lg:gap-2.5 cursor-pointer shrink-0" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
                             <Image
                                 src="/logo.svg"
                                 alt="FinanceNeo"
-                                width={36}
-                                height={36}
-                                className="rounded-xl object-contain drop-shadow-md"
+                                width={24}
+                                height={24}
+                                className="w-6 h-6 lg:w-8 lg:h-8 rounded-lg object-contain drop-shadow-md"
                                 priority
                             />
-                            <span className="text-xl font-bold tracking-tight text-white">
+                            <span className="text-sm lg:text-lg font-bold tracking-tight text-white whitespace-nowrap">
                                 Finance<span className="text-[#4ecca3]">Neo</span>
                             </span>
                         </div>
 
                         <div>
                             <button
+                                type="button"
                                 onClick={() => setShowLogin(true)}
-                                className="px-6 py-2 rounded-full border border-white/10 hover:border-white/20 text-zinc-300 hover:text-white text-sm font-semibold transition-all duration-300 bg-white/[0.02]"
+                                className="px-3 lg:px-4.5 py-0.5 lg:py-1.5 rounded-full border border-emerald-500/40 hover:border-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-[11px] lg:text-sm font-semibold transition-all duration-300 whitespace-nowrap"
                             >
-                                Sign In
+                                Try AI Chat
                             </button>
                         </div>
                     </div>
@@ -307,234 +347,280 @@ export default function LandingAndLoginPage() {
                         {/* ── Original Hero (Text + Mockups) ── */}
                         <div className="w-full flex flex-col lg:flex-row items-center px-8 lg:px-16 pt-16 lg:pt-14 pb-12 max-w-[1600px] mx-auto gap-12 lg:gap-20">
 
-                    {/* Left Column - Text Content */}
-                    <div className="flex-1 flex flex-col justify-center max-w-2xl text-left -mt-8 lg:-mt-0">
+                            {/* Left Column - Text Content */}
+                            <div className="flex-1 flex flex-col justify-center max-w-2xl text-left -mt-8 lg:-mt-0">
 
-                        <h1 className="font-sans text-4xl font-semibold leading-[1.05] tracking-[-0.03em] text-white md:text-5xl lg:text-7xl mb-3">
-                            <motion.span
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.7 }}
-                                className="block"
-                            >
-                                Understand your
-                            </motion.span>
-
-                            {/* Rotating word — vertical roll */}
-                            <span className="relative my-1 flex h-[1.1em] items-center overflow-hidden">
-                                <AnimatePresence mode="popLayout" initial={false}>
+                                <h1 className="font-sans text-4xl font-semibold leading-[1.05] tracking-[-0.03em] text-white md:text-5xl lg:text-7xl mb-3">
                                     <motion.span
-                                        key={ROTATING[rotatingIdx]}
-                                        initial={{ y: "110%", opacity: 0, rotateX: -40 }}
-                                        animate={{ y: "0%", opacity: 1, rotateX: 0 }}
-                                        exit={{ y: "-110%", opacity: 0, rotateX: 40 }}
-                                        transition={{ type: "spring", stiffness: 140, damping: 18, mass: 0.6 }}
-                                        style={{ transformOrigin: "50% 50%" }}
-                                        className="inline-block bg-gradient-to-b from-emerald-300 to-emerald-500 bg-clip-text pr-2 text-transparent"
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ duration: 0.7 }}
+                                        className="block"
                                     >
-                                        {ROTATING[rotatingIdx]}
+                                        Understand your
                                     </motion.span>
-                                </AnimatePresence>
-                            </span>
 
-                            <motion.span
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.7, delay: 0.2 }}
-                                className="block text-white/45"
-                            >
-                                in seconds, not spreadsheets.
-                            </motion.span>
-                        </h1>
+                                    {/* Rotating word — vertical roll */}
+                                    <span className="relative my-1 flex h-[1.1em] items-center overflow-hidden">
+                                        <AnimatePresence mode="popLayout" initial={false}>
+                                            <motion.span
+                                                key={ROTATING[rotatingIdx]}
+                                                initial={{ y: "110%", opacity: 0, rotateX: -40 }}
+                                                animate={{ y: "0%", opacity: 1, rotateX: 0 }}
+                                                exit={{ y: "-110%", opacity: 0, rotateX: 40 }}
+                                                transition={{ type: "spring", stiffness: 140, damping: 18, mass: 0.6 }}
+                                                style={{ transformOrigin: "50% 50%" }}
+                                                className="inline-block bg-gradient-to-b from-emerald-300 to-emerald-500 bg-clip-text pr-2 text-transparent"
+                                            >
+                                                {ROTATING[rotatingIdx]}
+                                            </motion.span>
+                                        </AnimatePresence>
+                                    </span>
 
-                        <motion.p
-                            initial={{ opacity: 0, y: 16 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.7, delay: 0.35 }}
-                            className="mt-2 max-w-xl text-lg leading-relaxed text-white/55 mb-10 hidden lg:block"
-                        >
-                            Drop in any bank statement PDF. Our AI extracts every transaction,
-                            categorizes it, and surfaces the spending patterns you keep missing —
-                            privately, instantly, beautifully.
-                        </motion.p>
+                                    <motion.span
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ duration: 0.7, delay: 0.2 }}
+                                        className="block text-white/45"
+                                    >
+                                        in seconds, not spreadsheets.
+                                    </motion.span>
+                                </h1>
 
-                        {/* Mobile/Tablet Mockup Replica (Visible only on lg:hidden) */}
-                        <motion.div
-                            initial={{ opacity: 0, y: 30 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.8, ease: "easeOut", delay: 0.5 }}
-                            className="lg:hidden mt-12 mb-10 w-full flex justify-center items-center h-[190px] mx-auto"
-                        >
-                            <div className="relative w-[100px] flex justify-center items-center">
-                                {/* Floating Cube Lottie */}
-                                <div className="absolute -left-12 top-[10%] z-10 w-11 h-11 pointer-events-none" style={{ animation: "devFloatPhone 5s ease-in-out infinite 0.8s" }}>
-                                    {animations.cube && <Lottie animationData={animations.cube} loop={true} style={{ width: "100%", height: "100%" }} width={100} height={100} />}
-                                </div>
-                                
-                                {/* The Phone frame (centered, scaled down further) */}
-                                <div className="relative z-20 pointer-events-none" style={{ animation: "devFloatPhone 5s ease-in-out infinite" }}>
-                                    <div style={{ width: 100, background: "#080c16", borderRadius: 20, border: "4px solid #1a2537", overflow: "hidden", boxShadow: "0 15px 30px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.08)" }}>
-                                        {/* Notch */}
-                                        <div style={{ height: 12, background: "#080c16", display: "flex", justifyContent: "center", alignItems: "center" }}>
-                                            <div style={{ width: 30, height: 3, background: "#1a2537", borderRadius: 2 }} />
+                                <motion.p
+                                    initial={{ opacity: 0, y: 16 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.7, delay: 0.35 }}
+                                    className="mt-2 max-w-xl text-lg leading-relaxed text-white/55 mb-10 hidden lg:block"
+                                >
+                                    Drop in any bank statement PDF. Our AI extracts every transaction,
+                                    categorizes it, and surfaces the spending patterns you keep missing —
+                                    privately, instantly, beautifully.
+                                </motion.p>
+
+                                {/* Mobile/Tablet Mockup Replica (Visible only on lg:hidden) */}
+                                <motion.div
+                                    initial={{ opacity: 0, y: 30 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.8, ease: "easeOut", delay: 0.5 }}
+                                    className="lg:hidden mt-10 mb-8 w-full flex justify-center items-center h-[270px] mx-auto"
+                                >
+                                    <div className="relative w-[135px] flex justify-center items-center">
+                                        {/* Floating Weekly Report Card on Mobile */}
+                                        <div style={{ position: "absolute", right: "calc(100% - 10px)", top: "-15px", zIndex: 35, transform: "scale(0.8)", transformOrigin: "top right", pointerEvents: "none", width: "max-content" }}>
+                                            <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-2xl bg-[#090e1a] text-zinc-100 border border-blue-500/30 shadow-[0_10px_25px_rgba(0,0,0,0.6),0_0_15px_rgba(59,130,246,0.2)]">
+                                                <div className="w-5 h-5 rounded-full bg-blue-500/15 text-blue-400 border border-blue-500/30 flex items-center justify-center shrink-0">
+                                                    <TrendingUp className="w-3 h-3 text-blue-400" />
+                                                </div>
+                                                <div className="text-left whitespace-nowrap">
+                                                    <p className="text-[9px] font-bold leading-tight text-white whitespace-nowrap">Weekly Report</p>
+                                                    <p className="text-[8px] font-semibold text-blue-400 leading-tight whitespace-nowrap">You saved 15%!</p>
+                                                </div>
+                                            </div>
                                         </div>
-                                        {/* Screen */}
-                                        <div style={{ height: 180, position: "relative", background: "#0d111c", overflow: "hidden" }}>
-                                            <img src="/phone-screen.png" onError={(e) => { e.currentTarget.src = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=800&auto=format&fit=crop"; }} className="w-full h-full object-cover" alt="Phone screen" />
+
+                                        {/* Floating Expense Added Card on Mobile */}
+                                        <div style={{ position: "absolute", left: "calc(100% - 10px)", top: "45px", zIndex: 30, transform: "scale(0.8)", transformOrigin: "top left", pointerEvents: "none", width: "max-content" }}>
+                                            <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-2xl bg-[#090e1a] text-zinc-100 border border-rose-500/30 shadow-2xl">
+                                                <div className="text-right whitespace-nowrap">
+                                                    <p className="text-[9px] font-bold leading-tight text-zinc-100 whitespace-nowrap">Expense Added</p>
+                                                    <p className="text-[8px] font-semibold text-rose-400 leading-tight whitespace-nowrap">- ₹1,250</p>
+                                                </div>
+                                                <div className="w-5 h-5 rounded-full bg-rose-500/15 text-rose-400 border border-rose-500/30 flex items-center justify-center shrink-0">
+                                                    <ArrowDownRight className="w-3 h-3 text-rose-400" />
+                                                </div>
+                                            </div>
                                         </div>
-                                        {/* Home bar */}
-                                        <div style={{ height: 10, background: "#080c16", display: "flex", justifyContent: "center", alignItems: "center" }}>
-                                            <div style={{ width: 35, height: 2, background: "#2d3f56", borderRadius: 1 }} />
+
+                                        {/* The Phone frame (centered, no bottom notch) */}
+                                        <div className="relative z-20 pointer-events-none">
+                                            <div style={{ width: 135, background: "#000000", borderRadius: 24, border: "4.5px solid #1a2537", overflow: "hidden", boxShadow: "0 18px 36px rgba(0,0,0,0.7), inset 0 0 0 1px rgba(255,255,255,0.08)" }}>
+                                                {/* Screen */}
+                                                <div style={{ height: 260, position: "relative", background: "#000000", overflow: "hidden", borderRadius: "18px 18px 0 0" }}>
+                                                    {/* iPhone Dynamic Island / Notch */}
+                                                    <div style={{ position: "absolute", top: -1, left: "50%", transform: "translateX(-50%)", width: 46, height: 14, background: "#000000", borderBottomLeftRadius: 9, borderBottomRightRadius: 9, zIndex: 20, display: "flex", justifyContent: "center", alignItems: "center" }}>
+                                                        <div style={{ width: 17, height: 2, background: "#27272a", borderRadius: 2 }} />
+                                                    </div>
+
+                                                    {/* iOS Status Bar */}
+                                                    <div className="absolute top-0 inset-x-0 h-4 bg-[#000000] flex items-center justify-between px-3.5 z-10 text-white">
+                                                        <div className="text-[7px] font-semibold mt-0.5">9:41</div>
+                                                        <div className="flex items-center gap-1 mt-0.5">
+                                                            <Signal className="w-1.5 h-1.5" />
+                                                            <Wifi className="w-1.5 h-1.5" />
+                                                            <Battery className="w-2 h-2" />
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="w-full h-[calc(100%-16px)] mt-[16px]">
+                                                        <img src="/phone-screen.png" style={{ imageRendering: "crisp-edges" }} onError={(e) => { e.currentTarget.src = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=800&auto=format&fit=crop"; }} className="w-full h-full object-fill contrast-[1.08] brightness-[1.02]" alt="Phone screen" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Floating Budget on Track Pill Badge on Mobile */}
+                                        <div style={{ position: "absolute", right: "calc(100% - 10px)", top: "185px", zIndex: 35, transform: "scale(0.8)", transformOrigin: "bottom right", pointerEvents: "none", width: "max-content" }}>
+                                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500 text-white font-bold border border-emerald-400/50 shadow-[0_10px_24px_rgba(16,185,129,0.45)]">
+                                                <div className="w-3.5 h-3.5 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+                                                    <CircleDollarSign className="w-2.5 h-2.5 text-white" />
+                                                </div>
+                                                <span className="text-[9px] font-bold text-white whitespace-nowrap">Budget on track!</span>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
+                                </motion.div>
 
-                                {/* Scanning Lottie + Text Label */}
-                                <div className="absolute -right-17 bottom-[10%] z-10 flex flex-col items-center gap-1 pointer-events-none" style={{ animation: "devFloatScan 4s ease-in-out infinite 1.2s" }}>
-                                    <div className="w-11 h-11">
-                                        {animations.scan && <Lottie animationData={animations.scan} loop={true} style={{ width: "100%", height: "100%" }} />}
-                                    </div>
-                                    <div className="bg-emerald-500/10 backdrop-blur-md border border-emerald-500/20 px-1.5 py-0.5 rounded flex items-center justify-center shadow-[0_0_10px_rgba(16,185,129,0.15)]">
-                                        <span className="text-[7px] font-bold text-emerald-400 uppercase tracking-widest whitespace-nowrap drop-shadow-[0_0_4px_rgba(16,185,129,0.8)]">
-                                            AI Scanning
-                                        </span>
-                                    </div>
+                                <div className="flex flex-row items-center justify-center lg:justify-start gap-2 w-full max-w-[260px] mx-auto lg:max-w-none lg:mx-0">
+                                    <button
+                                        onClick={async () => {
+                                            const { data: { user } } = await supabase.auth.getUser();
+                                            if (user) {
+                                                router.push("/");
+                                            } else {
+                                                setShowLogin(true);
+                                            }
+                                        }}
+                                        className="flex-1 lg:flex-none px-2 py-1.5 lg:px-5 lg:py-2.5 rounded-full bg-emerald-500 text-white text-[10px] lg:text-sm font-bold hover:shadow-[0_0_30px_rgba(16,185,129,0.4)] hover:scale-105 transition-all duration-300 flex items-center justify-center gap-1.5 group"
+                                    >
+                                        <span className="whitespace-nowrap">Get Started Free</span>
+                                    </button>
+
+                                    <button
+                                        onClick={() => setIsCalculatorOpen(true)}
+                                        className="flex-1 lg:flex-none px-2 py-1.5 lg:px-5 lg:py-2.5 rounded-full border border-white/20 text-white text-[10px] lg:text-sm font-bold hover:bg-white/5 transition-colors flex items-center justify-center group"
+                                    >
+                                        <span className="whitespace-nowrap lg:hidden">Free Calculator</span>
+                                        <span className="hidden lg:inline whitespace-nowrap">Use Free Financial Calculator</span>
+                                    </button>
                                 </div>
                             </div>
-                        </motion.div>
-
-                        <div className="flex flex-row items-center justify-center lg:justify-start gap-3 w-full">
-                            <button
-                                onClick={async () => {
-                                    const { data: { user } } = await supabase.auth.getUser();
-                                    if (user) {
-                                        router.push("/");
-                                    } else {
-                                        setShowLogin(true);
-                                    }
-                                }}
-                                className="px-4 py-2.5 lg:px-6 lg:py-3 rounded-full bg-emerald-500 text-white text-xs lg:text-base font-bold hover:shadow-[0_0_30px_rgba(16,185,129,0.4)] hover:scale-105 transition-all duration-300 flex items-center justify-center gap-1.5 lg:gap-2 group"
-                            >
-                                <span className="whitespace-nowrap">Get Started Free</span>
-                                <ArrowRight className="h-3.5 w-3.5 lg:h-5 lg:w-5 group-hover:translate-x-1 transition-transform" />
-                            </button>
-
-                            <button
-                                onClick={() => setIsCalculatorOpen(true)}
-                                className="px-4 py-2.5 lg:px-6 lg:py-3 rounded-full border border-white/20 text-white text-xs lg:text-base font-bold hover:bg-white/5 transition-colors flex items-center justify-center group"
-                            >
-                                <span className="whitespace-nowrap lg:hidden">Free Calculator</span>
-                                <span className="hidden lg:inline whitespace-nowrap">Use Free Financial Calculator</span>
-                            </button>
-                        </div>
-                    </div>
 
                             {/* Right Column - Mockups */}
                             <div className="flex-1 relative h-[460px] w-full max-w-3xl hidden lg:block mt-4">
-
-                        {/* CUBE LOTTIE — centered between phone and laptop */}
-                        <div style={{
-                            position: "absolute", left: "-1%", top: "250px", zIndex: 60,
-                            width: 140, height: 180,
-                            transform: "translateX(-50%)",
-                            animation: "popIn 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) both, cubeFloatLeft 5.5s cubic-bezier(0.45,0.05,0.55,0.95) infinite 1.2s",
-                            filter: "drop-shadow(0 0 20px rgba(16,185,129,0.28))",
-                            pointerEvents: "none",
-                        }}>
-                            {animations.cube && <Lottie animationData={animations.cube} loop={true} style={{ width: "100%", height: "100%" }} />}
-                        </div>
-
-                        {/* LAPTOP (back, right-aligned) */}
-                        <div style={{ position: "absolute", right: 0, top: 40, zIndex: 20, animation: "devFloatLaptop 6s ease-in-out infinite" }}>
-                            {/* Screen lid */}
-                            <div style={{ width: 440, background: "#060a14", borderRadius: "10px 10px 0 0", padding: "9px 9px 0 9px", border: "1.5px solid rgba(255,255,255,0.09)", borderBottom: "none", position: "relative", boxShadow: "0 24px 56px rgba(0,0,0,0.7)" }}>
-                                {/* Webcam dot */}
-                                <div style={{ position: "absolute", top: 4, left: "50%", transform: "translateX(-50%)", width: 5, height: 5, borderRadius: "50%", background: "#1e293b", border: "1px solid rgba(255,255,255,0.06)", zIndex: 10 }} />
-                                {/* Screen */}
-                                <div style={{ height: 260, background: "#020617", overflow: "hidden", borderRadius: "2px 2px 0 0", position: "relative" }}>
-                                    <img src="/laptop-screen.png" onError={(e) => { e.currentTarget.src = "https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?q=80&w=800&auto=format&fit=crop"; }} className="w-full h-full object-cover" alt="Laptop screen" />
-                                    <div style={{ position: "absolute", inset: 0, background: "linear-gradient(130deg, rgba(255,255,255,0.07) 0%, transparent 55%)", pointerEvents: "none" }} />
-                                </div>
-                            </div>
-                            {/* Hinge — same 440px */}
-                            <div style={{ width: 440, height: 5, background: "linear-gradient(to bottom, #1e293b, #0d111c)" }} />
-                            {/* Keyboard base — same 440px, no clip-path */}
-                            <div style={{ width: 440, background: "linear-gradient(180deg, #18243a 0%, #0d1a2b 50%, #080e1a 100%)", borderRadius: "0 0 8px 8px", padding: "10px 18px 14px", boxShadow: "0 24px 48px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.08)" }}>
-                                {/* Keyboard recess */}
-                                <div style={{ background: "#04060e", borderRadius: 4, border: "1px solid rgba(255,255,255,0.05)", padding: "6px 8px", display: "flex", flexDirection: "column", gap: 4 }}>
-                                    {/* Function row */}
-                                    <div style={{ display: "flex", gap: 2 }}>
-                                        {Array.from({ length: 13 }).map((_, i) => <div key={i} style={{ flex: 1, height: 6, background: "rgba(100,116,139,0.20)", borderRadius: 1.5 }} />)}
-                                    </div>
-                                    {/* Alpha rows */}
-                                    {[14, 14, 13].map((count, row) => (
-                                        <div key={row} style={{ display: "flex", gap: 2 }}>
-                                            {row === 2 && <div style={{ width: 22, height: 8, background: "rgba(100,116,139,0.22)", borderRadius: 1.5 }} />}
-                                            {Array.from({ length: count }).map((_, i) => <div key={i} style={{ flex: 1, height: 8, background: "rgba(100,116,139,0.22)", borderRadius: 1.5 }} />)}
-                                            {row === 2 && <div style={{ width: 22, height: 8, background: "rgba(100,116,139,0.22)", borderRadius: 1.5 }} />}
+                                {/* FLOATING WEEKLY REPORT BADGE (Left side of phone, desktop view) */}
+                                <div style={{ position: "absolute", left: "-8%", top: "20px", zIndex: 45, transform: "scale(0.85)", transformOrigin: "top left", pointerEvents: "none", width: "max-content" }}>
+                                    <div className="flex items-center gap-3 px-3.5 py-2.5 rounded-2xl bg-[#090e1a] text-zinc-100 border border-blue-500/30 shadow-[0_16px_40px_rgba(0,0,0,0.8),0_0_24px_rgba(59,130,246,0.2)]">
+                                        <div className="w-8 h-8 rounded-full bg-blue-500/15 text-blue-400 border border-blue-500/30 flex items-center justify-center shrink-0">
+                                            <TrendingUp className="w-4 h-4 text-blue-400" />
                                         </div>
-                                    ))}
-                                    {/* Spacebar row */}
-                                    <div style={{ display: "flex", gap: 2 }}>
-                                        {[20, 20, 20].map((w, i) => <div key={i} style={{ width: w, height: 8, background: "rgba(100,116,139,0.22)", borderRadius: 1.5 }} />)}
-                                        <div style={{ flex: 1, height: 8, background: "rgba(100,116,139,0.28)", borderRadius: 1.5 }} />
-                                        {[20, 20, 20].map((w, i) => <div key={i} style={{ width: w, height: 8, background: "rgba(100,116,139,0.22)", borderRadius: 1.5 }} />)}
+                                        <div className="text-left whitespace-nowrap">
+                                            <p className="text-xs font-bold leading-tight text-white whitespace-nowrap">Weekly Report</p>
+                                            <p className="text-[11px] font-semibold text-blue-400 leading-tight whitespace-nowrap">You saved 15%!</p>
+                                        </div>
                                     </div>
                                 </div>
-                                {/* Trackpad */}
-                                <div style={{ width: 110, height: 22, margin: "8px auto 0", background: "rgba(100,116,139,0.07)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 3 }} />
-                            </div>
-                        </div>
-
-                        {/* PHONE (front, overlapping laptop left side, same top) */}
-                        <div style={{ position: "absolute", left: "10%", top: 40, zIndex: 30, animation: "devFloatPhone 5s ease-in-out infinite 0.8s" }}>
-                            <div style={{ width: 200, background: "#080c16", borderRadius: 32, border: "6px solid #1a2537", overflow: "hidden", boxShadow: "0 32px 64px rgba(0,0,0,0.7), inset 0 0 0 1px rgba(255,255,255,0.08)" }}>
-                                {/* Notch */}
-                                <div style={{ height: 22, background: "#080c16", display: "flex", justifyContent: "center", alignItems: "center" }}>
-                                    <div style={{ width: 56, height: 5, background: "#1a2537", borderRadius: 3 }} />
+                                {/* FLOATING EXPENSE ADDED BADGE (Dark theme, right side) */}
+                                <div style={{ position: "absolute", right: "-3%", top: "150px", zIndex: 45, transform: "scale(0.75)", transformOrigin: "top right", pointerEvents: "none" }}>
+                                    <div>
+                                        <div className="flex items-center gap-3 px-3.5 py-2.5 rounded-2xl bg-[#090e1a] text-zinc-100 border border-rose-500/30 shadow-[0_16px_40px_rgba(0,0,0,0.8),0_0_24px_rgba(244,63,94,0.15)]">
+                                            <div className="w-8 h-8 rounded-full bg-rose-500/15 text-rose-400 border border-rose-500/30 flex items-center justify-center shrink-0">
+                                                <ArrowDownRight className="w-4.5 h-4.5 text-rose-400" />
+                                            </div>
+                                            <div>
+                                                <p className="text-xs font-bold leading-tight text-zinc-100">Expense Added</p>
+                                                <p className="text-[11px] font-semibold text-rose-400 leading-tight">- ₹1,250 · Groceries</p>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                {/* Screen */}
-                                <div style={{ height: 360, position: "relative", background: "#0d111c", overflow: "hidden" }}>
-                                    <img src="/phone-screen.png" onError={(e) => { e.currentTarget.src = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600&auto=format&fit=crop"; }} className="w-full h-full object-cover" alt="Phone screen" />
+
+                                {/* FLOATING BUDGET ON TRACK PILL BADGE (Bottom left of mobile phone) */}
+                                <div style={{ position: "absolute", left: "-10%", top: "365px", zIndex: 45, transform: "scale(0.85)", transformOrigin: "bottom left", pointerEvents: "none" }}>
+                                    <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500 text-white font-bold border border-emerald-400/50 shadow-[0_12px_28px_rgba(16,185,129,0.45)]">
+                                        <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+                                            <CircleDollarSign className="w-3.5 h-3.5 text-white" />
+                                        </div>
+                                        <span className="text-xs font-bold text-white whitespace-nowrap">Budget on track!</span>
+                                    </div>
                                 </div>
-                                {/* Home bar */}
-                                <div style={{ height: 18, background: "#080c16", display: "flex", justifyContent: "center", alignItems: "center" }}>
-                                    <div style={{ width: 60, height: 3, background: "#2d3f56", borderRadius: 2 }} />
+
+                                {/* LAPTOP (back, right-aligned) */}
+                                <div style={{ position: "absolute", right: 0, top: 40, zIndex: 20 }}>
+                                    {/* Screen lid */}
+                                    <div style={{ width: 440, background: "#060a14", borderRadius: "10px 10px 0 0", padding: "9px 9px 0 9px", border: "1.5px solid rgba(255,255,255,0.09)", borderBottom: "none", position: "relative", boxShadow: "0 24px 56px rgba(0,0,0,0.7)" }}>
+                                        {/* Webcam dot */}
+                                        <div style={{ position: "absolute", top: 4, left: "50%", transform: "translateX(-50%)", width: 5, height: 5, borderRadius: "50%", background: "#1e293b", border: "1px solid rgba(255,255,255,0.06)", zIndex: 10 }} />
+                                        {/* Screen */}
+                                        <div style={{ height: 260, background: "#020617", overflow: "hidden", borderRadius: "2px 2px 0 0", position: "relative" }}>
+                                            <img src="/laptop-screen.png" onError={(e) => { e.currentTarget.src = "https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?q=80&w=800&auto=format&fit=crop"; }} className="w-full h-full object-cover" alt="Laptop screen" />
+                                            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(130deg, rgba(255,255,255,0.07) 0%, transparent 55%)", pointerEvents: "none" }} />
+                                        </div>
+                                    </div>
+                                    {/* Hinge — same 440px */}
+                                    <div style={{ width: 440, height: 5, background: "linear-gradient(to bottom, #1e293b, #0d111c)" }} />
+                                    {/* Keyboard base — same 440px, no clip-path */}
+                                    <div style={{ width: 440, background: "linear-gradient(180deg, #18243a 0%, #0d1a2b 50%, #080e1a 100%)", borderRadius: "0 0 8px 8px", padding: "10px 18px 14px", boxShadow: "0 24px 48px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.08)" }}>
+                                        {/* Keyboard recess */}
+                                        <div style={{ background: "#04060e", borderRadius: 4, border: "1px solid rgba(255,255,255,0.05)", padding: "6px 8px", display: "flex", flexDirection: "column", gap: 4 }}>
+                                            {/* Function row */}
+                                            <div style={{ display: "flex", gap: 2 }}>
+                                                {Array.from({ length: 13 }).map((_, i) => <div key={i} style={{ flex: 1, height: 6, background: "rgba(100,116,139,0.20)", borderRadius: 1.5 }} />)}
+                                            </div>
+                                            {/* Alpha rows */}
+                                            {[14, 14, 13].map((count, row) => (
+                                                <div key={row} style={{ display: "flex", gap: 2 }}>
+                                                    {row === 2 && <div style={{ width: 22, height: 8, background: "rgba(100,116,139,0.22)", borderRadius: 1.5 }} />}
+                                                    {Array.from({ length: count }).map((_, i) => <div key={i} style={{ flex: 1, height: 8, background: "rgba(100,116,139,0.22)", borderRadius: 1.5 }} />)}
+                                                    {row === 2 && <div style={{ width: 22, height: 8, background: "rgba(100,116,139,0.22)", borderRadius: 1.5 }} />}
+                                                </div>
+                                            ))}
+                                            {/* Spacebar row */}
+                                            <div style={{ display: "flex", gap: 2 }}>
+                                                {[20, 20, 20].map((w, i) => <div key={i} style={{ width: w, height: 8, background: "rgba(100,116,139,0.22)", borderRadius: 1.5 }} />)}
+                                                <div style={{ flex: 1, height: 8, background: "rgba(100,116,139,0.28)", borderRadius: 1.5 }} />
+                                                {[20, 20, 20].map((w, i) => <div key={i} style={{ width: w, height: 8, background: "rgba(100,116,139,0.22)", borderRadius: 1.5 }} />)}
+                                            </div>
+                                        </div>
+                                        {/* Trackpad */}
+                                        <div style={{ width: 110, height: 22, margin: "8px auto 0", background: "rgba(100,116,139,0.07)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 3 }} />
+                                    </div>
                                 </div>
-                            </div>
-                        </div>
 
-                        {/* AI DOCUMENT SVG — floating left */}
-                        <div style={{ position: "absolute", left: "-8%", top: "-10%", zIndex: 40, width: 140, height: 140, animation: "popIn 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) both 0.2s, svgFloatLeft 6s ease-in-out infinite 1.4s" }}>
-                            <Image src="/ai-document.svg" fill alt="AI Document Analysis" style={{ objectFit: 'contain' }} />
-                        </div>
+                                {/* PHONE (front, overlapping laptop left side, no bottom notch) */}
+                                <div style={{ position: "absolute", left: "10%", top: 40, zIndex: 30 }}>
+                                    <div style={{ width: 200, background: "#000000", borderRadius: 32, border: "6px solid #1a2537", overflow: "hidden", boxShadow: "0 32px 64px rgba(0,0,0,0.7), inset 0 0 0 1px rgba(255,255,255,0.08)" }}>
+                                        {/* Screen */}
+                                        <div style={{ height: 390, position: "relative", background: "#000000", overflow: "hidden", borderRadius: "26px 26px 0 0" }}>
+                                            {/* iPhone Dynamic Island / Notch */}
+                                            <div style={{ position: "absolute", top: -1, left: "50%", transform: "translateX(-50%)", width: 70, height: 22, background: "#000000", borderBottomLeftRadius: 12, borderBottomRightRadius: 12, zIndex: 20, display: "flex", justifyContent: "center", alignItems: "center" }}>
+                                                <div style={{ width: 24, height: 3, background: "#27272a", borderRadius: 2 }} />
+                                            </div>
 
-                        {/* FLOATING TEXT & SVG — Top Left of Phone (No outer box) */}
-                        <div className="absolute left-[-7%] top-[-60px] z-50 flex items-center gap-2">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-400 drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]">
-                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                <polyline points="14 2 14 8 20 8"></polyline>
-                                <line x1="16" y1="13" x2="8" y2="13"></line>
-                                <line x1="16" y1="17" x2="8" y2="17"></line>
-                                <polyline points="10 9 9 9 8 9"></polyline>
-                            </svg>
-                            <span className="text-[11px] font-bold text-emerald-400 tracking-wider uppercase drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]">AI Insights</span> 
-                        </div>
+                                            {/* iOS Status Bar */}
+                                            <div className="absolute top-0 inset-x-0 h-6 bg-[#000000] flex items-center justify-between px-5 z-10 text-white">
+                                                <div className="text-[9px] font-semibold mt-1">9:41</div>
+                                                <div className="flex items-center gap-[2px] mt-1">
+                                                    <Signal className="w-2.5 h-2.5" />
+                                                    <Wifi className="w-2.5 h-2.5" />
+                                                    <Battery className="w-3.5 h-3.5" />
+                                                </div>
+                                            </div>
 
-                        {/* SCANNING ANIMATION — floating above the laptop on the right */}
-                        <div style={{ position: "absolute", right: "40px", top: "-20px", zIndex: 40, width: 60, height: 60, animation: "popIn 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) both 0.4s, devFloatScan 4s ease-in-out infinite 1.6s" }}>
-                            {animations.scan && <Lottie
-                                animationData={animations.scan}
-                                loop={true}
-                                style={{ width: "100%", height: "100%" }}
-                            />}
-                            {/* Floating 'AI Scanning' inside the scanning lines */}
-                            <div className="absolute top-[32%] left-1/2 -translate-x-1/2 text-[6px] font-black text-emerald-400 bg-[#070b13]/90 border border-emerald-500/40 px-1.5 py-0.2 rounded shadow-[0_0_6px_rgba(16,185,129,0.3)] tracking-wider uppercase whitespace-nowrap">
-                                AI Scanning
-                            </div>
-                        </div>
+                                            <div className="w-full h-[calc(100%-24px)] mt-[24px]">
+                                                <img src="/phone-screen.png" style={{ imageRendering: "crisp-edges" }} onError={(e) => { e.currentTarget.src = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600&auto=format&fit=crop"; }} className="w-full h-full object-fill contrast-[1.08] brightness-[1.02]" alt="Phone screen" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
 
-                        <style>{`
+
+
+
+                                {/* SCANNING ANIMATION — floating above the laptop on the right */}
+                                <div style={{ position: "absolute", right: "40px", top: "-20px", zIndex: 40, width: 60, height: 60 }}>
+                                    {animations.scan && <Lottie
+                                        animationData={animations.scan}
+                                        loop={true}
+                                        style={{ width: "100%", height: "100%" }}
+                                    />}
+                                    {/* Floating 'AI Scanning' inside the scanning lines */}
+                                    <div className="absolute top-[32%] left-1/2 -translate-x-1/2 text-[6px] font-black text-emerald-400 bg-[#070b13]/90 border border-emerald-500/40 px-1.5 py-0.2 rounded shadow-[0_0_6px_rgba(16,185,129,0.3)] tracking-wider uppercase whitespace-nowrap">
+                                        AI Scanning
+                                    </div>
+                                </div>
+
+                                <style>{`
                             @keyframes devFloatLaptop { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
                             @keyframes devFloatPhone  { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-14px)} }
                             @keyframes devFloatScan   { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
@@ -563,36 +649,36 @@ export default function LandingAndLoginPage() {
                             </div>
                         </div>
 
-                        </div>
-                        {/* Slide 2 Removed -> Moved to Modal */}
+                    </div>
+                    {/* Slide 2 Removed -> Moved to Modal */}
 
-                        {/* Scroll Down Indicator (3 Arrows) */}
-                        <motion.div style={{ opacity: scrollOpacity }} className="absolute bottom-2 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 lg:hidden pointer-events-none z-20">
-                            <motion.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                transition={{ delay: 1.5, duration: 1 }}
-                                className="flex flex-col items-center gap-1"
-                            >
-                                <div className="flex flex-col items-center -space-y-2.5">
-                                    <motion.div animate={{ opacity: [0.2, 1, 0.2] }} transition={{ repeat: Infinity, duration: 1.5, delay: 0 }}>
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-800">
-                                            <polyline points="6 9 12 15 18 9"></polyline>
-                                        </svg>
-                                    </motion.div>
-                                    <motion.div animate={{ opacity: [0.2, 1, 0.2] }} transition={{ repeat: Infinity, duration: 1.5, delay: 0.15 }}>
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-500">
-                                            <polyline points="6 9 12 15 18 9"></polyline>
-                                        </svg>
-                                    </motion.div>
-                                    <motion.div animate={{ opacity: [0.2, 1, 0.2] }} transition={{ repeat: Infinity, duration: 1.5, delay: 0.3 }}>
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-500">
-                                            <polyline points="6 9 12 15 18 9"></polyline>
-                                        </svg>
-                                    </motion.div>
-                                </div>
-                            </motion.div>
+                    {/* Scroll Down Indicator (3 Arrows) */}
+                    <motion.div style={{ opacity: scrollOpacity }} className="absolute bottom-2 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 lg:hidden pointer-events-none z-20">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 1.5, duration: 1 }}
+                            className="flex flex-col items-center gap-1"
+                        >
+                            <div className="flex flex-col items-center -space-y-2.5">
+                                <motion.div animate={{ opacity: [0.2, 1, 0.2] }} transition={{ repeat: Infinity, duration: 1.5, delay: 0 }}>
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-800">
+                                        <polyline points="6 9 12 15 18 9"></polyline>
+                                    </svg>
+                                </motion.div>
+                                <motion.div animate={{ opacity: [0.2, 1, 0.2] }} transition={{ repeat: Infinity, duration: 1.5, delay: 0.15 }}>
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-500">
+                                        <polyline points="6 9 12 15 18 9"></polyline>
+                                    </svg>
+                                </motion.div>
+                                <motion.div animate={{ opacity: [0.2, 1, 0.2] }} transition={{ repeat: Infinity, duration: 1.5, delay: 0.3 }}>
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-500">
+                                        <polyline points="6 9 12 15 18 9"></polyline>
+                                    </svg>
+                                </motion.div>
+                            </div>
                         </motion.div>
+                    </motion.div>
                 </div>
 
 
@@ -601,7 +687,7 @@ export default function LandingAndLoginPage() {
                     {/* --- Header & Cards Group Wrapper --- */}
                     <div className="space-y-8 lg:space-y-12">
                         {/* --- Section header --- */}
-                        <motion.div 
+                        <motion.div
                             initial={{ opacity: 0, y: 30, scale: 0.95 }}
                             whileInView={{ opacity: 1, y: 0, scale: 1 }}
                             viewport={{ once: true, margin: "-50px" }}
@@ -617,51 +703,53 @@ export default function LandingAndLoginPage() {
                         </motion.div>
 
                         {/* --- 3 Highlight cards (Spendee top strip) --- */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                        {[
-                            {
-                                icon: "📄",
-                                title: "Add Transactions Your Way",
-                                desc: "Enter transactions manually in seconds, or upload your bank's PDF statement — our AI extracts and categorises everything automatically.",
-                                accent: "#10b981",
-                                glow: "rgba(16, 185, 129, 0.06)",
-                            },
-                            {
-                                icon: "🧠",
-                                title: "AI-Powered Budget Analysis",
-                                desc: "Let AI analyse your spending patterns and generate a personalised budget breakdown — no guesswork, just clear financial direction.",
-                                accent: "#8b5cf6",
-                                glow: "rgba(139, 92, 246, 0.06)",
-                            },
-                            {
-                                icon: "🔒",
-                                title: "Data Security & PDF Export",
-                                desc: "Your data is encrypted end-to-end and stays private. Export any report as a polished PDF whenever you need it.",
-                                accent: "#f59e0b",
-                                glow: "rgba(245, 158, 11, 0.06)",
-                            },
-                        ].map((card, index) => (
-                            <motion.div
-                                key={card.title}
-                                initial={{ opacity: 0, y: 30 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true, margin: "-50px" }}
-                                transition={{ duration: 0.6, delay: index * 0.1 }}
-                                className="group relative rounded-2xl border p-5 transition-all duration-300 hover:-translate-y-1"
-                                style={{ background: card.glow, borderColor: card.accent + "30" }}
-                            >
-                                <div className="text-3xl mb-4">{card.icon}</div>
-                                <h3 className="text-lg font-bold text-white mb-2">{card.title}</h3>
-                                <p className="text-zinc-400 text-sm leading-relaxed">{card.desc}</p>
-                                <div className="absolute bottom-0 left-0 right-0 h-px rounded-full opacity-40" style={{ background: `linear-gradient(90deg, transparent, ${card.accent}, transparent)` }} />
-                            </motion.div>
-                        ))}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 sm:gap-4 max-w-5xl mx-auto">
+                            {[
+                                {
+                                    icon: "📄",
+                                    title: "Add Transactions Your Way",
+                                    desc: "Enter transactions manually in seconds, or upload your bank's PDF statement — our AI extracts and categorises everything automatically.",
+                                    accent: "#10b981",
+                                    glow: "rgba(16, 185, 129, 0.06)",
+                                },
+                                {
+                                    icon: "🧠",
+                                    title: "AI-Powered Budget Analysis",
+                                    desc: "Let AI analyse your spending patterns and generate a personalised budget breakdown — no guesswork, just clear financial direction.",
+                                    accent: "#8b5cf6",
+                                    glow: "rgba(139, 92, 246, 0.06)",
+                                },
+                                {
+                                    icon: "🔒",
+                                    title: "Data Security & PDF Export",
+                                    desc: "Your data is encrypted end-to-end and stays private. Export any report as a polished PDF whenever you need it.",
+                                    accent: "#f59e0b",
+                                    glow: "rgba(245, 158, 11, 0.06)",
+                                },
+                            ].map((card, index) => (
+                                <motion.div
+                                    key={card.title}
+                                    initial={{ opacity: 0, y: 30 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true, margin: "-50px" }}
+                                    transition={{ duration: 0.6, delay: index * 0.1 }}
+                                    className="group relative rounded-xl border p-3.5 sm:p-4 transition-all duration-300 hover:-translate-y-1"
+                                    style={{ background: card.glow, borderColor: card.accent + "30" }}
+                                >
+                                    <div className="flex items-center justify-between gap-2.5 mb-2">
+                                        <h3 className="text-sm font-bold text-white leading-tight">{card.title}</h3>
+                                        <span className="text-lg shrink-0">{card.icon}</span>
+                                    </div>
+                                    <p className="text-zinc-400 text-xs leading-relaxed">{card.desc}</p>
+                                    <div className="absolute bottom-0 left-0 right-0 h-px rounded-full opacity-40" style={{ background: `linear-gradient(90deg, transparent, ${card.accent}, transparent)` }} />
+                                </motion.div>
+                            ))}
                         </div>
                     </div>
 
                     {/* --- Step 1: Track Everything (visual left, text right) --- */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-7 lg:gap-13 items-center">
-                        <motion.div 
+                        <motion.div
                             initial={{ opacity: 0, x: -50 }}
                             whileInView={{ opacity: 1, x: 0 }}
                             viewport={{ once: true, margin: "-100px" }}
@@ -679,7 +767,7 @@ export default function LandingAndLoginPage() {
                                 </div>
                             </div>
                         </motion.div>
-                        <motion.div 
+                        <motion.div
                             initial={{ opacity: 0, x: 50 }}
                             whileInView={{ opacity: 1, x: 0 }}
                             viewport={{ once: true, margin: "-100px" }}
@@ -690,10 +778,10 @@ export default function LandingAndLoginPage() {
                                 <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider">Step 01 — Track</span>
                             </div>
                             <h3 className="text-2xl lg:text-3xl font-extrabold text-white leading-tight">
-                                See every  <span className="text-emerald-400">rupee</span> <br />in real time
+                                See every  <span className="text-emerald-400">money</span> <br />in real time
                             </h3>
                             <p className="text-zinc-400 leading-relaxed">
-                                Connect your bank, scan receipts with AI, or add entries manually. Every transaction is automatically categorised so you always know where your money goes without lifting a finger.
+                                Scan receipts with AI, or add entries manually. Every transaction is automatically categorised so you always know where your money goes without lifting a finger.
                             </p>
                             <ul className="space-y-3">
                                 {["Auto-categorised transactions", "PDF bank statement import", "AI receipt scanner"].map(item => (
@@ -707,8 +795,8 @@ export default function LandingAndLoginPage() {
                     </div>
 
                     {/* --- Step 2: Budget Smarter (text left, visual right) --- */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-15 items-center">
-                        <motion.div 
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-15 items-center lg:-mt-16">
+                        <motion.div
                             initial={{ opacity: 0, x: -50 }}
                             whileInView={{ opacity: 1, x: 0 }}
                             viewport={{ once: true, margin: "-100px" }}
@@ -733,7 +821,7 @@ export default function LandingAndLoginPage() {
                                 ))}
                             </ul>
                         </motion.div>
-                        <motion.div 
+                        <motion.div
                             initial={{ opacity: 0, x: 50 }}
                             whileInView={{ opacity: 1, x: 0 }}
                             viewport={{ once: true, margin: "-100px" }}
@@ -752,8 +840,8 @@ export default function LandingAndLoginPage() {
                                     ].map(({ cat, used, total, color }, index) => {
                                         const pct = Math.round((used / total) * 100);
                                         return (
-                                            <motion.div 
-                                                key={cat} 
+                                            <motion.div
+                                                key={cat}
                                                 className="mb-4 p-1 rounded-lg transition-colors hover:bg-white/[0.02]"
                                                 whileHover={{ x: 5 }}
                                                 transition={{ type: "spring", stiffness: 350, damping: 25 }}
@@ -763,13 +851,13 @@ export default function LandingAndLoginPage() {
                                                     <span className="text-[10px] text-zinc-500">₹{used.toLocaleString()} / ₹{total.toLocaleString()}</span>
                                                 </div>
                                                 <div className="h-2 bg-white/5 rounded-full overflow-hidden">
-                                                    <motion.div 
-                                                        className="h-full rounded-full" 
+                                                    <motion.div
+                                                        className="h-full rounded-full"
                                                         initial={{ width: 0 }}
                                                         whileInView={{ width: `${pct}%` }}
                                                         viewport={{ once: true }}
                                                         transition={{ duration: 1.2, ease: "easeOut", delay: index * 0.1 }}
-                                                        style={{ background: pct > 80 ? "#ef4444" : color }} 
+                                                        style={{ background: pct > 80 ? "#ef4444" : color }}
                                                     />
                                                 </div>
                                                 <div className="text-[9px] mt-1" style={{ color: pct > 80 ? "#ef4444" : "#52525b" }}>
@@ -784,9 +872,9 @@ export default function LandingAndLoginPage() {
                     </div>
 
                     {/* --- Step 3: Chat with FinanceNeo AI (visual left, text right) --- */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center pt-4 lg:pt-8">
                         {/* LEFT — animated chat UI */}
-                        <motion.div 
+                        <motion.div
                             initial={{ opacity: 0, x: -50 }}
                             whileInView={{ opacity: 1, x: 0 }}
                             viewport={{ once: true, margin: "-100px" }}
@@ -951,7 +1039,7 @@ export default function LandingAndLoginPage() {
                         </motion.div>
 
                         {/* RIGHT — copy */}
-                        <motion.div 
+                        <motion.div
                             initial={{ opacity: 0, x: 50 }}
                             whileInView={{ opacity: 1, x: 0 }}
                             viewport={{ once: true, margin: "-100px" }}
@@ -985,8 +1073,8 @@ export default function LandingAndLoginPage() {
                     </div>
 
                     {/* --- 6-feature capability grid --- */}
-                    <div>
-                        <motion.div 
+                    <div className="pt-16 lg:pt-20">
+                        <motion.div
                             initial={{ opacity: 0, y: 30, scale: 0.95 }}
                             whileInView={{ opacity: 1, y: 0, scale: 1 }}
                             viewport={{ once: true, margin: "-50px" }}
@@ -1024,35 +1112,130 @@ export default function LandingAndLoginPage() {
                             ))}
                         </div>
                     </div>
-
-                    {/* --- CTA banner --- */}
-                    <div className="relative rounded-3xl overflow-hidden border border-emerald-500/20 p-10 text-center">
-                        <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 via-transparent to-teal-500/10 pointer-events-none" />
-                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-px bg-gradient-to-r from-transparent via-emerald-400 to-transparent" />
-                        <div className="relative z-10">
-                            <h3 className="text-2xl lg:text-3xl font-extrabold text-white mb-3">Start for free today</h3>
-                            <p className="text-zinc-400 mb-7 max-w-md mx-auto text-sm">No credit card. No commitment. Just clarity on your finances from day one.</p>
-                            <button
-                                onClick={async () => {
-                                    const { data: { user } } = await supabase.auth.getUser();
-                                    if (user) { router.push("/dashboard"); } else { setShowLogin(true); }
-                                }}
-                                className="px-8 py-4 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold text-base hover:shadow-[0_0_30px_rgba(16,185,129,0.4)] hover:scale-105 transition-all duration-300 inline-flex items-center gap-2 group"
-                            >
-                                Create Free Account <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                            </button>
-                        </div>
-                    </div>
                 </div>
 
-                <footer className="px-8 lg:px-16 py-6 border-t border-white/10 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs font-medium text-zinc-500 mt-12">
-                    <p>© {new Date().getFullYear()} FinanceNeo by Abhijeet. All rights reserved.</p>
-                    <div className="flex items-center gap-6">
-                        <button type="button" onClick={() => { setShowLogin(true); handleSwitchView("privacy"); }} className="hover:text-emerald-400 transition-colors">Privacy Policy</button>
-                        <Link href="https://abhijeetg.netlify.app" target="_blank" rel="noopener noreferrer" className="hover:text-emerald-400 transition-colors">Contact Us</Link>
-                        <button type="button" onClick={() => { setShowLogin(true); handleSwitchView("terms"); }} className="hover:text-emerald-400 transition-colors">Terms and Conditions</button>
+                {/* --- UNIFIED BOTTOM SECTION BREAK WITH DARK THEME (FAQ + FOOTER) --- */}
+                <div className="w-screen relative left-1/2 -translate-x-1/2 bg-[#070c18] border-t border-white/[0.08] pt-8 mt-8 overflow-hidden">
+                    <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-emerald-500/[0.04] rounded-full blur-[150px] pointer-events-none" />
+
+                    {/* Frequently Asked Questions Content */}
+                    <div className="relative z-10 max-w-4xl mx-auto px-8 lg:px-16">
+                        <div className="text-center max-w-2xl mx-auto mb-12">
+                            <h3 className="text-3xl lg:text-4xl font-extrabold text-white mb-4 tracking-tight">
+                                Frequently Asked Questions
+                            </h3>
+                            <p className="text-zinc-400 text-sm md:text-base leading-relaxed">
+                                Everything you need to know about FinanceNeo, security, and smart budget tracking.
+                            </p>
+                        </div>
+
+                        {/* FAQ Accordion List */}
+                        <div className="max-w-2xl mx-auto space-y-2.5">
+                            {[
+                                {
+                                    q: "Is FinanceNeo completely free to use?",
+                                    a: "Yes, 100% free! You can track your daily expenses, set up monthly budgets, and check all your financial reports without paying anything or entering a credit card."
+                                },
+                                {
+                                    q: "How secure is my personal financial data?",
+                                    a: "Your data is completely safe and private. We use bank-grade encryption to protect your information, and we will never sell or share your data with anyone."
+                                },
+                                {
+                                    q: "How does the automatic AI statement scanner work?",
+                                    a: "Just upload your bank statement PDF or receipt photo. Our smart AI instantly reads it, organizes every transaction into categories like Groceries or Bills, and adds it to your dashboard in seconds."
+                                },
+                                {
+                                    q: "Can I download or export my transaction history?",
+                                    a: "Yes! You can download your full transaction records to a CSV spreadsheet anytime you want with just one click."
+                                },
+                                {
+                                    q: "Can I set monthly spending limits for my budgets?",
+                                    a: "Yes! You can set custom spending limits for Food, Shopping, Bills, and more. FinanceNeo will notify you before you overspend so you stay on track."
+                                }
+                            ].map((faq, idx) => (
+                                <FaqItem key={idx} question={faq.q} answer={faq.a} />
+                            ))}
+                        </div>
                     </div>
-                </footer>
+
+                    {/* Multi-Column Structured Footer (Dark Theme Container) */}
+                    <footer className="w-screen relative left-1/2 -translate-x-1/2 bg-[#03060e] border-t border-white/[0.08] pt-14 pb-8 px-8 lg:px-16 mt-20 text-zinc-400 relative z-10">
+                        <div className="max-w-[1600px] mx-auto grid grid-cols-1 md:grid-cols-4 gap-10 pb-10 border-b border-white/[0.08]">
+                            {/* Column 1: Brand & Slogan */}
+                            <div className="md:col-span-2 space-y-4 pr-6">
+                                <div className="flex items-center gap-3">
+                                    <Image
+                                        src="/logo.svg"
+                                        alt="FinanceNeo Logo"
+                                        width={32}
+                                        height={32}
+                                        className="w-8 h-8 rounded-lg"
+                                        priority
+                                    />
+                                    <span className="text-xl font-extrabold tracking-tight text-white">
+                                        Finance<span className="text-emerald-400">Neo</span>
+                                    </span>
+                                </div>
+                                <p className="text-sm text-zinc-400 max-w-sm leading-relaxed">
+                                    Smart AI-powered expense tracking and budget management app. Manage your money with confidence.
+                                </p>
+                            </div>
+
+                            {/* Column 2: Quick Links */}
+                            <div className="space-y-3">
+                                <h4 className="text-sm font-bold text-white uppercase tracking-wider">Quick Links</h4>
+                                <ul className="space-y-2.5 text-sm">
+                                    <li>
+                                        <button type="button" onClick={() => { window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-emerald-400 transition-colors">
+                                            Home
+                                        </button>
+                                    </li>
+                                    <li>
+                                        <button type="button" onClick={() => setIsCalculatorOpen(true)} className="hover:text-emerald-400 transition-colors">
+                                            Free Calculator
+                                        </button>
+                                    </li>
+                                    <li>
+                                        <button type="button" onClick={async () => {
+                                            const { data: { user } } = await supabase.auth.getUser();
+                                            if (user) { router.push("/dashboard"); } else { setShowLogin(true); }
+                                        }} className="hover:text-emerald-400 transition-colors">
+                                            Dashboard
+                                        </button>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            {/* Column 3: Legal & Support */}
+                            <div className="space-y-3">
+                                <h4 className="text-sm font-bold text-white uppercase tracking-wider">Legal</h4>
+                                <ul className="space-y-2.5 text-sm">
+                                    <li>
+                                        <button type="button" onClick={() => { setShowLogin(true); handleSwitchView("privacy"); }} className="hover:text-emerald-400 transition-colors">
+                                            Privacy Policy
+                                        </button>
+                                    </li>
+                                    <li>
+                                        <button type="button" onClick={() => { setShowLogin(true); handleSwitchView("terms"); }} className="hover:text-emerald-400 transition-colors">
+                                            Terms of Use
+                                        </button>
+                                    </li>
+                                    <li>
+                                        <Link href="https://abhijeetg.netlify.app" target="_blank" rel="noopener noreferrer" className="hover:text-emerald-400 transition-colors">
+                                            Contact Us
+                                        </Link>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        {/* Bottom copyright line */}
+                        <div className="max-w-[1600px] mx-auto pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-medium text-zinc-500">
+                            <p>© {new Date().getFullYear()} FinanceNeo. Made with <span className="text-rose-500">❤️</span> by Abhijeet.</p>
+                            <p className="text-zinc-600">All rights reserved.</p>
+                        </div>
+                    </footer>
+                </div>
             </motion.div>
 
             {/* Interactive Login Overlay */}
@@ -1060,7 +1243,7 @@ export default function LandingAndLoginPage() {
                 {showLogin && (
                     <div className="fixed inset-0 z-50 flex flex-col items-center justify-center px-4 pointer-events-none overflow-y-auto pt-4 pb-4">
                         <motion.div
-                            className="relative z-10 w-full max-w-md bg-white/[0.03] backdrop-blur-2xl border border-white/[0.08] shadow-[0_0_80px_rgba(0,0,0,0.8)] rounded-3xl p-8 sm:p-10 will-change-transform pointer-events-auto overflow-hidden"
+                            className="relative z-10 w-full max-w-[360px] sm:max-w-sm bg-white/[0.03] backdrop-blur-2xl border border-white/[0.08] shadow-[0_0_60px_rgba(0,0,0,0.8)] rounded-2xl p-5 sm:p-6 will-change-transform pointer-events-auto overflow-hidden"
                             initial={{ x: "100vw" }}
                             animate={{ x: "0vw" }}
                             exit={{ x: "100vw" }}
@@ -1075,26 +1258,26 @@ export default function LandingAndLoginPage() {
                                         handleSwitchView("login");
                                     }
                                 }}
-                                className="absolute top-4 left-4 p-2 rounded-full text-zinc-500 hover:text-white hover:bg-white/5 transition-colors focus:outline-none z-20 flex items-center pr-3"
+                                className="absolute top-3 left-3 p-1.5 rounded-full text-zinc-400 hover:text-white hover:bg-white/5 transition-colors focus:outline-none z-20 flex items-center pr-2.5"
                             >
-                                <ChevronLeft className="h-5 w-5 mr-1" />
-                                <span className="text-sm font-medium">Back</span>
+                                <ChevronLeft className="h-4 w-4 mr-0.5" />
+                                <span className="text-xs font-medium">Back</span>
                             </button>
 
                             {/* X button removed per user request */}
 
-                            <div className="mb-4 mt-6 text-center relative z-10 px-4">
-                                <h2 className="text-2xl font-bold text-white tracking-tight leading-tight">
-                                    {(view === "login" || view === "signup") && <div className="mb-1">Welcome to</div>}
+                            <div className="mb-3 mt-4 text-center relative z-10 px-2">
+                                <h2 className="text-xl font-bold text-white tracking-tight leading-tight">
+                                    {(view === "login" || view === "signup") && <div className="text-xs font-semibold text-zinc-300 mb-0.5">Welcome to</div>}
                                     {view === "forgot_password_email" && "Recover Account"}
                                     {view === "forgot_password_otp" && "Secure Account"}
                                     {view === "privacy" && "Privacy Policy"}
                                     {view === "terms" && "Terms and Conditions"}
                                     {view !== "privacy" && view !== "terms" && (
-                                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-[#4ecca3] text-3xl font-extrabold block">FinanceNeo</span>
+                                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-[#4ecca3] text-2xl font-extrabold block">FinanceNeo</span>
                                     )}
                                 </h2>
-                                <p className="text-zinc-400 text-sm h-5 transition-all">
+                                <p className="text-zinc-400 text-xs h-4 transition-all mt-1">
                                     {view === "login" && "Please enter your User ID and password to login."}
                                     {view === "signup" && "Create your new account profile."}
                                     {view === "forgot_password_email" && "Enter your email to receive an OTP."}
@@ -1105,7 +1288,7 @@ export default function LandingAndLoginPage() {
                                 </p>
                             </div>
 
-                            <div className="relative w-full">
+                            <div className="relative w-full mt-2">
                                 <AnimatePresence mode="wait">
 
                                     {/* --- STATE 1: LOGIN --- */}
@@ -1117,59 +1300,59 @@ export default function LandingAndLoginPage() {
                                             exit={{ opacity: 0, x: 20 }}
                                             transition={{ duration: 0.3 }}
                                             onSubmit={handleLogin}
-                                            className="flex flex-col gap-4 w-full"
+                                            className="flex flex-col gap-3 w-full"
                                         >
                                             <div className="space-y-1">
                                                 <div className="flex justify-between items-center pr-1">
-                                                    <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider pl-1">User ID</label>
-                                                    <button type="button" onClick={() => handleSwitchView("forgot_userid_email")} className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors">Forgot User ID?</button>
+                                                    <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider pl-1">User ID</label>
+                                                    <button type="button" onClick={() => handleSwitchView("forgot_userid_email")} className="text-[11px] text-emerald-400 hover:text-emerald-300 transition-colors">Forgot User ID?</button>
                                                 </div>
                                                 <input
                                                     type="text" required value={userId} onChange={(e) => setUserId(e.target.value)} disabled={loading}
-                                                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-all font-medium backdrop-blur-sm"
+                                                    className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-all font-medium backdrop-blur-sm"
                                                     placeholder="e.g. SatoshiNeo"
                                                 />
                                             </div>
                                             <div className="space-y-1">
                                                 <div className="flex justify-between items-center pr-1">
-                                                    <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider pl-1">Password</label>
-                                                    <button type="button" onClick={() => handleSwitchView("forgot_password_email")} className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors">Forgot Password?</button>
+                                                    <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider pl-1">Password</label>
+                                                    <button type="button" onClick={() => handleSwitchView("forgot_password_email")} className="text-[11px] text-emerald-400 hover:text-emerald-300 transition-colors">Forgot Password?</button>
                                                 </div>
                                                 <div className="relative">
                                                     <input
                                                         type={showPassword ? "text" : "password"} required value={password} onChange={(e) => setPassword(e.target.value)} disabled={loading}
-                                                        className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 pr-10 text-white focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-all font-medium backdrop-blur-sm"
+                                                        className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 pr-9 text-xs text-white focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-all font-medium backdrop-blur-sm"
                                                         placeholder="••••••••"
                                                     />
-                                                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white transition-colors focus:outline-none">
-                                                        {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                                                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white transition-colors focus:outline-none">
+                                                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                                     </button>
                                                 </div>
                                             </div>
 
-                                            <div className="flex items-center gap-2 mt-1">
+                                            <div className="flex items-center gap-2 mt-0.5">
                                                 <input
                                                     type="checkbox"
                                                     id="rememberMe"
                                                     checked={rememberMe}
                                                     onChange={(e) => setRememberMe(e.target.checked)}
-                                                    className="w-4 h-4 rounded border-white/10 bg-black/40 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0 transition-colors"
+                                                    className="w-3.5 h-3.5 rounded border-white/10 bg-black/40 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0 transition-colors"
                                                 />
-                                                <label htmlFor="rememberMe" className="text-sm text-zinc-400 select-none cursor-pointer hover:text-white transition-colors">
+                                                <label htmlFor="rememberMe" className="text-xs text-zinc-400 select-none cursor-pointer hover:text-white transition-colors">
                                                     Remember me
                                                 </label>
                                             </div>
 
                                             <button
                                                 type="submit" disabled={loading || !userId || !password}
-                                                className="w-full bg-emerald-500 hover:bg-emerald-400 disabled:bg-emerald-500/50 text-emerald-950 font-bold py-4 px-4 rounded-xl transition-all duration-300 shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] flex items-center justify-center mt-2"
+                                                className="w-full bg-emerald-500 hover:bg-emerald-400 disabled:bg-emerald-500/50 text-emerald-950 font-bold py-2.5 px-3 rounded-lg text-xs sm:text-sm transition-all duration-300 shadow-[0_0_15px_rgba(16,185,129,0.3)] hover:shadow-[0_0_25px_rgba(16,185,129,0.5)] flex items-center justify-center mt-1"
                                             >
                                                 {loading ? "Logging In..." : "Log In"}
                                             </button>
 
-                                            <div className="text-center mt-4">
-                                                <span className="text-sm text-zinc-500">Don't have an account? </span>
-                                                <button type="button" onClick={() => handleSwitchView("signup")} className="text-sm text-emerald-400 font-semibold hover:text-emerald-300 transition-colors">Sign Up</button>
+                                            <div className="text-center mt-2">
+                                                <span className="text-xs text-zinc-500">Don't have an account? </span>
+                                                <button type="button" onClick={() => handleSwitchView("signup")} className="text-xs text-emerald-400 font-semibold hover:text-emerald-300 transition-colors">Sign Up</button>
                                             </div>
                                         </motion.form>
                                     )}
@@ -1489,6 +1672,8 @@ export default function LandingAndLoginPage() {
             </AnimatePresence>
 
             <CalculatorModal isOpen={isCalculatorOpen} onClose={() => setIsCalculatorOpen(false)} />
+
+
         </div>
     );
 }

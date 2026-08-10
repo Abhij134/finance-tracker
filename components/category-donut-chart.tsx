@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import {
   PieChart,
   Pie,
@@ -65,7 +65,8 @@ const compactFmt = (n: number) =>
   }).format(n);
 
 interface CategoryDonutChartProps {
-  filteredTransactions: any[];
+  filteredTransactions?: any[];
+  aggregatedData?: Array<{ category: string; totalAmount: number; count?: number }>;
 }
 
 // Renders the "exploded" / emphasized active segment with a glowing outer ring
@@ -109,8 +110,10 @@ const renderActiveShape = (props: any) => {
 // External labels — always visible, hidden for tiny slices
 const renderOuterLabel = (props: any) => {
   const RADIAN = Math.PI / 180;
-  const { cx, cy, midAngle, outerRadius, percent, name, fill } = props;
+  const { cx, cy, midAngle, outerRadius, percent, name, fill, isMobile } = props;
 
+  // On mobile, skip outer labels entirely to prevent clipping
+  if (isMobile) return null;
   if (!percent || percent < 0.04) return null;
 
   const sin = Math.sin(-RADIAN * midAngle);
@@ -158,11 +161,29 @@ const renderOuterLabel = (props: any) => {
 
 export function CategoryDonutChart({
   filteredTransactions,
+  aggregatedData,
 }: CategoryDonutChartProps) {
   const { data, total, top } = useMemo(() => {
-    const expenses = filteredTransactions.filter((t) => t.amount < 0);
+    if (aggregatedData && aggregatedData.length > 0) {
+      const arr = aggregatedData
+        .map((item, i) => ({
+          name: item.category,
+          value: item.totalAmount,
+          count: item.count ?? 1,
+          color:
+            CAT_COLORS[item.category] ||
+            FALLBACK_PALETTE[i % FALLBACK_PALETTE.length],
+        }))
+        .sort((a, b) => b.value - a.value);
+
+      const sum = arr.reduce((s, d) => s + d.value, 0);
+      return { data: arr, total: sum, top: arr[0] };
+    }
+
+    const txs = filteredTransactions || [];
+    const expenses = txs.filter((t) => t.amount < 0);
     const grouped = expenses.reduce((acc, tx) => {
-      const cat = tx.category?.label ?? "Other";
+      const cat = tx.category?.label ?? (typeof tx.category === 'string' ? tx.category : "Other");
       if (!acc[cat]) acc[cat] = { value: 0, count: 0 };
       acc[cat].value += Math.abs(tx.amount);
       acc[cat].count += 1;
@@ -181,12 +202,24 @@ export function CategoryDonutChart({
 
     const sum = arr.reduce((s, d) => s + d.value, 0);
     return { data: arr, total: sum, top: arr[0] };
-  }, [filteredTransactions]);
+  }, [filteredTransactions, aggregatedData]);
 
   const [activeIndex, setActiveIndex] = useState(0);
+  // Lazy init so isMobile is correct on FIRST render (avoids hydration flash showing labels)
+  const [isMobile, setIsMobile] = useState<boolean>(() =>
+    typeof window !== "undefined" ? window.innerWidth < 640 : false
+  );
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 640);
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+
+  // Always show labels — use PieChart margins to ensure they fit within SVG bounds
+  const labelFn = renderOuterLabel;
 
   // Empty state
-  if (filteredTransactions.length === 0 || data.length === 0) {
+  if ((!filteredTransactions || filteredTransactions.length === 0) && (!aggregatedData || aggregatedData.length === 0) || data.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-full flex-1 w-full text-zinc-500 border border-dashed border-slate-700/50 rounded-xl bg-slate-900/20 p-6 min-h-[350px]">
         <PieIcon className="w-12 h-12 mb-4 opacity-20 text-zinc-600" />
@@ -204,9 +237,9 @@ export function CategoryDonutChart({
   return (
     <div className="w-full">
       {/* Chart with center summary overlay */}
-      <div className="relative" style={{ width: "100%", height: 360 }}>
+      <div className="relative" style={{ width: "100%", height: isMobile ? 300 : 360 }}>
         <ResponsiveContainer>
-          <PieChart>
+          <PieChart margin={isMobile ? { top: 50, right: 75, bottom: 50, left: 75 } : { top: 20, right: 60, bottom: 20, left: 60 }}>
             <defs>
               {data.map((d, i) => (
                 <linearGradient
@@ -226,8 +259,8 @@ export function CategoryDonutChart({
               data={data}
               cx="50%"
               cy="50%"
-              innerRadius={86}
-              outerRadius={120}
+              innerRadius={isMobile ? 42 : 86}
+              outerRadius={isMobile ? 62 : 120}
               paddingAngle={2}
               stroke="#0f172a"
               strokeWidth={2}
@@ -235,7 +268,7 @@ export function CategoryDonutChart({
               activeIndex={activeIndex}
               activeShape={renderActiveShape}
               onMouseEnter={(_: any, i: number) => setActiveIndex(i)}
-              label={renderOuterLabel}
+              label={labelFn}
               labelLine={false}
               isAnimationActive
               animationDuration={650}
@@ -261,24 +294,24 @@ export function CategoryDonutChart({
 
         {/* Center overlay — active category summary */}
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-[10px] uppercase tracking-[0.18em] text-zinc-500 font-medium">
+          <span className="text-[8px] sm:text-[10px] uppercase tracking-[0.18em] text-zinc-500 font-medium">
             {active.name}
           </span>
           <span
-            className="mt-1 text-2xl font-bold tabular-nums"
+            className="mt-0.5 sm:mt-1 text-base sm:text-2xl font-bold tabular-nums"
             style={{ color: active.color }}
           >
             {compactFmt(active.value)}
           </span>
-          <span className="mt-0.5 text-[11px] text-zinc-500">
+          <span className="text-[9px] sm:text-[11px] text-zinc-500">
             {activePct.toFixed(1)}% · {active.count} txn
             {active.count !== 1 ? "s" : ""}
           </span>
-          <div className="mt-2 h-px w-10 bg-slate-700" />
-          <span className="mt-2 text-[10px] uppercase tracking-wider text-zinc-500">
+          <div className="mt-1 sm:mt-2 h-px w-7 sm:w-10 bg-slate-700" />
+          <span className="mt-1 sm:mt-2 text-[8px] sm:text-[10px] uppercase tracking-wider text-zinc-500">
             Total
           </span>
-          <span className="text-sm font-semibold text-zinc-100 tabular-nums">
+          <span className="text-xs sm:text-sm font-semibold text-zinc-100 tabular-nums">
             {fmt(total)}
           </span>
         </div>

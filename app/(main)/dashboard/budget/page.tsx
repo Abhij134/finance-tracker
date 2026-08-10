@@ -6,10 +6,12 @@ import { getBudgets } from "@/app/actions/budgets";
 import { CATEGORIES } from "@/lib/constants";
 
 export default async function BudgetPage() {
-  const [dbTransactions, dbBudgets] = await Promise.all([
-    getTransactions(),
+  const [transactionsData, dbBudgets] = await Promise.all([
+    getTransactions({ limit: 100 }),
     getBudgets(),
   ]);
+
+  const dbTransactions = Array.isArray(transactionsData) ? transactionsData : transactionsData?.transactions || [];
 
   const txs = dbTransactions.map((d: any) => ({
     id: d.id,

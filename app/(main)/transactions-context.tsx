@@ -150,16 +150,18 @@ export function TransactionsProvider({
         async function refreshByFilter() {
             setIsLoadingMore(true);
             try {
-                const refreshed = await saGetTransactions({
-                    limit: 2000,
+                const response = await saGetTransactions({
+                    limit: 20,
                     offset: 0,
                 });
 
                 if (cancelled) return;
+                const refreshed = Array.isArray(response) ? response : response.transactions || [];
+                const hasMoreFlag = Array.isArray(response) ? refreshed.length === 20 : (response.hasMore ?? false);
                 const formatted = mapDbTransactions(refreshed);
                 setTransactions(formatted);
                 setOffset(formatted.length);
-                setHasMore(formatted.length === 2000);
+                setHasMore(hasMoreFlag);
             } catch (e) {
                 console.error("Failed to refresh transactions by period:", e);
                 // Keep existing transactions on error instead of clearing them
@@ -180,16 +182,15 @@ export function TransactionsProvider({
         setIsLoadingMore(true);
 
         try {
-            const nextTxs = await saGetTransactions({
-                limit: 2000,
+            const response = await saGetTransactions({
+                limit: 20,
                 offset,
             });
+            const nextTxs = Array.isArray(response) ? response : response.transactions || [];
+            const hasMoreFlag = Array.isArray(response) ? nextTxs.length === 20 : (response.hasMore ?? false);
             const formatted = mapDbTransactions(nextTxs);
 
-            if (formatted.length < 2000) {
-                setHasMore(false);
-            }
-
+            setHasMore(hasMoreFlag);
             setTransactions(prev => [...prev, ...formatted]);
             setOffset(prev => prev + formatted.length);
         } catch (e) {

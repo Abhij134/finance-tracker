@@ -183,10 +183,10 @@ export function CustomDateRangePicker({ from, to, onRangeChange, defaultOpen = f
 
             {isOpen && (
                 <div
-                    className={`${isMobile ? "fixed" : "absolute"} top-full mt-2 w-[min(350px,calc(100vw-1rem))] shadow-2xl z-[100] rounded-2xl border border-border/60 bg-[#0c1117]/98 backdrop-blur-xl animate-in fade-in slide-in-from-top-2 duration-200`}
+                    className={`${isMobile ? "fixed" : "absolute"} top-full mt-2 w-[min(310px,calc(100vw-1rem))] shadow-2xl z-[100] rounded-xl border border-border/60 bg-[#0c1117]/98 backdrop-blur-xl animate-in fade-in slide-in-from-top-2 duration-200`}
                     style={{
                         boxShadow: "0 20px 60px rgba(0,0,0,0.5), 0 0 30px rgba(16,185,129,0.04)",
-                        top: isMobile ? "140px" : "auto",
+                        top: isMobile ? "180px" : "auto",
                         right: isMobile ? "auto" : (align === "right" ? 0 : "auto"),
                         left: isMobile ? "50%" : (align === "center" ? "50%" : "0"),
                         transform: isMobile || align === "center" ? "translateX(-50%)" : "none"
