@@ -57,10 +57,11 @@ export function Navbar({ userName, userEmail, userBirthdate, userImage }: { user
             <button
               type="button"
               onClick={() => setIsCalcOpen(true)}
-              className="p-1.5 sm:p-2 text-zinc-400 hover:text-white hover:bg-white/10 rounded-xl transition-all flex items-center justify-center border border-transparent hover:border-white/10"
+              className="flex items-center gap-1 p-1.5 sm:px-2.5 sm:py-1.5 text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 rounded-xl transition-all border border-emerald-500/30 hover:border-emerald-500/60"
               title="Financial Calculators"
             >
-              <Calculator className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
+              <Calculator className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span className="text-[11px] sm:text-xs font-semibold">Calc</span>
             </button>
             <div className="h-4 w-px bg-white/10" />
             <ExportDropdown />

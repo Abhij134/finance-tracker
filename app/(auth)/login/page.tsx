@@ -3,7 +3,7 @@
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 import { useState, FormEvent, useRef, useEffect } from "react";
-import { Shield, Wallet, Activity, Target, ArrowRight, X, Eye, EyeOff, ChevronLeft, ChevronUp, User, LayoutDashboard, TrendingUp, ArrowDownRight, CircleDollarSign, Battery, Wifi, Signal } from "lucide-react";
+import { Shield, Wallet, Activity, Target, ArrowRight, X, Eye, EyeOff, ChevronLeft, ChevronUp, User, LayoutDashboard, TrendingUp, ArrowDownRight, CircleDollarSign, Battery, Wifi, Signal, Calculator } from "lucide-react";
 import Image from "next/image";
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import {
@@ -332,13 +332,30 @@ export default function LandingAndLoginPage() {
                             </span>
                         </div>
 
-                        <div>
+                        <div className="flex items-center gap-1.5 sm:gap-2.5">
                             <button
                                 type="button"
-                                onClick={() => setShowLogin(true)}
-                                className="px-3 lg:px-4.5 py-0.5 lg:py-1.5 rounded-full border border-emerald-500/40 hover:border-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-[11px] lg:text-sm font-semibold transition-all duration-300 whitespace-nowrap"
+                                onClick={() => setIsCalculatorOpen(true)}
+                                className="flex items-center gap-1 sm:gap-1.5 px-2.5 lg:px-3.5 py-1 lg:py-1.5 rounded-full border border-emerald-500/30 hover:border-emerald-500/60 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-[11px] lg:text-xs font-semibold transition-all duration-300 whitespace-nowrap"
                             >
-                                Try AI Chat
+                                <Calculator className="w-3.5 h-3.5" />
+                                <span>Calculators</span>
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() => { setView("login"); setShowLogin(true); }}
+                                className="px-2.5 lg:px-3.5 py-1 lg:py-1.5 rounded-full border border-white/20 hover:border-white/40 bg-white/10 hover:bg-white/20 text-white text-[11px] lg:text-xs font-semibold transition-all duration-300 whitespace-nowrap"
+                            >
+                                Log In
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() => { setView("signup"); setShowLogin(true); }}
+                                className="px-3 lg:px-4 py-1 lg:py-1.5 rounded-full bg-emerald-500 hover:bg-emerald-400 text-emerald-950 text-[11px] lg:text-xs font-bold transition-all duration-300 whitespace-nowrap shadow-md hover:shadow-emerald-500/20"
+                            >
+                                Get Started
                             </button>
                         </div>
                     </div>
