@@ -33,6 +33,14 @@ type ModalType = "profile" | "security" | "danger" | "signout" | "install" | nul
 
 // ─── Shared Modal Wrapper with Framer Motion ──────────────────────────────────
 function AnimatedModalBackdrop({ onClose, children, blur }: { onClose: () => void; children: React.ReactNode; blur?: boolean }) {
+    useEffect(() => {
+        const orig = document.body.style.overflow;
+        document.body.style.overflow = "hidden";
+        return () => {
+            document.body.style.overflow = orig;
+        };
+    }, []);
+
     return createPortal(
         <motion.div
             initial={{ opacity: 0 }}

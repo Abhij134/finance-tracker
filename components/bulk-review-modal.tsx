@@ -16,7 +16,7 @@ export function BulkReviewModal({ transactions, onSave, onClose }: Props) {
                 <div className="bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-lg text-emerald-400 text-sm font-medium flex justify-between items-center mb-4">
                     <span>Successfully extracted {transactions.length} transactions</span>
                 </div>
-                <div className="flex flex-col space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar pr-2 mb-6">
+                <div className="flex flex-col space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar pr-2 mb-6" tabIndex={0}>
                     {transactions.map((tx, idx) => (
                         <div key={idx} className="flex justify-between items-center bg-[#1a1a1a] border border-gray-800 p-3 rounded-lg">
                             <div className="flex flex-col">

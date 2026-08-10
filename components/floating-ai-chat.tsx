@@ -196,7 +196,7 @@ export function FloatingAiChat() {
           </div>
 
           {/* Messages */}
-          <div ref={scrollRef} className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4 custom-scrollbar">
+          <div ref={scrollRef} className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4 custom-scrollbar" tabIndex={0}>
             {messages.map((m) => (
               <div key={m.id} className={`flex w-full group ${m.role === "user" ? "justify-end" : "justify-start"}`}>
                 <div className={`flex max-w-[90%] sm:max-w-[88%] gap-2 sm:gap-3 ${m.role === "user" ? "flex-row-reverse" : "flex-row"} items-end`}>

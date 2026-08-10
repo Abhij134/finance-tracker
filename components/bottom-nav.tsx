@@ -25,10 +25,10 @@ export function BottomNav() {
                         className="flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-colors"
                     >
                         <item.icon
-                            className={`h-5 w-5 ${isActive ? "text-emerald-400" : "text-zinc-600"}`}
+                            className={`h-5 w-5 ${isActive ? "text-emerald-400" : "text-zinc-400"}`}
                         />
                         <span
-                            className={`text-[10px] font-medium ${isActive ? "text-emerald-400" : "text-zinc-600"}`}
+                            className={`text-[10px] font-medium ${isActive ? "text-emerald-400" : "text-zinc-400"}`}
                         >
                             {item.name}
                         </span>

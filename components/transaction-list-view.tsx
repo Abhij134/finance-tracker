@@ -239,7 +239,7 @@ export function TransactionListView({
                 </div>
             </div>
 
-            <div ref={tableParentRef} className="hidden sm:block pr-2 rounded-xl border border-border bg-card text-card-foreground shadow-md relative w-full overflow-y-auto" style={{ maxHeight: "70vh" }}>
+            <div ref={tableParentRef} className="hidden sm:block pr-2 rounded-xl border border-border bg-card text-card-foreground shadow-md relative w-full overflow-y-auto" style={{ maxHeight: "70vh" }} tabIndex={0}>
                 <table className="min-w-full border-separate border-spacing-0 desktop-table">
                     <thead className="text-left text-sm sticky top-0 z-20">
                         <tr>
@@ -369,7 +369,7 @@ export function TransactionListView({
             </div>
 
             {/* Mobile View Card List - Separate from Table */}
-            <div ref={listParentRef} className="sm:hidden overflow-y-auto w-full" style={{ maxHeight: "70vh" }}>
+            <div ref={listParentRef} className="sm:hidden overflow-y-auto w-full" style={{ maxHeight: "70vh" }} tabIndex={0}>
                 <div style={{ height: `${listVirtualizer.getTotalSize()}px`, width: "100%", position: "relative" }}>
                     {filteredTransactions.length === 0 ? (
                         <div className="text-center py-10 text-muted-foreground bg-card rounded-xl border border-border mt-3">
@@ -523,7 +523,7 @@ export function TransactionListView({
                                 disabled={isPending}
                                 defaultValue=""
                             >
-                                <option value="" disabled className="bg-[#0b141e] text-gray-500">Edit Category...</option>
+                                <option value="" disabled className="bg-[#0b141e] text-gray-400">Edit Category...</option>
                                 {CATEGORIES.map(c => <option className="bg-[#0b141e] text-white" key={c.label} value={c.label}>{c.label}</option>)}
                             </select>
                             <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-emerald-400/50">

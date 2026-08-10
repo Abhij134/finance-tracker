@@ -232,7 +232,7 @@ export function CustomDateRangePicker({ from, to, onRangeChange, defaultOpen = f
                             <div className="flex items-center justify-between pb-3 mb-1">
                                 <button
                                     onClick={prevMonth}
-                                    className="rounded-lg p-1.5 text-zinc-500 transition-all duration-150 hover:bg-white/[0.06] hover:text-zinc-200 active:scale-90"
+                                    className="rounded-lg p-1.5 text-zinc-400 transition-all duration-150 hover:bg-white/[0.06] hover:text-zinc-200 active:scale-90"
                                 >
                                     <ChevronLeft className="h-3.5 w-3.5" />
                                 </button>
@@ -248,7 +248,7 @@ export function CustomDateRangePicker({ from, to, onRangeChange, defaultOpen = f
                                 </button>
                                 <button
                                     onClick={nextMonth}
-                                    className="rounded-lg p-1.5 text-zinc-500 transition-all duration-150 hover:bg-white/[0.06] hover:text-zinc-200 active:scale-90"
+                                    className="rounded-lg p-1.5 text-zinc-400 transition-all duration-150 hover:bg-white/[0.06] hover:text-zinc-200 active:scale-90"
                                 >
                                     <ChevronRight className="h-3.5 w-3.5" />
                                 </button>
@@ -259,7 +259,7 @@ export function CustomDateRangePicker({ from, to, onRangeChange, defaultOpen = f
                                 <div
                                     ref={yearGridRef}
                                     className="grid grid-cols-4 gap-1.5 max-h-[220px] overflow-y-auto pr-1 custom-scrollbar"
-                                >
+                                 tabIndex={0}>
                                     {yearList.map((year) => {
                                         const isCurrentYear = year === currentYear;
                                         const isViewYear = year === viewDate.getFullYear();
@@ -277,7 +277,7 @@ export function CustomDateRangePicker({ from, to, onRangeChange, defaultOpen = f
                                                         ? "border border-primary/50 bg-primary/10 text-primary font-bold shadow-[0_0_12px_rgba(16,185,129,0.12)]"
                                                         : isCurrentYear
                                                             ? "text-primary bg-primary/[0.04] hover:bg-primary/10 ring-1 ring-primary/20"
-                                                            : "text-zinc-500 hover:bg-white/[0.04] hover:text-zinc-300"
+                                                            : "text-zinc-400 hover:bg-white/[0.04] hover:text-zinc-300"
                                                     }
                                                 `}
                                             >
@@ -291,7 +291,7 @@ export function CustomDateRangePicker({ from, to, onRangeChange, defaultOpen = f
                                     {/* Day headers */}
                                     <div className="grid grid-cols-7 gap-0 text-center mb-2">
                                         {DAYS.map((d) => (
-                                            <div key={d} className="text-[9px] font-semibold uppercase tracking-widest text-zinc-600 py-1">
+                                            <div key={d} className="text-[9px] font-semibold uppercase tracking-widest text-zinc-400 py-1">
                                                 {d}
                                             </div>
                                         ))}
@@ -381,7 +381,7 @@ export function CustomDateRangePicker({ from, to, onRangeChange, defaultOpen = f
                     </div>
 
                     {/* Footer */}
-                    <div className="flex items-center justify-between text-[10px] text-zinc-500 border-t border-border/30 px-4 py-2.5 bg-white/[0.01] rounded-b-2xl">
+                    <div className="flex items-center justify-between text-[10px] text-zinc-400 border-t border-border/30 px-4 py-2.5 bg-white/[0.01] rounded-b-2xl">
                         <span className="flex items-center gap-1.5">
                             <span className={`w-1.5 h-1.5 rounded-full ${selectingHint === "from" ? "bg-primary/60 shadow-[0_0_4px_rgba(16,185,129,0.4)]" : "bg-amber-400/60 shadow-[0_0_4px_rgba(251,191,36,0.4)]"}`} />
                             {selectingHint === "from" ? "Click a start date" : "Now click an end date"}
@@ -389,7 +389,7 @@ export function CustomDateRangePicker({ from, to, onRangeChange, defaultOpen = f
                         {(from || to) && (
                             <button
                                 onClick={() => { onRangeChange("", ""); setSelectingHint("from"); }}
-                                className="text-zinc-500 hover:text-red-400 font-medium transition-colors duration-150 px-2 py-0.5 rounded hover:bg-red-400/10"
+                                className="text-zinc-400 hover:text-red-400 font-medium transition-colors duration-150 px-2 py-0.5 rounded hover:bg-red-400/10"
                             >
                                 Clear
                             </button>

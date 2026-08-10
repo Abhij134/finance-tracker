@@ -70,7 +70,7 @@ export function RecentTransactions() {
         </div>
         <div className="pr-2">
           {/* Desktop View Table */}
-          <div className="hidden sm:block overflow-x-auto">
+          <div className="hidden sm:block overflow-x-auto" tabIndex={0}>
             <table className="min-w-full border-separate border-spacing-0 desktop-table">
               <thead>
                 <tr className="text-left text-xs text-muted-foreground">

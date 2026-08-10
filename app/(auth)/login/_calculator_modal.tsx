@@ -50,6 +50,17 @@ export default function CalculatorModal({ isOpen, onClose }: { isOpen: boolean, 
         }
     ];
 
+    useEffect(() => {
+        if (isOpen) {
+            document.body.style.overflow = "hidden";
+        } else {
+            document.body.style.overflow = "";
+        }
+        return () => {
+            document.body.style.overflow = "";
+        };
+    }, [isOpen]);
+
     if (!isOpen) return null;
 
     return (
@@ -75,7 +86,7 @@ export default function CalculatorModal({ isOpen, onClose }: { isOpen: boolean, 
                 </div>
 
                 {/* Content Area */}
-                <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
+                <div className="flex-1 overflow-y-auto custom-scrollbar p-6" tabIndex={0}>
                     {calcTab === 'grid' ? (
                         <div className="space-y-12">
                             {categories.map((cat) => (

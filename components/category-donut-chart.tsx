@@ -229,8 +229,8 @@ export function CategoryDonutChart({
   // Empty state
   if ((!filteredTransactions || filteredTransactions.length === 0) && (!aggregatedData || aggregatedData.length === 0) || data.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-full flex-1 w-full text-zinc-500 border border-dashed border-slate-700/50 rounded-xl bg-slate-900/20 p-6 min-h-[350px]">
-        <PieIcon className="w-12 h-12 mb-4 opacity-20 text-zinc-600" />
+      <div className="flex flex-col items-center justify-center h-full flex-1 w-full text-zinc-400 border border-dashed border-slate-700/50 rounded-xl bg-slate-900/20 p-6 min-h-[350px]">
+        <PieIcon className="w-12 h-12 mb-4 opacity-20 text-zinc-400" />
         <p className="text-sm font-medium">No expense data for this period.</p>
         <p className="text-xs opacity-60 text-center max-w-xs mt-1">
           Select a different date range or add transactions.
@@ -302,7 +302,7 @@ export function CategoryDonutChart({
 
         {/* Center overlay — active category summary */}
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-[9px] sm:text-[10px] uppercase tracking-[0.15em] text-zinc-500 font-medium">
+          <span className="text-[9px] sm:text-[10px] uppercase tracking-[0.15em] text-zinc-400 font-medium">
             {isMobile && active.name.length > 12 ? `${active.name.slice(0, 10)}..` : active.name}
           </span>
           <span
@@ -311,12 +311,12 @@ export function CategoryDonutChart({
           >
             {compactFmt(active.value)}
           </span>
-          <span className="text-[10px] sm:text-[11px] text-zinc-500">
+          <span className="text-[10px] sm:text-[11px] text-zinc-400">
             {activePct.toFixed(1)}% · {active.count} txn
             {active.count !== 1 ? "s" : ""}
           </span>
           <div className="mt-1 sm:mt-2 h-px w-7 sm:w-10 bg-slate-700" />
-          <span className="mt-1 sm:mt-2 text-[8px] sm:text-[10px] uppercase tracking-wider text-zinc-500">
+          <span className="mt-1 sm:mt-2 text-[8px] sm:text-[10px] uppercase tracking-wider text-zinc-400">
             Total
           </span>
           <span className="text-xs sm:text-sm font-semibold text-zinc-100 tabular-nums">
@@ -326,7 +326,7 @@ export function CategoryDonutChart({
       </div>
 
       {/* Top category highlight */}
-      <div className="mt-2 flex items-center justify-center gap-2 text-xs text-zinc-500">
+      <div className="mt-2 flex items-center justify-center gap-2 text-xs text-zinc-400">
         <TrendingUp className="h-3.5 w-3.5" style={{ color: top.color }} />
         <span>
           Top spend:{" "}
@@ -365,7 +365,7 @@ export function CategoryDonutChart({
                     <div className="truncate text-sm font-medium text-zinc-200">
                       {d.name}
                     </div>
-                    <div className="text-[11px] text-zinc-500">
+                    <div className="text-[11px] text-zinc-400">
                       {d.count} transaction{d.count !== 1 ? "s" : ""}
                     </div>
                   </div>
@@ -374,7 +374,7 @@ export function CategoryDonutChart({
                   <div className="text-sm font-semibold tabular-nums text-zinc-100">
                     {fmt(d.value)}
                   </div>
-                  <div className="text-[11px] tabular-nums text-zinc-500">
+                  <div className="text-[11px] tabular-nums text-zinc-400">
                     {pct.toFixed(1)}%
                   </div>
                 </div>

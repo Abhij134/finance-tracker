@@ -3,7 +3,8 @@
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 import { useState, FormEvent, useRef, useEffect } from "react";
-import { Shield, Wallet, Activity, Target, ArrowRight, X, Eye, EyeOff, ChevronLeft, ChevronUp, User, LayoutDashboard, TrendingUp, ArrowDownRight, CircleDollarSign, Battery, Wifi, Signal, Calculator } from "lucide-react";
+import { createPortal } from "react-dom";
+import { Shield, Wallet, Activity, Target, ArrowRight, X, Eye, EyeOff, ChevronLeft, ChevronUp, User, LayoutDashboard, TrendingUp, ArrowDownRight, CircleDollarSign, Battery, Wifi, Signal, Calculator, Sparkles, Bot } from "lucide-react";
 import Image from "next/image";
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import {
@@ -92,20 +93,33 @@ export default function LandingAndLoginPage() {
 
     // Hero Modal State
     const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
+    const [mounted, setMounted] = useState(false);
+    useEffect(() => { setMounted(true); }, []);
+
+    useEffect(() => {
+        if (showLogin || isCalculatorOpen) {
+            window.scrollTo(0, 0);
+            document.body.style.overflow = "hidden";
+        } else {
+            document.body.style.overflow = "";
+        }
+        return () => {
+            document.body.style.overflow = "";
+        };
+    }, [showLogin, isCalculatorOpen]);
     const [rotatingIdx, setRotatingIdx] = useState(0);
 
 
 
-    const [animations, setAnimations] = useState<any>({ chart: null, scan: null });
+
+
+    const [scanAnimation, setScanAnimation] = useState<any>(null);
 
     useEffect(() => {
         let mounted = true;
-        Promise.all([
-            import("@/public/lottie/chart.json").then(m => m.default),
-            import("@/public/lottie/scan.json").then(m => m.default)
-        ]).then(([chart, scan]) => {
-            if (mounted) setAnimations({ chart, scan });
-        }).catch(err => console.error("Error loading animations", err));
+        import("@/public/lottie/scan.json")
+            .then(m => { if (mounted) setScanAnimation(m.default); })
+            .catch(err => console.error("Error loading scan animation", err));
         return () => { mounted = false; };
     }, []);
 
@@ -318,6 +332,7 @@ export default function LandingAndLoginPage() {
                 {/* Header Navbar Sticky on Scroll with Top and Bottom Borders */}
                 <header className="sticky top-0 w-full border-t border-b border-white/[0.08] bg-[#070b13]/85 backdrop-blur-xl z-50 shadow-lg transition-all duration-300">
                     <div className="flex items-center justify-between gap-6 sm:gap-10 px-6 lg:px-16 py-2.5 lg:py-3.5 max-w-[1600px] mx-auto w-full">
+                        {/* Logo */}
                         <div className="flex items-center gap-2 lg:gap-2.5 cursor-pointer shrink-0" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
                             <Image
                                 src="/logo.svg"
@@ -332,30 +347,17 @@ export default function LandingAndLoginPage() {
                             </span>
                         </div>
 
+                        {/* Nav Actions */}
                         <div className="flex items-center gap-1.5 sm:gap-2.5">
-                            <button
-                                type="button"
-                                onClick={() => setIsCalculatorOpen(true)}
-                                className="flex items-center gap-1 sm:gap-1.5 px-2.5 lg:px-3.5 py-1 lg:py-1.5 rounded-full border border-emerald-500/30 hover:border-emerald-500/60 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-[11px] lg:text-xs font-semibold transition-all duration-300 whitespace-nowrap"
-                            >
-                                <Calculator className="w-3.5 h-3.5" />
-                                <span>Calculators</span>
-                            </button>
-
-                            <button
-                                type="button"
-                                onClick={() => { setView("login"); setShowLogin(true); }}
-                                className="px-2.5 lg:px-3.5 py-1 lg:py-1.5 rounded-full border border-white/20 hover:border-white/40 bg-white/10 hover:bg-white/20 text-white text-[11px] lg:text-xs font-semibold transition-all duration-300 whitespace-nowrap"
-                            >
-                                Log In
-                            </button>
-
+                            {/* Try AI Chat — desktop only */}
                             <button
                                 type="button"
                                 onClick={() => { setView("signup"); setShowLogin(true); }}
-                                className="px-3 lg:px-4 py-1 lg:py-1.5 rounded-full bg-emerald-500 hover:bg-emerald-400 text-emerald-950 text-[11px] lg:text-xs font-bold transition-all duration-300 whitespace-nowrap shadow-md hover:shadow-emerald-500/20"
+                                title="Try AI Chat"
+                                className="hidden lg:flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-violet-500/30 hover:border-violet-500/60 bg-violet-500/10 hover:bg-violet-500/20 text-violet-300 hover:text-violet-200 text-xs font-semibold transition-all duration-300"
                             >
-                                Get Started
+                                <Sparkles className="w-3.5 h-3.5" />
+                                <span className="whitespace-nowrap">Try AI Chat</span>
                             </button>
                         </div>
                     </div>
@@ -495,14 +497,7 @@ export default function LandingAndLoginPage() {
 
                                 <div className="flex flex-row items-center justify-center lg:justify-start gap-2 w-full max-w-[260px] mx-auto lg:max-w-none lg:mx-0">
                                     <button
-                                        onClick={async () => {
-                                            const { data: { user } } = await supabase.auth.getUser();
-                                            if (user) {
-                                                router.push("/");
-                                            } else {
-                                                setShowLogin(true);
-                                            }
-                                        }}
+                                        onClick={() => setShowLogin(true)}
                                         className="flex-1 lg:flex-none px-2 py-1.5 lg:px-5 lg:py-2.5 rounded-full bg-emerald-500 text-white text-[10px] lg:text-sm font-bold hover:shadow-[0_0_30px_rgba(16,185,129,0.4)] hover:scale-105 transition-all duration-300 flex items-center justify-center gap-1.5 group"
                                     >
                                         <span className="whitespace-nowrap">Get Started Free</span>
@@ -631,8 +626,8 @@ export default function LandingAndLoginPage() {
 
                                 {/* SCANNING ANIMATION — floating above the laptop on the right */}
                                 <div style={{ position: "absolute", right: "40px", top: "-20px", zIndex: 40, width: 60, height: 60 }}>
-                                    {animations.scan && <Lottie
-                                        animationData={animations.scan}
+                                    {mounted && scanAnimation && <Lottie
+                                        animationData={scanAnimation}
                                         loop={true}
                                         style={{ width: "100%", height: "100%" }}
                                     />}
@@ -689,12 +684,12 @@ export default function LandingAndLoginPage() {
                                     </svg>
                                 </motion.div>
                                 <motion.div animate={{ opacity: [0.2, 1, 0.2] }} transition={{ repeat: Infinity, duration: 1.5, delay: 0.15 }}>
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-500">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-400">
                                         <polyline points="6 9 12 15 18 9"></polyline>
                                     </svg>
                                 </motion.div>
                                 <motion.div animate={{ opacity: [0.2, 1, 0.2] }} transition={{ repeat: Infinity, duration: 1.5, delay: 0.3 }}>
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-500">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-400">
                                         <polyline points="6 9 12 15 18 9"></polyline>
                                     </svg>
                                 </motion.div>
@@ -770,22 +765,109 @@ export default function LandingAndLoginPage() {
                     </div>
 
                     {/* --- Step 1: Track Everything (visual left, text right) --- */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-7 lg:gap-13 items-center">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center py-10 lg:py-14" suppressHydrationWarning>
                         <motion.div
                             initial={{ opacity: 0, x: -50 }}
                             whileInView={{ opacity: 1, x: 0 }}
                             viewport={{ once: true, margin: "-100px" }}
                             transition={{ duration: 0.8, ease: "easeOut" }}
-                            className="relative flex items-center justify-center lg:-translate-y-22 order-2 lg:order-1 -mt-22 -mb-2 lg:my-0 scale-110 lg:scale-100"
+                            className="relative flex items-center justify-center order-2 lg:order-1"
                         >
-                            <div className="relative w-full max-w-[500px]">
-                                <div className="absolute -inset-6 bg-emerald-900/20 rounded-[3rem] blur-3xl pointer-events-none" />
-                                <div className="relative w-full flex items-center justify-center">
-                                    {animations.chart && <Lottie
-                                        animationData={animations.chart}
-                                        loop={true}
-                                        style={{ width: "100%", height: "auto", display: "block" }}
-                                    />}
+                            <div className="relative w-full max-w-sm">
+                                <div className="absolute -inset-6 bg-emerald-500/10 rounded-3xl blur-2xl pointer-events-none" />
+                                <div className="relative bg-[#0d1424] border border-emerald-500/20 rounded-2xl p-5 shadow-2xl space-y-3">
+                                    {/* Header */}
+                                    <div className="flex items-center justify-between pb-2 border-b border-white/5">
+                                        <div>
+                                            <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider">Live Expense Breakdown</p>
+                                            <p className="text-xl font-black text-white mt-0.5">₹42,500 <span className="text-[10px] text-emerald-400 font-medium ml-1">↓ 12% vs last month</span></p>
+                                        </div>
+                                        <div className="px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold">
+                                            Live Tracker
+                                        </div>
+                                    </div>
+
+                                    {/* SVG Graph with Expense Amount Tooltip Badges on Points */}
+                                    <div className="relative pt-1">
+                                        <svg viewBox="0 0 380 185" className="w-full h-auto overflow-visible">
+                                            <defs>
+                                                <linearGradient id="gridChartGrad" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="0%" stopColor="#10b981" stopOpacity="0.35" />
+                                                    <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
+                                                </linearGradient>
+                                            </defs>
+
+                                            {/* Horizontal Grid Lines */}
+                                            <line x1="30" y1="30" x2="360" y2="30" stroke="rgba(255,255,255,0.06)" strokeDasharray="3 3" />
+                                            <line x1="30" y1="75" x2="360" y2="75" stroke="rgba(255,255,255,0.06)" strokeDasharray="3 3" />
+                                            <line x1="30" y1="120" x2="360" y2="120" stroke="rgba(255,255,255,0.08)" />
+
+                                            {/* Y-Axis Labels */}
+                                            <text x="0" y="34" fill="#64748b" fontSize="9" fontWeight="600">₹50k</text>
+                                            <text x="0" y="79" fill="#64748b" fontSize="9" fontWeight="600">₹25k</text>
+                                            <text x="0" y="124" fill="#64748b" fontSize="9" fontWeight="600">₹0</text>
+
+                                            {/* X-Axis Labels */}
+                                            <text x="50" y="142" fill="#64748b" fontSize="9" fontWeight="600">Mon</text>
+                                            <text x="140" y="142" fill="#64748b" fontSize="9" fontWeight="600">Wed</text>
+                                            <text x="230" y="142" fill="#64748b" fontSize="9" fontWeight="600">Fri</text>
+                                            <text x="320" y="142" fill="#64748b" fontSize="9" fontWeight="600">Sun</text>
+
+                                            {/* Filled Area Under Curve */}
+                                            <path d="M 30,120 L 60,100 L 150,65 L 240,80 L 330,35 L 330,120 Z" fill="url(#gridChartGrad)" />
+
+                                            {/* Main Curve Line */}
+                                            <path d="M 30,120 L 60,100 L 150,65 L 240,80 L 330,35" fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+
+                                            {/* --- Data Points & Expense Amount Badges --- */}
+                                            
+                                            {/* Point 1: Mon - Swiggy ₹450 */}
+                                            <g>
+                                                <rect x="28" y="72" width="65" height="18" rx="5" fill="#0f172a" stroke="rgba(16,185,129,0.35)" strokeWidth="1" />
+                                                <text x="60" y="84" fill="#34d399" fontSize="8.5" fontWeight="700" textAnchor="middle">Swiggy ₹450</text>
+                                                <circle cx="60" cy="100" r="4" fill="#10b981" stroke="#064e3b" strokeWidth="2" />
+                                            </g>
+
+                                            {/* Point 2: Wed - Shopping ₹4.2k */}
+                                            <g>
+                                                <rect x="110" y="37" width="80" height="18" rx="5" fill="#0f172a" stroke="rgba(16,185,129,0.35)" strokeWidth="1" />
+                                                <text x="150" y="49" fill="#34d399" fontSize="8.5" fontWeight="700" textAnchor="middle">Shopping ₹4.2k</text>
+                                                <circle cx="150" cy="65" r="4" fill="#10b981" stroke="#064e3b" strokeWidth="2" />
+                                            </g>
+
+                                            {/* Point 3: Fri - Fuel ₹1.8k */}
+                                            <g>
+                                                <rect x="208" y="52" width="64" height="18" rx="5" fill="#0f172a" stroke="rgba(16,185,129,0.35)" strokeWidth="1" />
+                                                <text x="240" y="64" fill="#34d399" fontSize="8.5" fontWeight="700" textAnchor="middle">Fuel ₹1.8k</text>
+                                                <circle cx="240" cy="80" r="4" fill="#10b981" stroke="#064e3b" strokeWidth="2" />
+                                            </g>
+
+                                            {/* Point 4: Sun - Salary +₹65k */}
+                                            <g>
+                                                <rect x="290" y="8" width="74" height="18" rx="5" fill="#064e3b" stroke="#10b981" strokeWidth="1" />
+                                                <text x="327" y="20" fill="#a7f3d0" fontSize="8.5" fontWeight="800" textAnchor="middle">Salary +₹65k</text>
+                                                <circle cx="330" cy="35" r="5" fill="#34d399" stroke="#064e3b" strokeWidth="2" />
+                                            </g>
+                                        </svg>
+                                    </div>
+
+                                    {/* Recent Transactions List inside card */}
+                                    <div className="pt-2 border-t border-white/5 space-y-2">
+                                        <div className="flex items-center justify-between text-[11px]">
+                                            <div className="flex items-center gap-2">
+                                                <span className="w-5 h-5 rounded-md bg-emerald-500/10 flex items-center justify-center text-[10px]">🛒</span>
+                                                <span className="text-zinc-200 font-medium">Zepto Groceries</span>
+                                            </div>
+                                            <span className="text-zinc-400 font-semibold">-₹450</span>
+                                        </div>
+                                        <div className="flex items-center justify-between text-[11px]">
+                                            <div className="flex items-center gap-2">
+                                                <span className="w-5 h-5 rounded-md bg-emerald-500/10 flex items-center justify-center text-[10px]">💼</span>
+                                                <span className="text-zinc-200 font-medium">Monthly Salary</span>
+                                            </div>
+                                            <span className="text-emerald-400 font-semibold">+₹65,000</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </motion.div>
@@ -816,44 +898,20 @@ export default function LandingAndLoginPage() {
                         </motion.div>
                     </div>
 
-                    {/* --- Step 2: Budget Smarter (text left, visual right) --- */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-15 items-center lg:-mt-16">
+                    {/* --- Step 2: Budget Smarter (visual left, text right — aligned with Step 1 and 3) --- */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center py-10 lg:py-14" suppressHydrationWarning>
+                        {/* LEFT — visual card */}
                         <motion.div
                             initial={{ opacity: 0, x: -50 }}
                             whileInView={{ opacity: 1, x: 0 }}
                             viewport={{ once: true, margin: "-100px" }}
                             transition={{ duration: 0.8, ease: "easeOut" }}
-                            className="space-y-5 lg:order-1 lg:pl-35"
-                        >
-                            <div className="inline-flex items-center gap-2 px-2 py-1 rounded-full border border-violet-500/20 bg-violet-500/5">
-                                <span className="text-xs font-bold text-violet-400 uppercase tracking-wider">Step 02 — Budget</span>
-                            </div>
-                            <h3 className="text-2xl lg:text-3xl font-extrabold text-white leading-tight">
-                                Set limits that <br />actually work
-                            </h3>
-                            <p className="text-zinc-400 leading-relaxed">
-                                Create monthly budgets per category and get notified when you overspend. FinanceNeo's smart alerts give you enough time to course-correct.
-                            </p>
-                            <ul className="space-y-3">
-                                {["Per-category budget limits", "Real-time spend alerts", "Daily allowance calculator", "Rollover unused budget"].map(item => (
-                                    <li key={item} className="flex items-center gap-3 text-sm text-zinc-300">
-                                        <span className="w-5 h-5 rounded-full bg-violet-500/15 border border-violet-500/30 flex items-center justify-center flex-shrink-0 text-violet-400 text-xs">✓</span>
-                                        {item}
-                                    </li>
-                                ))}
-                            </ul>
-                        </motion.div>
-                        <motion.div
-                            initial={{ opacity: 0, x: 50 }}
-                            whileInView={{ opacity: 1, x: 0 }}
-                            viewport={{ once: true, margin: "-100px" }}
-                            transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
-                            className="relative flex items-center justify-center lg:order-2"
+                            className="relative flex items-center justify-center order-2 lg:order-1"
                         >
                             <div className="relative w-full max-w-sm">
                                 <div className="absolute -inset-6 bg-violet-500/10 rounded-3xl blur-2xl pointer-events-none" />
                                 <div className="relative bg-[#0d1424] border border-violet-500/20 rounded-2xl p-5 shadow-2xl">
-                                    <div className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-4">Budget Status — June</div>
+                                    <div className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-4">Budget Status — June</div>
                                     {[
                                         { cat: "Shopping", used: 7239, total: 9000, color: "#818cf8" },
                                         { cat: "Food & Drink", used: 3410, total: 5000, color: "#10b981" },
@@ -870,7 +928,7 @@ export default function LandingAndLoginPage() {
                                             >
                                                 <div className="flex justify-between items-baseline mb-1.5">
                                                     <span className="text-xs font-semibold text-zinc-300">{cat}</span>
-                                                    <span className="text-[10px] text-zinc-500">₹{used.toLocaleString()} / ₹{total.toLocaleString()}</span>
+                                                    <span className="text-[10px] text-zinc-400">₹{used.toLocaleString()} / ₹{total.toLocaleString()}</span>
                                                 </div>
                                                 <div className="h-2 bg-white/5 rounded-full overflow-hidden">
                                                     <motion.div
@@ -891,10 +949,37 @@ export default function LandingAndLoginPage() {
                                 </div>
                             </div>
                         </motion.div>
+
+                        {/* RIGHT — text content */}
+                        <motion.div
+                            initial={{ opacity: 0, x: 50 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            viewport={{ once: true, margin: "-100px" }}
+                            transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
+                            className="space-y-5 order-1 lg:order-2"
+                        >
+                            <div className="inline-flex items-center gap-2 px-2 py-1 rounded-full border border-violet-500/20 bg-violet-500/5">
+                                <span className="text-xs font-bold text-violet-400 uppercase tracking-wider">Step 02 — Budget</span>
+                            </div>
+                            <h3 className="text-2xl lg:text-3xl font-extrabold text-white leading-tight">
+                                Set limits that <br />actually work
+                            </h3>
+                            <p className="text-zinc-400 leading-relaxed">
+                                Create monthly budgets per category and get notified when you overspend. FinanceNeo's smart alerts give you enough time to course-correct.
+                            </p>
+                            <ul className="space-y-3">
+                                {["Per-category budget limits", "Real-time spend alerts", "Daily allowance calculator", "Rollover unused budget"].map(item => (
+                                    <li key={item} className="flex items-center gap-3 text-sm text-zinc-300">
+                                        <span className="w-5 h-5 rounded-full bg-violet-500/15 border border-violet-500/30 flex items-center justify-center flex-shrink-0 text-violet-400 text-xs">✓</span>
+                                        {item}
+                                    </li>
+                                ))}
+                            </ul>
+                        </motion.div>
                     </div>
 
                     {/* --- Step 3: Chat with FinanceNeo AI (visual left, text right) --- */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center pt-4 lg:pt-8">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center py-10 lg:py-14" suppressHydrationWarning>
                         {/* LEFT — animated chat UI */}
                         <motion.div
                             initial={{ opacity: 0, x: -50 }}
@@ -916,11 +1001,11 @@ export default function LandingAndLoginPage() {
 
                                             </div>
                                         </div>
-                                        <div className="w-6 h-6 rounded-full bg-white/5 flex items-center justify-center text-zinc-500 text-xs">✕</div>
+                                        <div className="w-6 h-6 rounded-full bg-white/5 flex items-center justify-center text-zinc-400 text-xs">✕</div>
                                     </div>
 
                                     {/* Messages — looping infinite chat cycle (16s per loop) */}
-                                    <div className="p-4 overflow-y-auto chat-scroll flex flex-col" style={{ height: 290 }}>
+                                    <div className="p-4 overflow-y-auto chat-scroll flex flex-col" style={{ height: 290 }} tabIndex={0}>
                                         {/* AI msg 1 */}
                                         <div className="flex items-end gap-2" style={{ animation: "chatMsg1 16s ease infinite" }}>
                                             <div className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-xs flex-shrink-0">🤖</div>
@@ -993,7 +1078,7 @@ export default function LandingAndLoginPage() {
                                     {/* Input bar */}
                                     <div className="px-4 py-3 border-t border-white/[0.06] bg-[#0d1424] flex items-center gap-2">
                                         <div className="flex-1 bg-white/[0.04] border border-white/[0.08] rounded-full px-4 py-2">
-                                            <span className="text-xs text-zinc-500">Ask Neo about your finances...</span>
+                                            <span className="text-xs text-zinc-400">Ask Neo about your finances...</span>
                                         </div>
                                         <button className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-white text-xs flex-shrink-0 shadow-lg shadow-emerald-500/30">➤</button>
                                     </div>
@@ -1090,7 +1175,7 @@ export default function LandingAndLoginPage() {
                                     </li>
                                 ))}
                             </ul>
-                            <p className="text-xs text-zinc-600 mt-2">Powered by your live transaction data — always accurate, always yours.</p>
+                            <p className="text-xs text-zinc-400 mt-2">Powered by your live transaction data — always accurate, always yours.</p>
                         </motion.div>
                     </div>
 
@@ -1128,7 +1213,7 @@ export default function LandingAndLoginPage() {
                                     </div>
                                     <div>
                                         <h4 className="text-sm font-bold text-white mb-1">{feat.title}</h4>
-                                        <p className="text-xs text-zinc-500 leading-relaxed">{feat.desc}</p>
+                                        <p className="text-xs text-zinc-400 leading-relaxed">{feat.desc}</p>
                                     </div>
                                 </motion.div>
                             ))}
@@ -1252,18 +1337,18 @@ export default function LandingAndLoginPage() {
                         </div>
 
                         {/* Bottom copyright line */}
-                        <div className="max-w-[1600px] mx-auto pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-medium text-zinc-500">
+                        <div className="max-w-[1600px] mx-auto pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-medium text-zinc-400">
                             <p>© {new Date().getFullYear()} FinanceNeo. Made with <span className="text-rose-500">❤️</span> by Abhijeet.</p>
-                            <p className="text-zinc-600">All rights reserved.</p>
+                            <p className="text-zinc-400">All rights reserved.</p>
                         </div>
                     </footer>
                 </div>
             </motion.div>
 
             {/* Interactive Login Overlay */}
-            <AnimatePresence>
-                {showLogin && (
-                    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center px-4 pointer-events-none overflow-y-auto pt-4 pb-4">
+            {mounted && showLogin && createPortal(
+                <AnimatePresence>
+                    <div className="fixed inset-0 z-50 flex items-center justify-center px-4 pointer-events-none" tabIndex={0}>
                         <motion.div
                             className="relative z-10 w-full max-w-[360px] sm:max-w-sm bg-white/[0.03] backdrop-blur-2xl border border-white/[0.08] shadow-[0_0_60px_rgba(0,0,0,0.8)] rounded-2xl p-5 sm:p-6 will-change-transform pointer-events-auto overflow-hidden"
                             initial={{ x: "100vw" }}
@@ -1373,7 +1458,7 @@ export default function LandingAndLoginPage() {
                                             </button>
 
                                             <div className="text-center mt-2">
-                                                <span className="text-xs text-zinc-500">Don't have an account? </span>
+                                                <span className="text-xs text-zinc-400">Don't have an account? </span>
                                                 <button type="button" onClick={() => handleSwitchView("signup")} className="text-xs text-emerald-400 font-semibold hover:text-emerald-300 transition-colors">Sign Up</button>
                                             </div>
                                         </motion.form>
@@ -1435,7 +1520,7 @@ export default function LandingAndLoginPage() {
                                             </button>
 
                                             <div className="text-center mt-4">
-                                                <span className="text-sm text-zinc-500">Already a member? </span>
+                                                <span className="text-sm text-zinc-400">Already a member? </span>
                                                 <button type="button" onClick={() => handleSwitchView("login")} className="text-sm text-emerald-400 font-semibold hover:text-emerald-300 transition-colors">Log In Instead</button>
                                             </div>
                                         </motion.form>
@@ -1469,7 +1554,7 @@ export default function LandingAndLoginPage() {
                                             </button>
 
                                             <div className="text-center mt-4">
-                                                <button type="button" onClick={() => handleSwitchView("login")} className="text-sm text-zinc-500 font-semibold hover:text-white transition-colors">&larr; Back to Login</button>
+                                                <button type="button" onClick={() => handleSwitchView("login")} className="text-sm text-zinc-400 font-semibold hover:text-white transition-colors">&larr; Back to Login</button>
                                             </div>
                                         </motion.form>
                                     )}
@@ -1564,7 +1649,7 @@ export default function LandingAndLoginPage() {
                                             </button>
 
                                             <div className="text-center mt-4">
-                                                <button type="button" onClick={() => handleSwitchView("login")} className="text-sm text-zinc-500 font-semibold hover:text-white transition-colors">&larr; Back to Login</button>
+                                                <button type="button" onClick={() => handleSwitchView("login")} className="text-sm text-zinc-400 font-semibold hover:text-white transition-colors">&larr; Back to Login</button>
                                             </div>
                                         </motion.form>
                                     )}
@@ -1594,7 +1679,7 @@ export default function LandingAndLoginPage() {
                                                         />
                                                     ))}
                                                 </div>
-                                                <p className="text-xs text-zinc-500 mt-3 self-start pl-1">
+                                                <p className="text-xs text-zinc-400 mt-3 self-start pl-1">
                                                     Check your email for the 6-digit security code.
                                                 </p>
                                             </div>
@@ -1645,8 +1730,8 @@ export default function LandingAndLoginPage() {
                                             exit={{ opacity: 0, x: 20 }}
                                             transition={{ duration: 0.3 }}
                                             className="text-left text-zinc-300 text-sm max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar"
-                                        >
-                                            <p className="mb-4 text-xs text-zinc-500">Last updated: April 2026</p>
+                                         tabIndex={0}>
+                                            <p className="mb-4 text-xs text-zinc-400">Last updated: April 2026</p>
                                             <h4 className="font-bold text-white mb-2 mt-4">1. Information We Collect</h4>
                                             <p className="mb-2">We collect information to provide better services to all our users. To fully utilize FinanceNeo's automated tracking, we collect:</p>
                                             <ul className="list-disc pl-5 mb-4 marker:text-emerald-500">
@@ -1670,8 +1755,8 @@ export default function LandingAndLoginPage() {
                                             exit={{ opacity: 0, x: 20 }}
                                             transition={{ duration: 0.3 }}
                                             className="text-left text-zinc-300 text-sm max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar"
-                                        >
-                                            <p className="mb-4 text-xs text-zinc-500">Last updated: April 2026</p>
+                                         tabIndex={0}>
+                                            <p className="mb-4 text-xs text-zinc-400">Last updated: April 2026</p>
                                             <h4 className="font-bold text-white mb-2 mt-4">1. Acceptance of Terms</h4>
                                             <p className="mb-4">By accessing and using FinanceNeo, you accept and agree to be bound by the terms and provision of this agreement.</p>
                                             <h4 className="font-bold text-white mb-2 mt-4">2. Description of Service</h4>
@@ -1690,10 +1775,15 @@ export default function LandingAndLoginPage() {
                             </div>
                         </motion.div>
                     </div>
-                )}
-            </AnimatePresence>
+                </AnimatePresence>,
+                document.body
+            )}
 
-            <CalculatorModal isOpen={isCalculatorOpen} onClose={() => setIsCalculatorOpen(false)} />
+            {/* Calculator modal via portal so fixed positioning is not affected by motion.div transforms */}
+            {mounted && isCalculatorOpen && createPortal(
+                <CalculatorModal isOpen={isCalculatorOpen} onClose={() => setIsCalculatorOpen(false)} />,
+                document.body
+            )}
 
 
         </div>

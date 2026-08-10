@@ -184,7 +184,7 @@ export function FinancialReportsDashboard() {
             </div>
           </div>
 
-          <div className="flex-1 w-full min-w-0 relative overflow-x-auto custom-scrollbar pb-6">
+          <div className="flex-1 w-full min-w-0 relative overflow-x-auto custom-scrollbar pb-6" tabIndex={0}>
             <div style={{ minWidth: `max(120%, ${finalChartData.length * 100}px)`, height: '100%' }}>
               <ResponsiveContainer width="100%" height={200}>
                 <AreaChart data={finalChartData} margin={{ top: 10, right: 30, left: -20, bottom: 25 }}>
@@ -238,7 +238,7 @@ export function FinancialReportsDashboard() {
             </p>
           </div>
 
-          <div className="flex-1 w-full relative overflow-y-auto pr-2 custom-scrollbar">
+          <div className="flex-1 w-full relative overflow-y-auto pr-2 custom-scrollbar" tabIndex={0}>
             {/* Inject the BudgetProgress Component directly */}
             <BudgetProgress />
           </div>

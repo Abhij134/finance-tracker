@@ -96,6 +96,7 @@ export function ManualTransactionModal({ open, onClose }: Props) {
         >
             <div
                 className="relative w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-2xl max-h-[92dvh] overflow-y-auto"
+                tabIndex={0}
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* header */}

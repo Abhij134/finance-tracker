@@ -26,7 +26,7 @@ const DonutChart = ({ p1, color1 = "#10b981", color2 = "#334155", centerLabel, c
                 style={{ background: `conic-gradient(from 0deg, ${color1} ${p1}%, ${color2} ${p1}%)` }}
             ></div>
             <div className="absolute inset-0 m-auto w-36 h-36 bg-[#070b13] rounded-full flex flex-col items-center justify-center border-[6px] border-[#070b13]">
-                <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest text-center px-2">{centerLabel}</span>
+                <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest text-center px-2">{centerLabel}</span>
                 <span className="text-xl font-bold text-white max-w-[120px] truncate">{centerValue}</span>
             </div>
         </div>
@@ -57,7 +57,7 @@ const ContextBox = ({ text }: { text: string }) => (
 
 const StatCard = ({ title, value, colorClass = "text-white", delay = 0.2 }: any) => (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay }} className="bg-white/5 border border-white/5 rounded-xl p-5 relative overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:bg-white/10 hover:shadow-[0_4px_20px_rgba(16,185,129,0.15)] hover:border-emerald-500/30 cursor-default">
-        <p className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest mb-2">{title}</p>
+        <p className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest mb-2">{title}</p>
         <p className={`text-xl font-bold truncate ${colorClass}`}>{value}</p>
     </motion.div>
 );
@@ -74,7 +74,7 @@ export function ComingSoonPlaceholder({ name }: { name: string }) {
         <div className="w-full h-full flex flex-col justify-center items-center py-20">
             <Calculator className="w-16 h-16 text-emerald-500/20 mb-4" />
             <h3 className="text-2xl font-bold text-white mb-2">{name} is Coming Soon</h3>
-            <p className="text-zinc-500">We are currently building this calculator.</p>
+            <p className="text-zinc-400">We are currently building this calculator.</p>
         </div>
     );
 }
@@ -665,8 +665,8 @@ export function GstCalculator() {
 
     return <Shell title="GST Settings" inputs={<>
         <div className="flex bg-slate-900/80 rounded-lg p-1 border border-white/5 mb-6">
-            <button onClick={() => setMode('add')} className={`flex-1 py-2 text-sm font-semibold rounded-md transition-colors ${mode === 'add' ? 'bg-emerald-500/20 text-emerald-400' : 'text-zinc-500 hover:text-white'}`}>Add GST</button>
-            <button onClick={() => setMode('remove')} className={`flex-1 py-2 text-sm font-semibold rounded-md transition-colors ${mode === 'remove' ? 'bg-emerald-500/20 text-emerald-400' : 'text-zinc-500 hover:text-white'}`}>Remove GST</button>
+            <button onClick={() => setMode('add')} className={`flex-1 py-2 text-sm font-semibold rounded-md transition-colors ${mode === 'add' ? 'bg-emerald-500/20 text-emerald-400' : 'text-zinc-400 hover:text-white'}`}>Add GST</button>
+            <button onClick={() => setMode('remove')} className={`flex-1 py-2 text-sm font-semibold rounded-md transition-colors ${mode === 'remove' ? 'bg-emerald-500/20 text-emerald-400' : 'text-zinc-400 hover:text-white'}`}>Remove GST</button>
         </div>
         <InputGroup label={mode === 'add' ? 'Base Amount' : 'Total Amount (Inc GST)'} value={amount} onChange={(e: any) => setAmount(+e.target.value)} min={100} max={1000000} step={100} prefix="₹" />
         <div>

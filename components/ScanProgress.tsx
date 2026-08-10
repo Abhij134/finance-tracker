@@ -223,7 +223,7 @@ export function ScanProgress({
                     <p className="text-[9px] text-muted-foreground uppercase tracking-widest mb-2">
                         {isPaused ? "Paused — buffering transactions" : "Live feed"}
                     </p>
-                    <div ref={feedRef} className="flex flex-col gap-1 max-h-36 overflow-y-auto scrollbar-none">
+                    <div ref={feedRef} className="flex flex-col gap-1 max-h-36 overflow-y-auto scrollbar-none" tabIndex={0}>
                         {transactions.length === 0 ? (
                             <div className="flex items-center gap-2 py-1">
                                 <div className={`w-1.5 h-1.5 rounded-full ${isDone || isStopped ? "bg-muted-foreground/30" : "bg-amber-400 animate-pulse"}`} />

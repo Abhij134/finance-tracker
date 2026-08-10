@@ -28,7 +28,7 @@ export function SafeToSpendCard({ data }: SafeToSpendCardProps) {
     if (!budget || budget === 0) {
         return (
             <div className="flex flex-col items-center justify-center p-6 text-center h-full min-h-[350px] rounded-xl border border-zinc-800 bg-card text-muted-foreground shadow-md">
-                <ShieldCheck className="h-10 w-10 text-zinc-600 mb-3" />
+                <ShieldCheck className="h-10 w-10 text-zinc-400 mb-3" />
                 <h3 className="text-lg font-semibold text-zinc-400">Daily Allowance</h3>
                 <p className="text-sm mt-2 max-w-[220px] leading-relaxed">
                     Set an overall monthly budget to unlock your smart daily spending limits.
@@ -51,7 +51,7 @@ export function SafeToSpendCard({ data }: SafeToSpendCardProps) {
                 <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-400">
                     Daily Allowance
                 </h2>
-                <p className="text-xs text-zinc-600 mt-0.5 tracking-wide">
+                <p className="text-xs text-zinc-400 mt-0.5 tracking-wide">
                     {periodLabel ? `Safe to spend · ${periodLabel}` : "Safe to spend today"}
                 </p>
             </div>
@@ -117,7 +117,7 @@ export function SafeToSpendCard({ data }: SafeToSpendCardProps) {
             {/* Budget Used Progress Bar */}
             <div className="px-5 mb-5 z-10">
                 <div className="flex justify-between items-center mb-1.5">
-                    <span className="text-[11px] text-zinc-500 font-medium uppercase tracking-wide flex items-center gap-1">
+                    <span className="text-[11px] text-zinc-400 font-medium uppercase tracking-wide flex items-center gap-1">
                         <Flame className="h-3 w-3" /> Budget Used
                     </span>
                     <span className="text-[11px] font-bold text-zinc-300">{budgetUsedPct}%</span>
@@ -135,15 +135,15 @@ export function SafeToSpendCard({ data }: SafeToSpendCardProps) {
             {/* Footer Stats */}
             <div className="mt-auto z-10 pt-4 px-5 pb-5 border-t border-zinc-800/60 grid grid-cols-3 gap-3">
                 <div className="flex flex-col">
-                    <span className="text-[10px] text-zinc-500 uppercase tracking-wider font-medium mb-1">Days Left</span>
+                    <span className="text-[10px] text-zinc-400 uppercase tracking-wider font-medium mb-1">Days Left</span>
                     <span className="text-base font-bold text-zinc-200">{daysRemaining}</span>
                 </div>
                 <div className="flex flex-col">
-                    <span className="text-[10px] text-zinc-500 uppercase tracking-wider font-medium mb-1">Spent</span>
+                    <span className="text-[10px] text-zinc-400 uppercase tracking-wider font-medium mb-1">Spent</span>
                     <span className="text-base font-bold text-zinc-200">{fmt(totalSpent)}</span>
                 </div>
                 <div className="flex flex-col items-end">
-                    <span className="text-[10px] text-zinc-500 uppercase tracking-wider font-medium mb-1">Budget</span>
+                    <span className="text-[10px] text-zinc-400 uppercase tracking-wider font-medium mb-1">Budget</span>
                     <span className="text-base font-bold text-zinc-200">{fmt(budget)}</span>
                 </div>
             </div>

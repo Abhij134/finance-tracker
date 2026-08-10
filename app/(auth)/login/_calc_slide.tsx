@@ -3,7 +3,7 @@
 const S = `bg-[#0d121c] border border-white/5 rounded-lg px-3 py-2.5 gap-2 flex items-center focus-within:border-emerald-500/50 transition-colors`;
 const inp = `flex-1 bg-transparent text-white text-sm font-semibold outline-none w-full`;
 const sliderCls = `w-full accent-emerald-500 h-1 bg-white/10 rounded-full appearance-none`;
-const lbl = `text-[10px] text-zinc-500 mb-1 block`;
+const lbl = `text-[10px] text-zinc-400 mb-1 block`;
 const row = (label:string, val:string) => ({label, val});
 
 // Sidebar menu config

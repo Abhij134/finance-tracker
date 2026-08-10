@@ -12,7 +12,9 @@ const withSerwist = withSerwistInit({
 const nextConfig: NextConfig = {
   reactCompiler: true,
   compress: true,
+  poweredByHeader: false,
   experimental: {
+    optimizePackageImports: ['lucide-react', 'framer-motion', 'recharts', 'date-fns', 'sonner'],
     serverActions: {
       bodySizeLimit: '5mb',
     },
@@ -20,7 +22,29 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: ['172.20.10.2', '172.20.10.2:3000', 'localhost', '127.0.0.1'],
   images: {
     formats: ['image/avif', 'image/webp'],
-    minimumCacheTTL: 86400,
+    minimumCacheTTL: 31536000,
+  },
+  async headers() {
+    return [
+      {
+        source: '/_next/static/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        source: '/logo.svg',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+    ];
   },
   serverExternalPackages: ['pdfkit', 'unpdf'],
   // THE FIX: Explicitly tells Next.js 16 it is okay to mix Turbopack and Webpack plugins

@@ -6,13 +6,11 @@ import { ReactNode } from "react";
 import { PageTransition } from "@/components/page-transition";
 
 const FloatingAiChat = dynamic(
-  () => import("@/components/floating-ai-chat").then((mod) => mod.FloatingAiChat),
-  { ssr: false }
+  () => import("@/components/floating-ai-chat").then((mod) => mod.FloatingAiChat)
 );
 
 const FloatingScanProgress = dynamic(
-  () => import("@/components/floating-scan-progress").then((mod) => mod.FloatingScanProgress),
-  { ssr: false }
+  () => import("@/components/floating-scan-progress").then((mod) => mod.FloatingScanProgress)
 );
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {

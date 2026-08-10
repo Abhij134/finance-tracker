@@ -221,14 +221,14 @@ export function AiLiveInsights({
         <button
           onClick={() => fetchInsights(true)}
           disabled={isLoading}
-          className="p-1 rounded-md hover:bg-white/5 transition-all text-zinc-500 hover:text-zinc-200 active:scale-95 disabled:opacity-50"
+          className="p-1 rounded-md hover:bg-white/5 transition-all text-zinc-400 hover:text-zinc-200 active:scale-95 disabled:opacity-50"
         >
           <RefreshCw className={`h-3 w-3 sm:h-3.5 sm:w-3.5 ${isLoading ? "animate-spin" : ""}`} />
         </button>
       </div>
 
       {/* Insights list */}
-      <div className="flex-1 flex flex-col gap-2.5 sm:gap-3 overflow-y-auto pr-1 relative z-10 custom-scrollbar pb-1">
+      <div className="flex-1 flex flex-col gap-2.5 sm:gap-3 overflow-y-auto pr-1 relative z-10 custom-scrollbar pb-1" tabIndex={0}>
 
         {/* Loading */}
         {isLoading && !insights && (
@@ -237,7 +237,7 @@ export function AiLiveInsights({
               <Activity className="h-6 w-6 text-emerald-500/20" />
               <Activity className="h-6 w-6 text-emerald-500 absolute top-0 left-0 animate-pulse" />
             </div>
-            <p className="text-[8px] font-bold uppercase tracking-widest text-zinc-600 animate-pulse">Analyzing...</p>
+            <p className="text-[8px] font-bold uppercase tracking-widest text-zinc-400 animate-pulse">Analyzing...</p>
           </div>
         )}
 
@@ -283,7 +283,7 @@ export function AiLiveInsights({
         {!isLoading && insights && insights.length === 0 && (
           <div className="text-center py-10 opacity-30 select-none">
             <Sparkles className="h-12 w-12 mx-auto mb-4 text-zinc-700" />
-            <p className="text-xs font-bold uppercase tracking-widest text-zinc-500">Awaiting Signal</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-zinc-400">Awaiting Signal</p>
           </div>
         )}
 

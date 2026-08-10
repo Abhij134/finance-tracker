@@ -16,16 +16,14 @@ import { StatCardSkeleton, RecentTransactionsSkeleton, AiInsightsSkeleton, Greet
 const CategoryBreakdown = dynamic(
   () => import("@/components/category-breakdown").then((mod) => mod.CategoryBreakdown),
   {
-    loading: () => <ChartSkeleton className="min-h-[320px]" />,
-    ssr: false,
+    loading: () => <ChartSkeleton className="min-h-[320px]" />
   }
 );
 
 const AiLiveInsights = dynamic(
   () => import("@/components/ai-live-insights").then((mod) => mod.AiLiveInsights),
   {
-    loading: () => <AiInsightsSkeleton />,
-    ssr: false,
+    loading: () => <AiInsightsSkeleton />
   }
 );
 import { toLocalISO, getLocalStartOfDay, getLocalEndOfDay } from "@/lib/utils";

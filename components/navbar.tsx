@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Calculator } from "lucide-react";
+import { createPortal } from "react-dom";
 import { UserDropdown } from "@/components/user-dropdown";
 import { ExportDropdown } from "@/components/export-dropdown";
 
@@ -17,6 +18,8 @@ const CalculatorModal = dynamic(
 export function Navbar({ userName, userEmail, userBirthdate, userImage }: { userName?: string; userEmail?: string; userBirthdate?: string; userImage?: string; }) {
   const router = useRouter();
   const [isCalcOpen, setIsCalcOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
   const handleSignOut = async () => {
     const { handleSignOut: signOutAction } = await import("@/app/actions/auth");
@@ -57,11 +60,10 @@ export function Navbar({ userName, userEmail, userBirthdate, userImage }: { user
             <button
               type="button"
               onClick={() => setIsCalcOpen(true)}
-              className="flex items-center gap-1 p-1.5 sm:px-2.5 sm:py-1.5 text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 rounded-xl transition-all border border-emerald-500/30 hover:border-emerald-500/60"
+              className="flex items-center gap-1 p-1.5 sm:p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-all border border-white/10 hover:border-white/20"
               title="Financial Calculators"
             >
               <Calculator className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              <span className="text-[11px] sm:text-xs font-semibold">Calc</span>
             </button>
             <div className="h-4 w-px bg-white/10" />
             <ExportDropdown />
@@ -80,7 +82,11 @@ export function Navbar({ userName, userEmail, userBirthdate, userImage }: { user
         </div>
       </header>
 
-      <CalculatorModal isOpen={isCalcOpen} onClose={() => setIsCalcOpen(false)} />
+      {/* Calculator modal rendered via portal at body level so fixed positioning works */}
+      {mounted && isCalcOpen && createPortal(
+        <CalculatorModal isOpen={isCalcOpen} onClose={() => setIsCalcOpen(false)} />,
+        document.body
+      )}
     </>
   );
 }

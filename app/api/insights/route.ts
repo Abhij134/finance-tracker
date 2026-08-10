@@ -220,9 +220,6 @@ export async function GET(req: Request) {
         const userId = session?.user?.id;
         if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-        const dbUser = await prisma.user.findUnique({ where: { id: userId } });
-        if (!dbUser) return NextResponse.json({ error: "User not found" }, { status: 404 });
-
         // Parse date params
         const url = new URL(req.url);
         const fromParam = url.searchParams.get("from");
@@ -230,7 +227,7 @@ export async function GET(req: Request) {
         const rangeParam = url.searchParams.get("range") || "month";
 
         const hour = new Date().toISOString().slice(0, 13);
-        const cacheKey = `insights:${fromParam || 'none'}:${toParam || 'none'}:${hour}`;
+        const cacheKey = `insights:${userId}:${fromParam || 'none'}:${toParam || 'none'}:${hour}`;
 
         const cached = insightsCache.get(cacheKey);
         if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
@@ -262,8 +259,15 @@ export async function GET(req: Request) {
         }
 
         const [allTxs, dbBudgets] = await Promise.all([
-            prisma.transaction.findMany({ where: { userId: dbUser.id, ...dateFilter }, orderBy: { date: "desc" } }),
-            prisma.budget.findMany({ where: { userId: dbUser.id } }),
+            prisma.transaction.findMany({
+                where: { userId, ...dateFilter },
+                select: { id: true, date: true, amount: true, merchant: true, category: true },
+                orderBy: { date: "desc" }
+            }),
+            prisma.budget.findMany({
+                where: { userId },
+                select: { category: true, amount: true }
+            }),
         ]);
 
         const totalIncome = allTxs.filter(t => t.amount > 0).reduce((s, t) => s + t.amount, 0);
