@@ -107,51 +107,59 @@ const renderActiveShape = (props: any) => {
   );
 };
 
-// External labels — always visible, hidden for tiny slices
-const renderOuterLabel = (props: any) => {
+// External labels — always visible, compact on mobile to prevent clipping
+const renderOuterLabel = (props: any, isMobile: boolean) => {
   const RADIAN = Math.PI / 180;
-  const { cx, cy, midAngle, outerRadius, percent, name, fill, isMobile } = props;
+  const { cx, cy, midAngle, outerRadius, percent, name, fill } = props;
 
-  // On mobile, skip outer labels entirely to prevent clipping
-  if (isMobile) return null;
-  if (!percent || percent < 0.04) return null;
+  if (!percent || percent < 0.03) return null;
 
   const sin = Math.sin(-RADIAN * midAngle);
   const cos = Math.cos(-RADIAN * midAngle);
-  const sx = cx + (outerRadius + 4) * cos;
-  const sy = cy + (outerRadius + 4) * sin;
-  const mx = cx + (outerRadius + 22) * cos;
-  const my = cy + (outerRadius + 22) * sin;
-  const ex = mx + (cos >= 0 ? 1 : -1) * 18;
+
+  // Compact offsets for mobile so text stays comfortably inside container bounds
+  const rOffset = isMobile ? 8 : 22;
+  const hOffset = isMobile ? 6 : 18;
+  const textOffset = isMobile ? 2 : 6;
+  const nameFontSize = isMobile ? 9 : 11;
+  const pctFontSize = isMobile ? 8 : 10;
+
+  const sx = cx + (outerRadius + 2) * cos;
+  const sy = cy + (outerRadius + 2) * sin;
+  const mx = cx + (outerRadius + rOffset) * cos;
+  const my = cy + (outerRadius + rOffset) * sin;
+  const ex = mx + (cos >= 0 ? 1 : -1) * hOffset;
   const ey = my;
   const textAnchor = cos >= 0 ? "start" : "end";
+
+  const displayName = isMobile && name.length > 11 ? `${name.slice(0, 9)}..` : name;
 
   return (
     <g>
       <path
         d={`M${sx},${sy}L${mx},${my}L${ex},${ey}`}
         stroke={fill}
-        strokeWidth={1.25}
+        strokeWidth={1.1}
         fill="none"
-        opacity={0.6}
+        opacity={0.65}
       />
-      <circle cx={ex} cy={ey} r={2.5} fill={fill} />
+      <circle cx={ex} cy={ey} r={2} fill={fill} />
       <text
-        x={ex + (cos >= 0 ? 6 : -6)}
-        y={ey - 4}
+        x={ex + (cos >= 0 ? textOffset : -textOffset)}
+        y={ey - 3}
         textAnchor={textAnchor}
         fill="#f0f4f8"
-        fontSize={11}
+        fontSize={nameFontSize}
         fontWeight={600}
       >
-        {name}
+        {displayName}
       </text>
       <text
-        x={ex + (cos >= 0 ? 6 : -6)}
-        y={ey + 10}
+        x={ex + (cos >= 0 ? textOffset : -textOffset)}
+        y={ey + (isMobile ? 8 : 10)}
         textAnchor={textAnchor}
         fill="#94a3b8"
-        fontSize={10}
+        fontSize={pctFontSize}
       >
         {(percent * 100).toFixed(0)}%
       </text>
@@ -215,8 +223,8 @@ export function CategoryDonutChart({
     return () => window.removeEventListener("resize", check);
   }, []);
 
-  // Always show labels — use PieChart margins to ensure they fit within SVG bounds
-  const labelFn = renderOuterLabel;
+  // Pass isMobile into label function
+  const labelFn = (props: any) => renderOuterLabel(props, isMobile);
 
   // Empty state
   if ((!filteredTransactions || filteredTransactions.length === 0) && (!aggregatedData || aggregatedData.length === 0) || data.length === 0) {
@@ -237,9 +245,9 @@ export function CategoryDonutChart({
   return (
     <div className="w-full">
       {/* Chart with center summary overlay */}
-      <div className="relative" style={{ width: "100%", height: isMobile ? 300 : 360 }}>
+      <div className="relative" style={{ width: "100%", height: isMobile ? 280 : 360 }}>
         <ResponsiveContainer>
-          <PieChart margin={isMobile ? { top: 50, right: 75, bottom: 50, left: 75 } : { top: 20, right: 60, bottom: 20, left: 60 }}>
+          <PieChart margin={isMobile ? { top: 8, right: 8, bottom: 8, left: 8 } : { top: 20, right: 60, bottom: 20, left: 60 }}>
             <defs>
               {data.map((d, i) => (
                 <linearGradient
@@ -259,8 +267,8 @@ export function CategoryDonutChart({
               data={data}
               cx="50%"
               cy="50%"
-              innerRadius={isMobile ? 42 : 86}
-              outerRadius={isMobile ? 62 : 120}
+              innerRadius={isMobile ? 56 : 86}
+              outerRadius={isMobile ? 78 : 120}
               paddingAngle={2}
               stroke="#0f172a"
               strokeWidth={2}
@@ -294,8 +302,8 @@ export function CategoryDonutChart({
 
         {/* Center overlay — active category summary */}
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-[8px] sm:text-[10px] uppercase tracking-[0.18em] text-zinc-500 font-medium">
-            {active.name}
+          <span className="text-[9px] sm:text-[10px] uppercase tracking-[0.15em] text-zinc-500 font-medium">
+            {isMobile && active.name.length > 12 ? `${active.name.slice(0, 10)}..` : active.name}
           </span>
           <span
             className="mt-0.5 sm:mt-1 text-base sm:text-2xl font-bold tabular-nums"
@@ -303,7 +311,7 @@ export function CategoryDonutChart({
           >
             {compactFmt(active.value)}
           </span>
-          <span className="text-[9px] sm:text-[11px] text-zinc-500">
+          <span className="text-[10px] sm:text-[11px] text-zinc-500">
             {activePct.toFixed(1)}% · {active.count} txn
             {active.count !== 1 ? "s" : ""}
           </span>

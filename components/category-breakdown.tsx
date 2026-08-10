@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import {
   PieChart,
   Pie,
@@ -77,48 +77,59 @@ const renderActiveShape = (props: any) => {
 };
 
 // ── External leader-line labels ───────────────────────────────────────────────
-const renderOuterLabel = (props: any) => {
+// External labels — always visible, compact on mobile to prevent clipping
+const renderOuterLabel = (props: any, isMobile: boolean) => {
   const RADIAN = Math.PI / 180;
   const { cx, cy, midAngle, outerRadius, percent, name, fill } = props;
 
-  if (!percent || percent < 0.04) return null;
+  if (!percent || percent < 0.03) return null;
 
   const sin = Math.sin(-RADIAN * midAngle);
   const cos = Math.cos(-RADIAN * midAngle);
-  const sx = cx + (outerRadius + 4) * cos;
-  const sy = cy + (outerRadius + 4) * sin;
-  const mx = cx + (outerRadius + 22) * cos;
-  const my = cy + (outerRadius + 22) * sin;
-  const ex = mx + (cos >= 0 ? 1 : -1) * 16;
+
+  // Compact offsets for mobile so text stays comfortably inside container bounds
+  const rOffset = isMobile ? 8 : 22;
+  const hOffset = isMobile ? 6 : 16;
+  const textOffset = isMobile ? 2 : 6;
+  const nameFontSize = isMobile ? 9 : 11;
+  const pctFontSize = isMobile ? 8 : 10;
+
+  const sx = cx + (outerRadius + 2) * cos;
+  const sy = cy + (outerRadius + 2) * sin;
+  const mx = cx + (outerRadius + rOffset) * cos;
+  const my = cy + (outerRadius + rOffset) * sin;
+  const ex = mx + (cos >= 0 ? 1 : -1) * hOffset;
   const ey = my;
   const textAnchor = cos >= 0 ? "start" : "end";
+
+  const displayName = isMobile && name.length > 11 ? `${name.slice(0, 9)}..` : name;
 
   return (
     <g>
       <path
         d={`M${sx},${sy}L${mx},${my}L${ex},${ey}`}
         stroke={fill}
-        strokeWidth={1.2}
+        strokeWidth={1.1}
         fill="none"
         opacity={0.65}
       />
-      <circle cx={ex} cy={ey} r={2.5} fill={fill} />
+      <circle cx={ex} cy={ey} r={2} fill={fill} />
       <text
-        x={ex + (cos >= 0 ? 6 : -6)}
-        y={ey - 4}
+        x={ex + (cos >= 0 ? textOffset : -textOffset)}
+        y={ey - 3}
         textAnchor={textAnchor}
         fill="#e2e8f0"
-        fontSize={11}
+        fontSize={nameFontSize}
         fontWeight={600}
       >
-        {name}
+        {displayName}
       </text>
       <text
-        x={ex + (cos >= 0 ? 6 : -6)}
-        y={ey + 10}
+        x={ex + (cos >= 0 ? textOffset : -textOffset)}
+        y={ey + (isMobile ? 8 : 10)}
         textAnchor={textAnchor}
         fill="#64748b"
-        fontSize={10}
+        fontSize={pctFontSize}
       >
         {(percent * 100).toFixed(0)}%
       </text>
@@ -131,6 +142,17 @@ export function CategoryBreakdown() {
   const { transactions, dateFilter } = useTransactions();
   const [activeIndex, setActiveIndex] = useState(0);
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
+
+  const [isMobile, setIsMobile] = useState<boolean>(() =>
+    typeof window !== "undefined" ? window.innerWidth < 640 : false
+  );
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 640);
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+
+  const labelFn = (props: any) => renderOuterLabel(props, isMobile);
 
   // Filter by date
   const filteredTransactions = useMemo(() => {
@@ -222,9 +244,9 @@ export function CategoryBreakdown() {
       </div>
 
       {/* ── Donut chart + center overlay ──────────────────────────────────── */}
-      <div className="relative" style={{ width: "100%", height: 320 }}>
+      <div className="relative" style={{ width: "100%", height: isMobile ? 280 : 320 }}>
         <ResponsiveContainer>
-          <PieChart>
+          <PieChart margin={isMobile ? { top: 8, right: 8, bottom: 8, left: 8 } : { top: 16, right: 40, bottom: 16, left: 40 }}>
             <defs>
               {data.map((d, i) => (
                 <linearGradient
@@ -241,8 +263,8 @@ export function CategoryBreakdown() {
               data={data}
               cx="50%"
               cy="50%"
-              innerRadius={72}
-              outerRadius={108}
+              innerRadius={isMobile ? 56 : 72}
+              outerRadius={isMobile ? 78 : 108}
               paddingAngle={2}
               stroke="#0f172a"
               strokeWidth={2}
@@ -250,7 +272,7 @@ export function CategoryBreakdown() {
               activeIndex={activeIndex}
               activeShape={renderActiveShape}
               onMouseEnter={(_: any, i: number) => setActiveIndex(i)}
-              label={renderOuterLabel}
+              label={labelFn}
               labelLine={false}
               isAnimationActive
               animationDuration={700}
@@ -276,11 +298,11 @@ export function CategoryBreakdown() {
 
         {/* Center overlay — active category summary */}
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-[9px] uppercase tracking-[0.2em] text-zinc-500 font-semibold">
-            {active.name}
+          <span className="text-[9px] uppercase tracking-[0.15em] text-zinc-500 font-semibold">
+            {isMobile && active.name.length > 12 ? `${active.name.slice(0, 10)}..` : active.name}
           </span>
           <span
-            className="mt-1 text-xl font-black tabular-nums leading-tight"
+            className="mt-0.5 text-base sm:text-xl font-black tabular-nums leading-tight"
             style={{ color: active.color }}
           >
             {compactFmt(active.value)}
@@ -288,11 +310,11 @@ export function CategoryBreakdown() {
           <span className="text-[10px] text-zinc-500 mt-0.5">
             {activePct.toFixed(1)}% · {active.count} txn{active.count !== 1 ? "s" : ""}
           </span>
-          <div className="mt-2 h-px w-8 bg-slate-700" />
-          <span className="mt-1.5 text-[9px] uppercase tracking-widest text-zinc-600">
+          <div className="mt-1 sm:mt-2 h-px w-7 sm:w-8 bg-slate-700" />
+          <span className="mt-1 sm:mt-1.5 text-[8px] sm:text-[9px] uppercase tracking-widest text-zinc-600">
             Total
           </span>
-          <span className="text-sm font-bold text-zinc-200 tabular-nums">
+          <span className="text-xs sm:text-sm font-bold text-zinc-200 tabular-nums">
             {fmt(total)}
           </span>
         </div>

@@ -14,11 +14,21 @@ function formatAmount(n: number) {
   return n < 0 ? `-${f}` : `+${f}`;
 }
 
+function formatDateSafe(dateStr: string, formatPattern: string) {
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return "—";
+    return format(d, formatPattern);
+  } catch {
+    return "—";
+  }
+}
+
 export function RecentTransactions() {
   const { transactions, loadMore, isLoadingMore, hasMore } = useTransactions();
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const [displayLimit, setDisplayLimit] = useState(10);
+  const [displayLimit, setDisplayLimit] = useState(15);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const toggleExpand = (id: string) => {
@@ -38,10 +48,10 @@ export function RecentTransactions() {
 
   const handleLoadMore = () => {
     if (displayLimit < transactions.length) {
-      setDisplayLimit(prev => prev + 10);
+      setDisplayLimit(prev => prev + 15);
     } else if (hasMore) {
       loadMore();
-      setDisplayLimit(prev => prev + 10);
+      setDisplayLimit(prev => prev + 15);
     }
   };
 
@@ -66,7 +76,7 @@ export function RecentTransactions() {
                   <th className="px-4 py-3 text-right">Amount</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody suppressHydrationWarning>
                 {recentTransactions.length === 0 && (
                   <tr>
                     <td
@@ -87,10 +97,10 @@ export function RecentTransactions() {
                     <td className="sticky left-0 bg-card/95 backdrop-blur px-4 py-3 text-muted-foreground whitespace-nowrap">
                       <div className="flex flex-col">
                         <span className="font-medium">
-                          {mounted ? format(new Date(tx.date), 'dd MMM yyyy') : '...'}
+                          {formatDateSafe(tx.date, 'dd MMM yyyy')}
                         </span>
                         <span className="text-[10px] text-muted-foreground">
-                          {mounted ? format(new Date(tx.date), 'hh:mm a') : '...'}
+                          {formatDateSafe(tx.date, 'hh:mm a')}
                         </span>
                       </div>
                     </td>
@@ -264,7 +274,7 @@ export function RecentTransactions() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="flex flex-col items-center justify-center py-6"
+              className="flex flex-col items-center justify-center pt-2 pb-1 sm:py-3 mt-1"
             >
               {isLoadingMore ? (
                 <motion.div
@@ -278,7 +288,7 @@ export function RecentTransactions() {
               ) : (
                 <button
                   onClick={handleLoadMore}
-                  className="group flex items-center gap-2 px-6 py-2 text-emerald-500 text-sm font-bold hover:text-emerald-400 transition-all duration-300 active:scale-90"
+                  className="group flex items-center gap-2 px-4 py-1.5 text-emerald-500 text-sm font-bold hover:text-emerald-400 transition-all duration-300 active:scale-90"
                 >
                   Load More Transactions
                 </button>

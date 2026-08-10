@@ -319,10 +319,10 @@ export default function LandingAndLoginPage() {
                                 alt="FinanceNeo"
                                 width={24}
                                 height={24}
-                                className="w-6 h-6 lg:w-8 lg:h-8 rounded-lg object-contain drop-shadow-md"
+                                className="w-5 h-5 lg:w-8 lg:h-8 rounded-lg object-contain drop-shadow-md"
                                 priority
                             />
-                            <span className="text-sm lg:text-lg font-bold tracking-tight text-white whitespace-nowrap">
+                            <span className="text-xs lg:text-lg font-bold tracking-tight text-white whitespace-nowrap">
                                 Finance<span className="text-[#4ecca3]">Neo</span>
                             </span>
                         </div>
