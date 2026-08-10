@@ -1,10 +1,19 @@
+import dynamic from "next/dynamic";
 import { Sidebar } from "@/components/sidebar";
 import { BottomNav } from "@/components/bottom-nav";
 import { ScanProvider } from "@/components/scan-context";
 import { ReactNode } from "react";
 import { PageTransition } from "@/components/page-transition";
-import { FloatingAiChat } from "@/components/floating-ai-chat";
-import { FloatingScanProgress } from "@/components/floating-scan-progress";
+
+const FloatingAiChat = dynamic(
+  () => import("@/components/floating-ai-chat").then((mod) => mod.FloatingAiChat),
+  { ssr: false }
+);
+
+const FloatingScanProgress = dynamic(
+  () => import("@/components/floating-scan-progress").then((mod) => mod.FloatingScanProgress),
+  { ssr: false }
+);
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   return (

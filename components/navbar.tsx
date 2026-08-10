@@ -1,13 +1,18 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Calculator } from "lucide-react";
 import { UserDropdown } from "@/components/user-dropdown";
 import { ExportDropdown } from "@/components/export-dropdown";
-import CalculatorModal from "@/app/(auth)/login/_calculator_modal";
+
+const CalculatorModal = dynamic(
+  () => import("@/app/(auth)/login/_calculator_modal"),
+  { ssr: false }
+);
 
 export function Navbar({ userName, userEmail, userBirthdate, userImage }: { userName?: string; userEmail?: string; userBirthdate?: string; userImage?: string; }) {
   const router = useRouter();

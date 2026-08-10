@@ -16,7 +16,12 @@ import {
 import { toast } from "sonner";
 import Link from "next/link";
 import Lottie from "lottie-react";
-import CalculatorModal from "./_calculator_modal";
+import dynamic from "next/dynamic";
+
+const CalculatorModal = dynamic(
+  () => import("./_calculator_modal"),
+  { ssr: false }
+);
 
 type AuthState = "login" | "signup" | "forgot_password_email" | "forgot_password_otp" | "forgot_userid_email" | "forgot_userid_otp" | "userid_recovered" | "privacy" | "terms";
 

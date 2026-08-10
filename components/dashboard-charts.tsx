@@ -1,13 +1,22 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import dynamic from "next/dynamic";
 import { Calendar } from "lucide-react";
 import { useTransactions } from "@/app/(main)/transactions-context";
 import { useBudgets } from "@/app/(main)/budget-context";
-import { CategoryDonutChart } from "./category-donut-chart";
 import { CustomDateRangePicker } from "./custom-date-picker";
 import { SafeToSpendCard } from "./safe-to-spend-card";
 import { useDailyAllowance } from "@/lib/use-daily-allowance";
+import { ChartSkeleton } from "./skeletons";
+
+const CategoryDonutChart = dynamic(
+  () => import("./category-donut-chart").then((mod) => mod.CategoryDonutChart),
+  {
+    loading: () => <ChartSkeleton className="min-h-[280px] sm:min-h-[360px]" />,
+    ssr: false,
+  }
+);
 
 type DatePreset = "all" | "7d" | "30d" | "month" | "custom";
 

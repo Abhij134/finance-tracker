@@ -1,10 +1,15 @@
 "use client";
 import React, { useState, useMemo, useEffect } from "react";
+import dynamic from "next/dynamic";
 import { PenLine, Cpu, Plus, Loader2, ChevronDown, ChevronUp } from "lucide-react";
 import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTransactions } from "@/app/(main)/transactions-context";
-import { ManualTransactionModal } from "./manual-transaction-modal";
+
+const ManualTransactionModal = dynamic(
+  () => import("./manual-transaction-modal").then((mod) => mod.ManualTransactionModal),
+  { ssr: false }
+);
 
 function formatAmount(n: number) {
   const f = Intl.NumberFormat("en-IN", {

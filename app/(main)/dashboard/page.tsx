@@ -1,7 +1,6 @@
+import dynamic from "next/dynamic";
 import { ActionCenter } from "@/components/action-center";
 import { RecentTransactions } from "@/components/recent-transactions";
-import { AiLiveInsights } from "@/components/ai-live-insights";
-import { CategoryBreakdown } from "@/components/category-breakdown";
 import { Navbar } from "@/components/navbar";
 import { StatCards } from "@/components/stat-cards";
 import { TransactionsProvider, DatePreset } from "@/app/(main)/transactions-context";
@@ -12,7 +11,23 @@ import { getBudgets } from "@/app/actions/budgets";
 import { GreetingHeader } from "@/components/greeting-header";
 import { getUserProfile } from "@/app/actions/auth";
 import { Suspense } from "react";
-import { StatCardSkeleton, RecentTransactionsSkeleton, AiInsightsSkeleton, GreetingHeaderSkeleton } from "@/components/skeletons";
+import { StatCardSkeleton, RecentTransactionsSkeleton, AiInsightsSkeleton, GreetingHeaderSkeleton, ChartSkeleton } from "@/components/skeletons";
+
+const CategoryBreakdown = dynamic(
+  () => import("@/components/category-breakdown").then((mod) => mod.CategoryBreakdown),
+  {
+    loading: () => <ChartSkeleton className="min-h-[320px]" />,
+    ssr: false,
+  }
+);
+
+const AiLiveInsights = dynamic(
+  () => import("@/components/ai-live-insights").then((mod) => mod.AiLiveInsights),
+  {
+    loading: () => <AiInsightsSkeleton />,
+    ssr: false,
+  }
+);
 import { toLocalISO, getLocalStartOfDay, getLocalEndOfDay } from "@/lib/utils";
 function deriveDateRange(range: string, fromParam?: string, toParam?: string) {
   const now = new Date();
