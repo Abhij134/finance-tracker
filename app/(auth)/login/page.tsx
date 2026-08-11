@@ -4,7 +4,7 @@ import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 import { useState, FormEvent, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { Shield, Wallet, Activity, Target, ArrowRight, X, Eye, EyeOff, ChevronLeft, ChevronUp, User, LayoutDashboard, TrendingUp, ArrowDownRight, CircleDollarSign, Battery, Wifi, Signal, Calculator, Sparkles, Bot } from "lucide-react";
+import { Shield, Wallet, Activity, Target, ArrowRight, X, Eye, EyeOff, ChevronLeft, ChevronUp, User, LayoutDashboard, TrendingUp, ArrowDownRight, CircleDollarSign, Battery, Wifi, Signal, Calculator, Bot } from "lucide-react";
 import Image from "next/image";
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import {
