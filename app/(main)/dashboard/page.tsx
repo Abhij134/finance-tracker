@@ -72,17 +72,18 @@ export default async function Home({
   ) as DatePreset;
   const { from, to } = deriveDateRange(preset, params.from as string, params.to as string);
 
-  const profileResponse = await getUserProfile();
+  // Run all data fetches concurrently — eliminates sequential DB round-trips
+  const [profileResponse, transactionsData, dbBudgets] = await Promise.all([
+    getUserProfile(),
+    getTransactions({ limit: 100 }),
+    getBudgets(),
+  ]);
+
   const dbUser = profileResponse.success && profileResponse.user ? profileResponse.user : null;
   const userName = dbUser?.username || "Guest";
   const userEmail = dbUser?.email || "";
   const userBirthdate = dbUser?.birthdate ? new Date(dbUser.birthdate).toISOString() : undefined;
   const userImage = dbUser?.image || undefined;
-
-  const [transactionsData, dbBudgets] = await Promise.all([
-    getTransactions({ limit: 100 }),
-    getBudgets(),
-  ]);
 
   const dbTransactions = Array.isArray(transactionsData) ? transactionsData : transactionsData?.transactions || [];
 

@@ -97,9 +97,9 @@ export async function signInUser(formData: FormData) {
             return { success: false, error: error.message };
         }
 
-        // Verify Prisma sync
+        // Verify Prisma sync (fire-and-forget — non-blocking so login returns immediately)
         if (data.user) {
-            await ensureUser(supabase, data.user.id);
+            ensureUser(supabase, data.user.id).catch(() => {/* no-op — sync guard only */});
         }
 
         revalidatePath("/", "layout");
