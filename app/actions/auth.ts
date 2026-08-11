@@ -102,7 +102,7 @@ export async function signInUser(formData: FormData) {
             ensureUser(supabase, data.user.id).catch(() => {/* no-op — sync guard only */});
         }
 
-        revalidatePath("/", "layout");
+        revalidatePath("/dashboard");
         return { success: true };
     } catch (e: any) {
         return { success: false, error: e.message || "Database error during login." };

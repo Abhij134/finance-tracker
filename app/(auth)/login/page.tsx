@@ -16,7 +16,6 @@ import {
 } from "@/app/actions/auth";
 import { toast } from "sonner";
 import Link from "next/link";
-import Lottie from "lottie-react";
 import dynamic from "next/dynamic";
 
 const CalculatorModal = dynamic(
@@ -616,11 +615,12 @@ export default function LandingAndLoginPage() {
 
                                 {/* SCANNING ANIMATION — floating above the laptop on the right */}
                                 <div style={{ position: "absolute", right: "40px", top: "-20px", zIndex: 40, width: 60, height: 60 }}>
-                                    {mounted && scanAnimation && <Lottie
-                                        animationData={scanAnimation}
-                                        loop={true}
-                                        style={{ width: "100%", height: "100%" }}
-                                    />}
+                                    {/* CSS scan lines replacing lottie animation */}
+                                    <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", gap: 3 }}>
+                                        {[...Array(4)].map((_, i) => (
+                                            <div key={i} style={{ height: 2, width: `${60 - i * 10}%`, background: "rgba(16,185,129,0.6)", borderRadius: 2, animation: `scanLine 1.6s ease-in-out ${i * 0.15}s infinite` }} />
+                                        ))}
+                                    </div>
                                     {/* Floating 'AI Scanning' inside the scanning lines */}
                                     <div className="absolute top-[32%] left-1/2 -translate-x-1/2 text-[6px] font-black text-emerald-400 bg-[#070b13]/90 border border-emerald-500/40 px-1.5 py-0.2 rounded shadow-[0_0_6px_rgba(16,185,129,0.3)] tracking-wider uppercase whitespace-nowrap">
                                         AI Scanning
@@ -631,6 +631,7 @@ export default function LandingAndLoginPage() {
                             @keyframes devFloatLaptop { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
                             @keyframes devFloatPhone  { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-14px)} }
                             @keyframes devFloatScan   { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+                            @keyframes scanLine       { 0%,100%{opacity:0.3;width:30%} 50%{opacity:1;width:90%} }
                             @keyframes svgFloatLeft   {
                                 0%,100% { transform: translateY(0) rotate(-2deg) scale(1); }
                                 50%     { transform: translateY(-10px) rotate(2deg) scale(1.03); }

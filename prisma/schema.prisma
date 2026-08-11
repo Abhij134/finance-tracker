@@ -30,7 +30,7 @@ model Transaction {
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
-  @@index([userId, createdAt(sort: Desc)])
+  @@index([userId, date(sort: Desc)])
   @@index([userId, category])
 }
 
@@ -52,6 +52,7 @@ model Budget {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, category])
+  @@index([userId])
 }
 
 model User {

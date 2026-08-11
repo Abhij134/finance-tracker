@@ -75,7 +75,7 @@ export default async function Home({
   // Run all data fetches concurrently — eliminates sequential DB round-trips
   const [profileResponse, transactionsData, dbBudgets] = await Promise.all([
     getUserProfile(),
-    getTransactions({ limit: 100 }),
+    getTransactions({ limit: 30 }),
     getBudgets(),
   ]);
 
