@@ -349,16 +349,6 @@ export default function LandingAndLoginPage() {
 
                         {/* Nav Actions */}
                         <div className="flex items-center gap-1.5 sm:gap-2.5">
-                            {/* Try AI Chat — desktop only */}
-                            <button
-                                type="button"
-                                onClick={() => { setView("signup"); setShowLogin(true); }}
-                                title="Try AI Chat"
-                                className="hidden lg:flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-violet-500/30 hover:border-violet-500/60 bg-violet-500/10 hover:bg-violet-500/20 text-violet-300 hover:text-violet-200 text-xs font-semibold transition-all duration-300"
-                            >
-                                <Sparkles className="w-3.5 h-3.5" />
-                                <span className="whitespace-nowrap">Try AI Chat</span>
-                            </button>
                         </div>
                     </div>
                 </header>
