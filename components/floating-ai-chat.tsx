@@ -315,24 +315,32 @@ export function FloatingAiChat() {
         </div>
       </div>
 
-      {/* ── Trigger button — top right on mobile, bottom right on desktop ─────────── */}
+      {/* ── Trigger button — top right inside top nav on mobile, bottom right on desktop ─────────── */}
       <button
         onClick={() => setIsOpen((v) => !v)}
         className={`
-          fixed z-50 flex items-center gap-1.5 sm:gap-2.5 rounded-full
-          px-2.5 py-0.5 sm:px-4 sm:py-2 text-[10px] sm:text-sm font-medium tracking-wide
+          fixed z-50 flex items-center gap-1.5 sm:gap-2 rounded-full
+          px-2.5 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium tracking-wide
           border transition-all duration-300 active:scale-95
           ${isOpen
-            ? "top-7 right-3.5 sm:top-auto sm:bottom-10 sm:right-6 bg-white/10 border-white/20 text-white shadow-xl opacity-0 pointer-events-none scale-90"
-            : "top-7 right-3.5 sm:top-auto sm:bottom-10 sm:right-6 bg-[#06150e]/80 backdrop-blur-md border-emerald-500/30 text-emerald-400 hover:bg-[#081c13] hover:border-emerald-500/60 hover:shadow-[0_0_24px_rgba(16,185,129,0.35)] shadow-md"
+            ? "top-2.5 right-2.5 sm:top-auto sm:bottom-10 sm:right-6 bg-white/10 border-white/20 text-white shadow-xl opacity-0 pointer-events-none scale-90"
+            : "top-2.5 right-2.5 sm:top-auto sm:bottom-10 sm:right-6 bg-[#06150e]/90 backdrop-blur-md border-emerald-500/40 text-emerald-400 hover:bg-[#081c13] hover:border-emerald-500/60 shadow-[0_0_15px_rgba(16,185,129,0.25)]"
           }
         `}
       >
         <div className={`bot-wrap shrink-0 ${!isOpen ? "bot-hoverable" : ""}`}>
-          <CustomBotIcon className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
+          <CustomBotIcon className="h-4 w-4 sm:h-5 sm:w-5" />
         </div>
-        <span className="hidden sm:inline">
-          {isOpen ? "Close Chat" : "FinanceNeo AI"}
+        <span className="font-semibold flex items-center gap-1 text-[11px] sm:text-sm">
+          {isOpen ? (
+            "Close"
+          ) : (
+            <>
+              <Sparkles className="h-3 w-3 text-emerald-400 sm:hidden" />
+              <span>Try AI</span>
+              <span className="hidden sm:inline"> Chat</span>
+            </>
+          )}
         </span>
         <span className="hidden sm:inline-flex items-center">
           {isOpen
@@ -341,7 +349,7 @@ export function FloatingAiChat() {
           }
         </span>
         {!isOpen && unreadCount > 0 && (
-          <span className="h-4 w-4 rounded-full bg-emerald-500 text-emerald-950 text-[10px] font-bold flex items-center justify-center ml-1">
+          <span className="h-4 w-4 rounded-full bg-emerald-500 text-emerald-950 text-[10px] font-bold flex items-center justify-center ml-0.5">
             {unreadCount}
           </span>
         )}

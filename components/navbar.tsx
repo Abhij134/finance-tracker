@@ -76,8 +76,8 @@ export function Navbar({ userName, userEmail, userBirthdate, userImage }: { user
               userImage={userImage}
               onSignOut={handleSignOut}
             />
-            {/* AI Chat button is at fixed top-3 right-3 from FloatingAiChat — leave gap */}
-            <div className="w-6 sm:w-28" />
+            {/* AI Chat button is at fixed top-2.5 right-2.5 from FloatingAiChat — leave gap */}
+            <div className="w-20 sm:w-28" />
           </div>
         </div>
       </header>
