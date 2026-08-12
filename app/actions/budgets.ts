@@ -10,7 +10,10 @@ export async function getBudgets() {
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
         userId = user?.id;
-    } catch (e) {
+    } catch (e: any) {
+        if (e?.digest === 'DYNAMIC_SERVER_USAGE') {
+            throw e;
+        }
         console.error('getBudgets Auth error:', e);
     }
 

@@ -236,7 +236,10 @@ export async function getUserProfile() {
         const supabase = await createClient();
         const { data } = await supabase.auth.getUser();
         user = data.user;
-    } catch (e) {
+    } catch (e: any) {
+        if (e?.digest === 'DYNAMIC_SERVER_USAGE') {
+            throw e;
+        }
         console.error('getUserProfile Auth error:', e);
     }
 

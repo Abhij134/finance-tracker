@@ -321,7 +321,10 @@ export async function getTransactions(options: { limit?: number; offset?: number
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
         userId = user?.id;
-    } catch (e) {
+    } catch (e: any) {
+        if (e?.digest === 'DYNAMIC_SERVER_USAGE') {
+            throw e;
+        }
         console.error('getTransactions Auth error:', e);
     }
 
