@@ -34,11 +34,11 @@ export async function updateSession(request: NextRequest) {
 
     const pathname = request.nextUrl.pathname;
 
-    // Public routes — no auth required
+    // Public routes & API endpoints — do not redirect API calls to HTML login page
     const isPublicPage = pathname === '/' ||
         pathname.startsWith('/login') ||
         pathname.startsWith('/auth') ||
-        pathname.startsWith('/api/auth');
+        pathname.startsWith('/api');
 
     // If authenticated and visiting the landing page or login page, redirect to dashboard
     if (user && (pathname === '/' || pathname === '/login')) {
