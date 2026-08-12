@@ -496,7 +496,7 @@ export default function LandingAndLoginPage() {
                                     </div>
                                 </div>
                                 {/* FLOATING EXPENSE ADDED BADGE (Dark theme, right side) */}
-                                <div style={{ position: "absolute", right: "-3%", top: "100px", zIndex: 45, transform: "scale(0.75)", transformOrigin: "top right", pointerEvents: "none" }}>
+                                <div style={{ position: "absolute", right: "-3%", top: "70px", zIndex: 45, transform: "scale(0.75)", transformOrigin: "top right", pointerEvents: "none" }}>
                                     <div>
                                         <div className="flex items-center gap-3 px-3.5 py-2.5 rounded-2xl bg-[#090e1a] text-zinc-100 border border-rose-500/30 shadow-[0_16px_40px_rgba(0,0,0,0.8),0_0_24px_rgba(244,63,94,0.15)]">
                                             <div className="w-8 h-8 rounded-full bg-rose-500/15 text-rose-400 border border-rose-500/30 flex items-center justify-center shrink-0">
