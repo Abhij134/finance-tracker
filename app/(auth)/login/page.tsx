@@ -765,7 +765,7 @@ export default function LandingAndLoginPage() {
                     </div>
 
                     {/* --- Step 1: Track Everything (visual left, text right) --- */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center py-10 lg:py-14" suppressHydrationWarning>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center py-10 lg:py-14">
                         <motion.div
                             initial={{ opacity: 0, x: -50 }}
                             whileInView={{ opacity: 1, x: 0 }}
@@ -773,8 +773,7 @@ export default function LandingAndLoginPage() {
                             transition={{ duration: 0.8, ease: "easeOut" }}
                             className="relative flex items-center justify-center order-2 lg:order-1"
                         >
-                            <div className="relative w-full max-w-sm">
-                                <div className="absolute -inset-6 bg-emerald-500/10 rounded-3xl blur-2xl pointer-events-none" />
+                            <div className="relative w-full max-w-sm before:content-[''] before:absolute before:-inset-6 before:bg-emerald-500/10 before:rounded-3xl before:blur-2xl before:pointer-events-none">
                                 <div className="relative bg-[#0d1424] border border-emerald-500/20 rounded-2xl p-5 shadow-2xl space-y-3">
                                     {/* Header */}
                                     <div className="flex items-center justify-between pb-2 border-b border-white/5">
@@ -899,7 +898,7 @@ export default function LandingAndLoginPage() {
                     </div>
 
                     {/* --- Step 2: Budget Smarter (visual left, text right — aligned with Step 1 and 3) --- */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center py-10 lg:py-14" suppressHydrationWarning>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center py-10 lg:py-14">
                         {/* LEFT — visual card */}
                         <motion.div
                             initial={{ opacity: 0, x: -50 }}
@@ -908,8 +907,7 @@ export default function LandingAndLoginPage() {
                             transition={{ duration: 0.8, ease: "easeOut" }}
                             className="relative flex items-center justify-center order-2 lg:order-1"
                         >
-                            <div className="relative w-full max-w-sm">
-                                <div className="absolute -inset-6 bg-violet-500/10 rounded-3xl blur-2xl pointer-events-none" />
+                            <div className="relative w-full max-w-sm before:content-[''] before:absolute before:-inset-6 before:bg-violet-500/10 before:rounded-3xl before:blur-2xl before:pointer-events-none">
                                 <div className="relative bg-[#0d1424] border border-violet-500/20 rounded-2xl p-5 shadow-2xl">
                                     <div className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-4">Budget Status — June</div>
                                     {[
@@ -979,7 +977,7 @@ export default function LandingAndLoginPage() {
                     </div>
 
                     {/* --- Step 3: Chat with FinanceNeo AI (visual left, text right) --- */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center py-10 lg:py-14" suppressHydrationWarning>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center py-10 lg:py-14">
                         {/* LEFT — animated chat UI */}
                         <motion.div
                             initial={{ opacity: 0, x: -50 }}
@@ -988,8 +986,7 @@ export default function LandingAndLoginPage() {
                             transition={{ duration: 0.8, ease: "easeOut" }}
                             className="relative flex items-center justify-center order-2 lg:order-1"
                         >
-                            <div className="relative w-full max-w-sm">
-                                <div className="absolute -inset-6 bg-emerald-500/10 rounded-3xl blur-2xl pointer-events-none" />
+                            <div className="relative w-full max-w-sm before:content-[''] before:absolute before:-inset-6 before:bg-emerald-500/10 before:rounded-3xl before:blur-2xl before:pointer-events-none">
                                 {/* Chat window */}
                                 <div className="relative bg-[#0a0f1e] border border-emerald-500/20 rounded-2xl overflow-hidden shadow-2xl" style={{ minHeight: 380 }}>
                                     {/* Header */}
