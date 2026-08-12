@@ -19,11 +19,9 @@ type Tx = {
 
 export function TransactionListView({
     initialTransactions,
-    totalPages,
     totalCount,
 }: {
     initialTransactions: Tx[];
-    totalPages?: number;
     totalCount?: number;
 }) {
     const [startDate, setStartDate] = useState<string>("");
@@ -34,8 +32,6 @@ export function TransactionListView({
     const [isSelectionMode, setIsSelectionMode] = useState(false);
     const [isPending, startTransition] = useTransition();
     const [mounted, setMounted] = useState(false);
-    const [displayLimit, setDisplayLimit] = useState(10);
-    const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [expandedId, setExpandedId] = useState<string | null>(null);
 
     const toggleExpand = (id: string) => {
@@ -65,10 +61,6 @@ export function TransactionListView({
         });
     }, [initialTransactions, startDate, endDate, searchQuery]);
 
-    const paginatedTransactions = useMemo(() => {
-        return filteredTransactions.slice(0, displayLimit);
-    }, [filteredTransactions, displayLimit]);
-
     const rowVirtualizer = useVirtualizer({
         count: filteredTransactions.length,
         getScrollElement: () => tableParentRef.current,
@@ -82,16 +74,6 @@ export function TransactionListView({
         estimateSize: () => 80,
         overscan: 5,
     });
-
-    const handleLoadMore = () => {
-        setIsLoadingMore(true);
-        setTimeout(() => {
-            setDisplayLimit(prev => prev + 10);
-            setIsLoadingMore(false);
-        }, 600);
-    };
-
-    const hasMore = false; // Showing all by default on this page
 
     function formatAmount(n: number) {
         const f = Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(Math.abs(n));
@@ -155,6 +137,9 @@ export function TransactionListView({
 
     return (
         <div className="space-y-4">
+            <div className="text-sm text-muted-foreground">
+                Showing {initialTransactions.length.toLocaleString()} of {(totalCount ?? initialTransactions.length).toLocaleString()} transactions
+            </div>
             {/* Filters Bar */}
             <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-2 items-end">
                 <div className="flex-1 min-w-[200px] w-full">
@@ -267,7 +252,7 @@ export function TransactionListView({
                         ) : (
                             <>
                                 {rowVirtualizer.getVirtualItems().length > 0 && rowVirtualizer.getVirtualItems()[0]?.start > 0 && (
-                                    <tr><td colSpan={6} style={{ height: `${rowVirtualizer.getVirtualItems()[0].start}px` }} /></tr>
+                                    <tr><td colSpan={isSelectionMode ? 6 : 5} style={{ height: `${rowVirtualizer.getVirtualItems()[0].start}px` }} /></tr>
                                 )}
                                 {rowVirtualizer.getVirtualItems().map((virtualRow) => {
                                     const tx = filteredTransactions[virtualRow.index];
@@ -360,7 +345,7 @@ export function TransactionListView({
                                     );
                                 })}
                                 {rowVirtualizer.getVirtualItems().length > 0 && rowVirtualizer.getTotalSize() - (rowVirtualizer.getVirtualItems()[rowVirtualizer.getVirtualItems().length - 1]?.end || 0) > 0 && (
-                                    <tr><td colSpan={6} style={{ height: `${rowVirtualizer.getTotalSize() - rowVirtualizer.getVirtualItems()[rowVirtualizer.getVirtualItems().length - 1].end}px` }} /></tr>
+                                    <tr><td colSpan={isSelectionMode ? 6 : 5} style={{ height: `${rowVirtualizer.getTotalSize() - rowVirtualizer.getVirtualItems()[rowVirtualizer.getVirtualItems().length - 1].end}px` }} /></tr>
                                 )}
                             </>
                         )}

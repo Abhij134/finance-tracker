@@ -315,7 +315,9 @@ export async function addBulkTransactions(transactions: any[]) {
     }
 }
 
-export async function getTransactions(options: { limit?: number; offset?: number; page?: number; startDate?: Date } = {}) {
+const MAX_ALL_TRANSACTIONS = 5000;
+
+export async function getTransactions(options: { limit?: number; offset?: number; page?: number; startDate?: Date; all?: boolean } = {}) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     const userId = user?.id;
@@ -330,7 +332,8 @@ export async function getTransactions(options: { limit?: number; offset?: number
     }
 
     const limit = options.limit ?? 20;
-    const offset = options.offset ?? (options.page ? (options.page - 1) * limit : 0);
+    const queryLimit = options.all ? MAX_ALL_TRANSACTIONS : limit;
+    const offset = options.offset ?? (options.page ? (options.page - 1) * queryLimit : 0);
     const startDate = options.startDate;
 
     try {
@@ -343,7 +346,7 @@ export async function getTransactions(options: { limit?: number; offset?: number
             prisma.transaction.findMany({
                 where: whereClause,
                 orderBy: { date: 'desc' },
-                take: limit,
+                take: queryLimit,
                 skip: offset,
                 select: {
                     id: true,
@@ -359,8 +362,8 @@ export async function getTransactions(options: { limit?: number; offset?: number
             })
         ]);
 
-        const totalPages = Math.ceil(totalCount / limit);
-        const currentPage = Math.floor(offset / limit) + 1;
+        const totalPages = Math.ceil(totalCount / queryLimit);
+        const currentPage = Math.floor(offset / queryLimit) + 1;
         const hasMore = offset + transactions.length < totalCount;
 
         return {
@@ -409,6 +412,7 @@ export async function deleteBulkTransactions(transactionIds: string[]) {
             }
         });
         revalidatePath("/");
+        revalidatePath("/transactions");
     } catch (e: any) {
         throw new Error(e.message || "Failed to delete bulk transactions");
     }
@@ -429,6 +433,7 @@ export async function updateBulkTransactionsCategory(transactionIds: string[], n
             data: { category: newCategory }
         });
         revalidatePath("/");
+        revalidatePath("/transactions");
     } catch (e: any) {
         throw new Error(e.message || "Failed to update categories");
     }
