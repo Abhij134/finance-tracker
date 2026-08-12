@@ -773,8 +773,8 @@ export default function LandingAndLoginPage() {
                             transition={{ duration: 0.8, ease: "easeOut" }}
                             className="relative flex items-center justify-center order-2 lg:order-1"
                         >
-                            <div className="relative w-full max-w-sm">
-                                <div className="relative bg-[#0d1424] border border-emerald-500/20 rounded-2xl p-5 shadow-2xl shadow-emerald-500/15 space-y-3">
+                            <div className="relative w-full max-w-sm before:content-[''] before:absolute before:-inset-6 before:bg-emerald-500/10 before:rounded-3xl before:blur-2xl before:pointer-events-none">
+                                <div className="relative bg-[#0d1424] border border-emerald-500/20 rounded-2xl p-5 shadow-2xl space-y-3">
                                     {/* Header */}
                                     <div className="flex items-center justify-between pb-2 border-b border-white/5">
                                         <div>
@@ -907,8 +907,8 @@ export default function LandingAndLoginPage() {
                             transition={{ duration: 0.8, ease: "easeOut" }}
                             className="relative flex items-center justify-center order-2 lg:order-1"
                         >
-                            <div className="relative w-full max-w-sm">
-                                <div className="relative bg-[#0d1424] border border-violet-500/20 rounded-2xl p-5 shadow-2xl shadow-violet-500/15">
+                            <div className="relative w-full max-w-sm before:content-[''] before:absolute before:-inset-6 before:bg-violet-500/10 before:rounded-3xl before:blur-2xl before:pointer-events-none">
+                                <div className="relative bg-[#0d1424] border border-violet-500/20 rounded-2xl p-5 shadow-2xl">
                                     <div className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-4">Budget Status — June</div>
                                     {[
                                         { cat: "Shopping", used: 7239, total: 9000, color: "#818cf8" },
@@ -986,9 +986,9 @@ export default function LandingAndLoginPage() {
                             transition={{ duration: 0.8, ease: "easeOut" }}
                             className="relative flex items-center justify-center order-2 lg:order-1"
                         >
-                            <div className="relative w-full max-w-sm">
+                            <div className="relative w-full max-w-sm before:content-[''] before:absolute before:-inset-6 before:bg-emerald-500/10 before:rounded-3xl before:blur-2xl before:pointer-events-none">
                                 {/* Chat window */}
-                                <div className="relative bg-[#0a0f1e] border border-emerald-500/20 rounded-2xl overflow-hidden shadow-2xl shadow-emerald-500/15" style={{ minHeight: 380 }}>
+                                <div className="relative bg-[#0a0f1e] border border-emerald-500/20 rounded-2xl overflow-hidden shadow-2xl" style={{ minHeight: 380 }}>
                                     {/* Header */}
                                     <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06] bg-[#0d1424]">
                                         <div className="flex items-center gap-2.5">
