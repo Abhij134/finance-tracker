@@ -19,8 +19,8 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 
 const CalculatorModal = dynamic(
-  () => import("./_calculator_modal"),
-  { ssr: false }
+    () => import("./_calculator_modal"),
+    { ssr: false }
 );
 
 type AuthState = "login" | "signup" | "forgot_password_email" | "forgot_password_otp" | "forgot_userid_email" | "forgot_userid_otp" | "userid_recovered" | "privacy" | "terms";
@@ -412,7 +412,7 @@ export default function LandingAndLoginPage() {
                                         </div>
 
                                         {/* Floating Expense Added Card on Mobile */}
-                                        <div style={{ position: "absolute", left: "calc(100% - 10px)", top: "45px", zIndex: 30, transform: "scale(0.8)", transformOrigin: "top left", pointerEvents: "none", width: "max-content" }}>
+                                        <div style={{ position: "absolute", left: "calc(100% - 10px)", top: "25px", zIndex: 30, transform: "scale(0.8)", transformOrigin: "top left", pointerEvents: "none", width: "max-content" }}>
                                             <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-2xl bg-[#090e1a] text-zinc-100 border border-rose-500/30 shadow-2xl">
                                                 <div className="text-right whitespace-nowrap">
                                                     <p className="text-[9px] font-bold leading-tight text-zinc-100 whitespace-nowrap">Expense Added</p>
@@ -496,7 +496,7 @@ export default function LandingAndLoginPage() {
                                     </div>
                                 </div>
                                 {/* FLOATING EXPENSE ADDED BADGE (Dark theme, right side) */}
-                                <div style={{ position: "absolute", right: "-3%", top: "150px", zIndex: 45, transform: "scale(0.75)", transformOrigin: "top right", pointerEvents: "none" }}>
+                                <div style={{ position: "absolute", right: "-3%", top: "100px", zIndex: 45, transform: "scale(0.75)", transformOrigin: "top right", pointerEvents: "none" }}>
                                     <div>
                                         <div className="flex items-center gap-3 px-3.5 py-2.5 rounded-2xl bg-[#090e1a] text-zinc-100 border border-rose-500/30 shadow-[0_16px_40px_rgba(0,0,0,0.8),0_0_24px_rgba(244,63,94,0.15)]">
                                             <div className="w-8 h-8 rounded-full bg-rose-500/15 text-rose-400 border border-rose-500/30 flex items-center justify-center shrink-0">
@@ -1691,7 +1691,7 @@ export default function LandingAndLoginPage() {
                                             exit={{ opacity: 0, x: 20 }}
                                             transition={{ duration: 0.3 }}
                                             className="text-left text-zinc-300 text-sm max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar"
-                                         tabIndex={0}>
+                                            tabIndex={0}>
                                             <p className="mb-4 text-xs text-zinc-400">Last updated: April 2026</p>
                                             <h4 className="font-bold text-white mb-2 mt-4">1. Information We Collect</h4>
                                             <p className="mb-2">We collect information to provide better services to all our users. To fully utilize FinanceNeo's automated tracking, we collect:</p>
@@ -1716,7 +1716,7 @@ export default function LandingAndLoginPage() {
                                             exit={{ opacity: 0, x: 20 }}
                                             transition={{ duration: 0.3 }}
                                             className="text-left text-zinc-300 text-sm max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar"
-                                         tabIndex={0}>
+                                            tabIndex={0}>
                                             <p className="mb-4 text-xs text-zinc-400">Last updated: April 2026</p>
                                             <h4 className="font-bold text-white mb-2 mt-4">1. Acceptance of Terms</h4>
                                             <p className="mb-4">By accessing and using FinanceNeo, you accept and agree to be bound by the terms and provision of this agreement.</p>

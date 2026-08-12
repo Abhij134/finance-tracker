@@ -80,7 +80,7 @@ function getLocalYYYYMMDD(d: Date) {
 export function StatCards() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { transactions, dateFilter } = useTransactions();
+  const { transactions, dateFilter, setDateFilter } = useTransactions();
   const { budgets, updateBudget } = useBudgets();
 
   const preset = dateFilter.preset;
@@ -104,11 +104,37 @@ export function StatCards() {
   }, [budgetLimit, isEditingBudget]);
 
   const navigateTo = (p: DatePreset, from?: string, to?: string) => {
+    let f = from || "";
+    let t = to || "";
+    
+    if (p !== "custom" && p !== "all") {
+        const today = new Date();
+        const toLocalISO = (d: Date) => {
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, "0");
+            const day = String(d.getDate()).padStart(2, "0");
+            return `${year}-${month}-${day}`;
+        };
+        t = toLocalISO(today);
+        if (p === "7d") {
+            const d = new Date(); d.setDate(d.getDate() - 6);
+            f = toLocalISO(d);
+        } else if (p === "30d") {
+            const d = new Date(); d.setDate(d.getDate() - 29);
+            f = toLocalISO(d);
+        } else if (p === "month") {
+            const d = new Date(today.getFullYear(), today.getMonth(), 1);
+            f = toLocalISO(d);
+        }
+    }
+
+    setDateFilter({ preset: p, range: { from: f, to: t } });
+
     const params = new URLSearchParams(searchParams.toString());
     params.set("range", p);
-    if (from) params.set("from", from); else params.delete("from");
-    if (to) params.set("to", to); else params.delete("to");
-    router.push(`/?${params.toString()}`);
+    if (f) params.set("from", f); else params.delete("from");
+    if (t) params.set("to", t); else params.delete("to");
+    window.history.replaceState(null, '', `?${params.toString()}`);
   };
 
   const handleSaveBudget = async () => {
