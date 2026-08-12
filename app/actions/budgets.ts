@@ -1,14 +1,14 @@
 "use server";
 
 import { createClient } from "@/utils/supabase/server";
+import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 import prisma from "@/lib/prisma";
 
 export async function getBudgets() {
     let userId = null;
     try {
-        const supabase = await createClient();
-        const { data: { user } } = await supabase.auth.getUser();
+        const { user } = await auth();
         userId = user?.id;
     } catch (e: any) {
         if (e?.digest === 'DYNAMIC_SERVER_USAGE') {

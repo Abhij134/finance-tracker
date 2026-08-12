@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/utils/supabase/server";
+import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 import prisma from "@/lib/prisma";
 import { ensureUser } from "@/lib/auth-helpers";
@@ -233,9 +234,8 @@ export async function handleSignOut() {
 export async function getUserProfile() {
     let user = null;
     try {
-        const supabase = await createClient();
-        const { data } = await supabase.auth.getUser();
-        user = data.user;
+        const { user: authUser } = await auth();
+        user = authUser;
     } catch (e: any) {
         if (e?.digest === 'DYNAMIC_SERVER_USAGE') {
             throw e;

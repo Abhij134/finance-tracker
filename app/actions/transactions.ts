@@ -1,6 +1,7 @@
 "use server"
 
 import { createClient } from "@/utils/supabase/server"
+import { auth } from "@/auth"
 import { revalidatePath } from "next/cache"
 import prisma from '@/lib/prisma';
 
@@ -318,8 +319,7 @@ export async function addBulkTransactions(transactions: any[]) {
 export async function getTransactions(options: { limit?: number; offset?: number; page?: number; startDate?: Date } = {}) {
     let userId = null;
     try {
-        const supabase = await createClient();
-        const { data: { user } } = await supabase.auth.getUser();
+        const { user } = await auth();
         userId = user?.id;
     } catch (e: any) {
         if (e?.digest === 'DYNAMIC_SERVER_USAGE') {
