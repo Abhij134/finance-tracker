@@ -4,6 +4,9 @@
 [[plugins]]
   package = "@netlify/plugin-nextjs"
 
+[functions]
+  included_files = ["node_modules/.prisma/client/libquery_engine-*", "node_modules/@prisma/client/libquery_engine-*"]
+
 [[headers]]
   for = "/_next/static/*"
   [headers.values]

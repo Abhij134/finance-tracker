@@ -372,7 +372,13 @@ export async function getTransactions(options: { limit?: number; offset?: number
         };
     } catch (e) {
         console.error('getTransactions failed:', e);
-        throw e; // Throw so that error boundaries or callers can handle it properly
+        return {
+            transactions: [],
+            totalPages: 0,
+            totalCount: 0,
+            page: 1,
+            hasMore: false,
+        };
     }
 }
 
