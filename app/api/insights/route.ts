@@ -217,13 +217,23 @@ function safeParseInsights(raw: string): any[] | null {
 
 export async function GET(req: Request) {
     try {
-        const supabase = await createClient();
-        const { data: { user } } = await supabase.auth.getUser();
-        let userId = user?.id;
+        let userId: string | undefined;
+
+        try {
+            const supabase = await createClient();
+            const { data: { user } } = await supabase.auth.getUser();
+            userId = user?.id;
+        } catch (err) {
+            console.error("[insights route] Supabase auth check error:", err);
+        }
 
         if (!userId) {
-            const session = await auth();
-            userId = session?.user?.id;
+            try {
+                const session = await auth();
+                userId = session?.user?.id;
+            } catch (err) {
+                console.error("[insights route] NextAuth session check error:", err);
+            }
         }
 
         if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -344,18 +354,6 @@ export async function GET(req: Request) {
             selectedPeriod: rangeParam,
         };
 
-        if (allTxs.length === 0) {
-            return NextResponse.json({
-                insights: [{
-                    type: "info",
-                    title: "NO TRANSACTIONS YET",
-                    message: "Upload a bank statement or add transactions manually to get personalized AI insights.",
-                    severity: "info",
-                    icon: "calendar",
-                }]
-            });
-        }
-
         const prompt = buildInsightsPrompt(data);
 
         try {
@@ -384,22 +382,19 @@ export async function GET(req: Request) {
             });
         } catch (err: any) {
             console.error("[insights route] Gemini error:", err);
-            if (err.status === 429) {
-                return NextResponse.json({ 
-                    insights: getFallbackInsights(data), 
-                    cached: false, 
-                    rateLimited: true 
-                }, {
-                    headers: {
-                        "Cache-Control": "private, max-age=3600, stale-while-revalidate=7200",
-                    }
-                });
-            }
             return NextResponse.json({ insights: getFallbackInsights(data) });
         }
 
     } catch (error) {
         console.error("[insights route] fatal:", error);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+        return NextResponse.json({
+            insights: [{
+                type: "info",
+                title: "A.I. INSIGHTS",
+                message: "Track your spending and categories in real-time to optimize your financial goals.",
+                severity: "info",
+                icon: "sparkles",
+            }]
+        });
     }
 }
