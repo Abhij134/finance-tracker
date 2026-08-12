@@ -329,7 +329,7 @@ export async function getTransactions(options: { limit?: number; offset?: number
         };
     }
 
-    const limit = options.limit ?? 20;
+    const limit = options.limit ?? 2000;
     const offset = options.offset ?? (options.page ? (options.page - 1) * limit : 0);
     const startDate = options.startDate;
 

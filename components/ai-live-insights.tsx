@@ -57,9 +57,50 @@ export function AiLiveInsights({
 
   // ── Fallback built client-side when API fails ────────────────────────────
   const buildLocalInsights = (txs: typeof transactions): Insight[] => {
-    if (!txs || txs.length === 0) return [];
-    const expenses = txs.filter((t) => t.amount < 0);
-    const income = txs.filter((t) => t.amount > 0);
+    if (!txs || txs.length === 0) {
+      const presetLabel = dateFilter.preset === "all" ? "All Time" : dateFilter.preset === "month" ? "This Month" : "Selected Period";
+      return [{
+        type: "info",
+        title: `NO TRANSACTIONS (${presetLabel.toUpperCase()})`,
+        message: `No transactions recorded for ${presetLabel}. Change period or add new entries to view AI insights.`,
+        severity: "positive",
+        icon: "calendar",
+      }];
+    }
+
+    // Filter txs strictly by active date filter
+    let filtered = txs;
+    if (from && to && from.trim() !== "" && to.trim() !== "") {
+      const fromDate = new Date(from);
+      const toDate = new Date(to);
+      toDate.setHours(23, 59, 59, 999);
+      filtered = txs.filter((t) => {
+        const d = new Date(t.date);
+        return d >= fromDate && d <= toDate;
+      });
+    } else if (dateFilter.preset === "month") {
+      const now = new Date();
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+      filtered = txs.filter((t) => {
+        const d = new Date(t.date);
+        return d >= startOfMonth && d <= endOfMonth;
+      });
+    }
+
+    if (filtered.length === 0) {
+      const presetLabel = dateFilter.preset === "all" ? "All Time" : dateFilter.preset === "month" ? "This Month" : "Selected Period";
+      return [{
+        type: "info",
+        title: `NO EXPENSES (${presetLabel.toUpperCase()})`,
+        message: `No expenses found for ${presetLabel}. Select another period or add new transactions.`,
+        severity: "positive",
+        icon: "calendar",
+      }];
+    }
+
+    const expenses = filtered.filter((t) => t.amount < 0);
+    const income = filtered.filter((t) => t.amount > 0);
     const totalExpenses = expenses.reduce((s, t) => s + Math.abs(t.amount), 0);
     const totalIncome = income.reduce((s, t) => s + t.amount, 0);
     const results: Insight[] = [];
@@ -108,6 +149,13 @@ export function AiLiveInsights({
   const fetchInsights = async (force = false) => {
     if (!transactions) return;
 
+    const CACHE_KEY = `ai_insights_v3_${dateFilter.preset}_${from}_${to}`;
+
+    if (force && typeof window !== "undefined") {
+      localStorage.removeItem(CACHE_KEY);
+      cachedInsightsRef.current = [];
+    }
+
     const now = Date.now();
     if (
       !force &&
@@ -117,8 +165,6 @@ export function AiLiveInsights({
       setInsights(cachedInsightsRef.current);
       return;
     }
-
-    const CACHE_KEY = `ai_insights_v2_${from}_${to}`;
 
     let hasValidCache = false;
     if (!force && typeof window !== "undefined") {
@@ -133,14 +179,19 @@ export function AiLiveInsights({
       }
     }
 
-    if (!hasValidCache) setIsLoading(true);
+    setIsLoading(true);
 
     try {
       const params = new URLSearchParams();
+      params.set("range", dateFilter.preset);
       if (from) params.set("from", from);
       if (to) params.set("to", to);
       params.set("dailyAllowance", (allowance || 0).toString());
       params.set("daysLeft", (daysRemaining || 1).toString());
+      if (force) {
+        params.set("force", "true");
+        params.set("_t", Date.now().toString());
+      }
 
       const res = await fetch(`/api/insights?${params.toString()}`);
       if (!res.ok) throw new Error(`API ${res.status}`);
@@ -159,16 +210,60 @@ export function AiLiveInsights({
         }
       } else throw new Error("Empty response");
     } catch {
-      if (!hasValidCache) setInsights(buildLocalInsights(transactions));
+      setInsights(buildLocalInsights(transactions));
     } finally {
       setIsLoading(false);
     }
   };
 
+  // ── Smart Credit-Saving AI Refresh Logic ────────────────────────────────────
+  const prevTxSignatureRef = useRef<string>("");
+  const fetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   useEffect(() => {
-    if (transactions) fetchInsights();
+    if (!transactions) return;
+
+    // Build lightweight signature to detect real transaction additions/deletions/period changes
+    const currentCount = transactions.length;
+    const currentSum = transactions.reduce((s, t) => s + t.amount, 0);
+    const latestId = transactions[0]?.id || "";
+    const filterKey = `${dateFilter.preset}_${from}_${to}`;
+    const currentSig = `${currentCount}_${currentSum}_${latestId}_${filterKey}`;
+
+    // Initial load: record signature and fetch
+    if (!prevTxSignatureRef.current) {
+      prevTxSignatureRef.current = currentSig;
+      fetchInsights();
+      return;
+    }
+
+    // Date range / Period change: fetch immediately for the newly selected time slot
+    if (!prevTxSignatureRef.current.endsWith(filterKey)) {
+      prevTxSignatureRef.current = currentSig;
+      fetchInsights(true);
+      return;
+    }
+
+    // Transaction signature changed (new receipt uploaded / transaction added)
+    if (prevTxSignatureRef.current !== currentSig) {
+      prevTxSignatureRef.current = currentSig;
+
+      // PRECAUTION FOR AI API CREDITS:
+      // Debounce API requests by 3s so rapid bulk additions trigger ONLY 1 single AI API call
+      if (fetchTimeoutRef.current) clearTimeout(fetchTimeoutRef.current);
+
+      fetchTimeoutRef.current = setTimeout(() => {
+        const CACHE_KEY = `ai_insights_v3_${dateFilter.preset}_${from}_${to}`;
+        if (typeof window !== "undefined") localStorage.removeItem(CACHE_KEY);
+        fetchInsights(true);
+      }, 3000);
+    }
+
+    return () => {
+      if (fetchTimeoutRef.current) clearTimeout(fetchTimeoutRef.current);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [from, to]);
+  }, [transactions, dateFilter.preset, dateFilter.range.from, dateFilter.range.to]);
 
   // ── Icon map ─────────────────────────────────────────────────────────────
   const getIcon = (icon: string) => {

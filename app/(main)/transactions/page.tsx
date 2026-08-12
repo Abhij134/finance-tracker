@@ -3,7 +3,7 @@ import { getTransactions } from "@/app/actions/transactions";
 import { CATEGORIES } from "@/lib/constants";
 
 export default async function AllTransactionsPage() {
-  const result = await getTransactions({ limit: 20, offset: 0 });
+  const result = await getTransactions({ limit: 2000, offset: 0 });
   const rawTxs = Array.isArray(result) ? result : result.transactions || [];
   const totalPages = Array.isArray(result) ? 1 : result.totalPages || 1;
   const totalCount = Array.isArray(result) ? rawTxs.length : result.totalCount || rawTxs.length;

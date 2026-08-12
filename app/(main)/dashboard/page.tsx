@@ -75,7 +75,7 @@ export default async function Home({
   // Run all data fetches concurrently — eliminates sequential DB round-trips
   const [profileResponse, transactionsData, dbBudgets] = await Promise.all([
     getUserProfile(),
-    getTransactions({ limit: 30 }),
+    getTransactions({ limit: 2000 }),
     getBudgets(),
   ]);
 
@@ -136,11 +136,7 @@ export default async function Home({
                 <ActionCenter />
                 <div className="flex-1 min-h-[420px] sm:min-h-[480px] lg:min-h-[540px]">
                   <Suspense fallback={<AiInsightsSkeleton />}>
-                    <AiLiveInsights
-                      range={preset}
-                      from={from ? toLocalISO(from) : ""}
-                      to={to ? toLocalISO(to) : ""}
-                    />
+                    <AiLiveInsights />
                   </Suspense>
                 </div>
               </div>

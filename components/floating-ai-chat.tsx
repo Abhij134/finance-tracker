@@ -34,8 +34,13 @@ export function FloatingAiChat() {
   const userId = "user";
   const [isOpen, setIsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [mounted, setMounted] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const welcomeMessage: UIMessage[] = [
     {
@@ -44,7 +49,7 @@ export function FloatingAiChat() {
       parts: [
         {
           type: "text",
-          text: "Hello! I'm FinanceNeo AI. Ask me anything about your spending, budgets, or financial insights!",
+          text: "Hello! I'm FinanceNeo AI. Ask me anything about your finances, or tell me to add a transaction or update your budgets!",
         }
       ],
     }
@@ -87,7 +92,7 @@ export function FloatingAiChat() {
 
   // Hydrate saved messages from localStorage AFTER initial render to prevent SSR hydration mismatch
   useEffect(() => {
-    if (typeof window !== "undefined") {
+    if (mounted && typeof window !== "undefined") {
       const saved = localStorage.getItem(`finance-neo-chat-${userId}`);
       if (saved) {
         try {
@@ -98,14 +103,14 @@ export function FloatingAiChat() {
         } catch (e) {}
       }
     }
-  }, [userId, setMessages]);
+  }, [userId, setMessages, mounted]);
 
   // Persist messages to localStorage
   useEffect(() => {
-    if (messages.length > 0) {
+    if (mounted && messages.length > 0) {
       localStorage.setItem(`finance-neo-chat-${userId}`, JSON.stringify(messages));
     }
-  }, [messages, userId]);
+  }, [messages, userId, mounted]);
 
   const isLoading = status === 'streaming' || status === 'submitted';
 
@@ -275,22 +280,23 @@ export function FloatingAiChat() {
   return (
     <>
       {/* Mobile backdrop */}
-      {isOpen && (
+      {mounted && isOpen && (
         <div className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden" onClick={() => setIsOpen(false)} />
       )}
 
       {/* Chat panel */}
-      <div
-        className="fixed z-50 w-[calc(100vw-2rem)] sm:w-[420px] left-4 right-4 sm:left-auto sm:right-6 transition-all duration-300 top-[4.5rem] sm:top-auto sm:bottom-[7.5rem] origin-top sm:origin-bottom-right"
-        style={{
-          transform: isOpen ? "translateY(0) scale(1)" : "translateY(-12px) scale(0.92)",
-          opacity: isOpen ? 1 : 0,
-          pointerEvents: isOpen ? "auto" : "none",
-          transition: isOpen
-            ? "transform 0.32s cubic-bezier(0.34,1.56,0.64,1), opacity 0.2s ease"
-            : "transform 0.2s cubic-bezier(0.4,0,1,1), opacity 0.15s ease",
-        }}
-      >
+      {mounted && (
+        <div
+          className="fixed z-50 w-[calc(100vw-2rem)] sm:w-[420px] left-4 right-4 sm:left-auto sm:right-6 transition-all duration-300 top-[4.5rem] sm:top-auto sm:bottom-[7.5rem] origin-top sm:origin-bottom-right"
+          style={{
+            transform: isOpen ? "translateY(0) scale(1)" : "translateY(-12px) scale(0.92)",
+            opacity: isOpen ? 1 : 0,
+            pointerEvents: isOpen ? "auto" : "none",
+            transition: isOpen
+              ? "transform 0.32s cubic-bezier(0.34,1.56,0.64,1), opacity 0.2s ease"
+              : "transform 0.2s cubic-bezier(0.4,0,1,1), opacity 0.15s ease",
+          }}
+        >
         <div
           className="flex flex-col rounded-3xl border border-white/10 bg-[#0B0F19]/98 backdrop-blur-3xl overflow-hidden shadow-[0_32px_128px_-16px_rgba(0,0,0,1)] ring-1 ring-white/10 h-[min(520px,calc(100dvh-160px))] sm:h-[min(600px,calc(100dvh-140px))]"
         >
@@ -451,38 +457,36 @@ export function FloatingAiChat() {
           </div>
         </div>
       </div>
+      )}
 
       {/* Trigger button */}
       <button
         onClick={() => setIsOpen((v) => !v)}
+        suppressHydrationWarning
         className={`
           fixed z-50 flex items-center gap-1.5 sm:gap-2 rounded-full
           px-2.5 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium tracking-wide
           border transition-all duration-300 active:scale-95
-          ${isOpen
-            ? "top-2.5 right-2.5 sm:top-auto sm:bottom-10 sm:right-6 bg-white/10 border-white/20 text-white shadow-xl opacity-0 pointer-events-none scale-90"
-            : "top-2.5 right-2.5 sm:top-auto sm:bottom-10 sm:right-6 bg-[#06150e]/90 backdrop-blur-md border-emerald-500/40 text-emerald-400 hover:bg-[#081c13] hover:border-emerald-500/60 shadow-[0_0_15px_rgba(16,185,129,0.25)]"
-          }
+          top-2.5 right-2.5 sm:top-auto sm:bottom-10 sm:right-6
+          bg-[#06150e]/90 backdrop-blur-md border-emerald-500/40 text-emerald-400
+          hover:bg-[#081c13] hover:border-emerald-500/60 shadow-[0_0_15px_rgba(16,185,129,0.25)]
+          ${mounted && isOpen ? "opacity-0 pointer-events-none scale-90" : ""}
         `}
       >
         <span className="font-semibold flex items-center gap-1.5 text-[11px] sm:text-sm">
-          {isOpen ? (
-            "Close"
-          ) : (
-            <>
-              <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-emerald-400" />
-              <span>Try AI</span>
-              <span className="hidden sm:inline"> Chat</span>
-            </>
-          )}
+          <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-emerald-400" />
+          <span>Try AI</span>
+          <span className="hidden sm:inline"> Chat</span>
         </span>
-        <span className="hidden sm:inline-flex items-center">
-          {isOpen
-            ? <ChevronUp className="h-4 w-4" />
-            : <ChevronDown className="h-4 w-4" />
-          }
-        </span>
-        {!isOpen && unreadCount > 0 && (
+        {mounted && (
+          <span className="hidden sm:inline-flex items-center">
+            {isOpen
+              ? <ChevronUp className="h-4 w-4" />
+              : <ChevronDown className="h-4 w-4" />
+            }
+          </span>
+        )}
+        {mounted && !isOpen && unreadCount > 0 && (
           <span className="h-4 w-4 rounded-full bg-emerald-500 text-emerald-950 text-[10px] font-bold flex items-center justify-center ml-0.5">
             {unreadCount}
           </span>

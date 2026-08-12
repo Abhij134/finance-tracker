@@ -9,13 +9,13 @@ import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 
 const DAYS_OF_WEEK = [
-  { value: "MONDAY",    label: "Monday" },
-  { value: "TUESDAY",   label: "Tuesday" },
+  { value: "MONDAY", label: "Monday" },
+  { value: "TUESDAY", label: "Tuesday" },
   { value: "WEDNESDAY", label: "Wednesday" },
-  { value: "THURSDAY",  label: "Thursday" },
-  { value: "FRIDAY",    label: "Friday" },
-  { value: "SATURDAY",  label: "Saturday" },
-  { value: "SUNDAY",    label: "Sunday" },
+  { value: "THURSDAY", label: "Thursday" },
+  { value: "FRIDAY", label: "Friday" },
+  { value: "SATURDAY", label: "Saturday" },
+  { value: "SUNDAY", label: "Sunday" },
 ];
 
 const alertSettingsList = [
@@ -55,6 +55,7 @@ export default function AlertsPage() {
   const [loadingInitial, setLoadingInitial] = useState(true);
   const [updatingStates, setUpdatingStates] = useState<Record<string, boolean>>({});
   const [testingSummary, setTestingSummary] = useState(false);
+  const [disableSendTest, setDisableSendTest] = useState(false);
 
   useEffect(() => {
     async function loadData() {
@@ -72,7 +73,27 @@ export default function AlertsPage() {
       setLoadingInitial(false);
     }
     loadData();
+
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("disable_send_test_summary");
+      if (stored !== null) {
+        setDisableSendTest(stored === "true");
+      }
+    }
   }, []);
+
+  const handleToggleDisableSendTest = () => {
+    const nextVal = !disableSendTest;
+    setDisableSendTest(nextVal);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("disable_send_test_summary", String(nextVal));
+    }
+    toast.success(
+      nextVal
+        ? "Send Test disabled. Summary will share automatically on schedule."
+        : "Send Test option enabled."
+    );
+  };
 
   const handleToggle = async (dbKey: string | null) => {
     if (!dbKey) return;
@@ -238,8 +259,8 @@ export default function AlertsPage() {
                       </div>
                     )}
 
-                    {/* Weekly Summary Day Picker */}
-                    {setting.dbKey === "periodicSummaryEmailEnabled" && isActive && (
+                    {/* Weekly Summary Day Picker & Controls */}
+                    {setting.dbKey === "periodicSummaryEmailEnabled" && (
                       <AnimatePresence>
                         <motion.div
                           initial={{ opacity: 0, height: 0 }}
@@ -270,17 +291,51 @@ export default function AlertsPage() {
                               </select>
                               <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
                             </div>
-                            
-                            <div className="mt-3 flex justify-end">
+
+                            {/* Controls: Disable Send Test Option & Send Test Summary button */}
+                            <div className="mt-4 flex flex-wrap items-center justify-end gap-2.5 pt-3 border-t border-zinc-800/80">
                               <button
-                                onClick={handleSendTestSummary}
-                                disabled={testingSummary}
-                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-500 bg-emerald-500/10 border border-emerald-500/20 rounded-md hover:bg-emerald-500/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                type="button"
+                                onClick={handleToggleDisableSendTest}
+                                title="Disable Send Test option so email summaries share automatically on schedule without depending on manual test clicks"
+                                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all ${
+                                  disableSendTest
+                                    ? "bg-red-500/15 border-red-500/40 text-red-400 shadow-[0_0_10px_rgba(239,68,68,0.15)]"
+                                    : "bg-zinc-800/90 border-zinc-700 text-zinc-300 hover:text-zinc-100 hover:border-zinc-600"
+                                }`}
                               >
-                                {testingSummary ? <Loader2 className="h-3 w-3 animate-spin" /> : <Mail className="h-3 w-3" />}
-                                Send Test Summary
+                                <span className={`h-2 w-2 rounded-full ${disableSendTest ? "bg-red-400 animate-pulse" : "bg-zinc-500"}`} />
+                                {disableSendTest ? "Disable Send Test: ON" : "Disable Send Test"}
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={handleSendTestSummary}
+                                disabled={testingSummary || disableSendTest}
+                                title={disableSendTest ? "Send Test option is disabled — weekly summary automatically sends on schedule" : "Send an instant test summary email"}
+                                className={`flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-lg border transition-all ${
+                                  disableSendTest
+                                    ? "bg-zinc-900 border-zinc-800 text-zinc-600 cursor-not-allowed opacity-50"
+                                    : "text-emerald-400 bg-emerald-500/10 border-emerald-500/30 hover:bg-emerald-500/20 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                                }`}
+                              >
+                                {testingSummary ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Mail className="h-3.5 w-3.5" />}
+                                {disableSendTest ? "Send Test (Disabled)" : "Send Test Summary"}
                               </button>
                             </div>
+
+                            {/* Status description note */}
+                            <p className="mt-2.5 text-[11px] leading-relaxed text-muted-foreground/80 text-right">
+                              {disableSendTest ? (
+                                <span className="text-emerald-400/90 font-medium">
+                                  ✓ Automatic weekly delivery active: Summaries share automatically every {DAYS_OF_WEEK.find(d => d.value === preferences.summaryDay)?.label ?? "week"} without depending on hitting Send Test.
+                                </span>
+                              ) : (
+                                <span className="text-emerald-400/90 font-medium">
+                                  ✓ Automatic weekly delivery active every {DAYS_OF_WEEK.find(d => d.value === preferences.summaryDay)?.label ?? "week"}. Click Send Test Summary to get an instant preview.
+                                </span>
+                              )}
+                            </p>
                           </div>
                         </motion.div>
                       </AnimatePresence>

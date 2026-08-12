@@ -14,7 +14,7 @@ const nextConfig: NextConfig = {
   compress: true,
   poweredByHeader: false,
   experimental: {
-    optimizePackageImports: ['framer-motion', 'recharts', 'date-fns', 'sonner'],
+    optimizePackageImports: ['framer-motion', 'recharts', 'date-fns', 'sonner', 'lucide-react'],
     serverActions: {
       bodySizeLimit: '5mb',
     },

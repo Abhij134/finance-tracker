@@ -63,7 +63,7 @@ export function ActionCenter() {
         <div className={`transition-opacity`}>
           <PDFScanner
             onTransactionsExtracted={async (data) => {
-              if (Array.isArray(data) && isScanning) {
+              if (Array.isArray(data) && data.length > 0) {
                 const txsToInsert = data.map((tx) => {
                   const rawAmount = typeof tx.amount === "number" ? tx.amount : parseFloat(tx.amount || "0");
                   const type = tx.type?.toString().toUpperCase();
@@ -78,9 +78,10 @@ export function ActionCenter() {
                     referenceId: tx.referenceId || null,
                   };
                 });
-                await addBulkTransactions(txsToInsert);
-              } else if (Array.isArray(data)) {
-                setScannedData(data);
+                const res = await addBulkTransactions(txsToInsert);
+                if (res?.success) {
+                  toast.success(`Imported ${res.addedCount || txsToInsert.length} transactions from receipt!`);
+                }
               }
             }}
             onLoadingChange={setIsScanning}

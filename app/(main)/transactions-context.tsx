@@ -151,13 +151,13 @@ export function TransactionsProvider({
             setIsLoadingMore(true);
             try {
                 const response = await saGetTransactions({
-                    limit: 20,
+                    limit: 2000,
                     offset: 0,
                 });
 
                 if (cancelled) return;
                 const refreshed = Array.isArray(response) ? response : response.transactions || [];
-                const hasMoreFlag = Array.isArray(response) ? refreshed.length === 20 : (response.hasMore ?? false);
+                const hasMoreFlag = Array.isArray(response) ? refreshed.length === 2000 : (response.hasMore ?? false);
                 const formatted = mapDbTransactions(refreshed);
                 setTransactions(formatted);
                 setOffset(formatted.length);
@@ -183,11 +183,11 @@ export function TransactionsProvider({
 
         try {
             const response = await saGetTransactions({
-                limit: 20,
+                limit: 2000,
                 offset,
             });
             const nextTxs = Array.isArray(response) ? response : response.transactions || [];
-            const hasMoreFlag = Array.isArray(response) ? nextTxs.length === 20 : (response.hasMore ?? false);
+            const hasMoreFlag = Array.isArray(response) ? nextTxs.length === 2000 : (response.hasMore ?? false);
             const formatted = mapDbTransactions(nextTxs);
 
             setHasMore(hasMoreFlag);
@@ -217,6 +217,8 @@ export function TransactionsProvider({
     }, []);
 
     const addBulkTransactions = useCallback(async (txs: Omit<Tx, "id">[]) => {
+        if (!txs || txs.length === 0) return { success: true, addedCount: 0 };
+
         // Optimistic update
         const tempTxs = txs.map(tx => ({ ...tx, id: Math.random().toString() }));
         setTransactions((prev) => [...tempTxs, ...prev]);
@@ -229,8 +231,22 @@ export function TransactionsProvider({
             method: tx.method,
             date: tx.date,
         })));
+
+        // Re-fetch transactions from database to sync exact DB records & IDs
+        try {
+            const refreshed = await saGetTransactions({ limit: 2000, offset: 0 });
+            const dbTxs = Array.isArray(refreshed) ? refreshed : refreshed.transactions || [];
+            const formatted = mapDbTransactions(dbTxs);
+            if (formatted.length > 0) {
+                setTransactions(formatted);
+                setOffset(formatted.length);
+            }
+        } catch (e) {
+            console.error("Failed to sync transactions after bulk add:", e);
+        }
+
         return response;
-    }, []);
+    }, [mapDbTransactions]);
 
     const updateTransaction = useCallback(async (updated: Tx) => {
         setTransactions((prev) =>

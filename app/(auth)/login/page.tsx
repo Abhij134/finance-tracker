@@ -123,7 +123,10 @@ export default function LandingAndLoginPage() {
     }, []);
 
     useEffect(() => {
-        const t = setInterval(() => setRotatingIdx((i) => (i + 1) % ROTATING.length), 2200);
+        const t = setInterval(() => {
+            if (typeof document !== "undefined" && document.hidden) return;
+            setRotatingIdx((i) => (i + 1) % ROTATING.length);
+        }, 2200);
         return () => clearInterval(t);
     }, []);
 
@@ -363,61 +366,37 @@ export default function LandingAndLoginPage() {
                             {/* Left Column - Text Content */}
                             <div className="flex-1 flex flex-col justify-center max-w-2xl text-left -mt-8 lg:-mt-0">
 
-                                <h1 className="font-sans text-4xl font-semibold leading-[1.05] tracking-[-0.03em] text-white md:text-5xl lg:text-7xl mb-3">
-                                    <motion.span
-                                        initial={{ opacity: 0, y: 20 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ duration: 0.7 }}
-                                        className="block"
-                                    >
-                                        Understand your
-                                    </motion.span>
+                                <h1 className="font-sans text-4xl font-semibold leading-[1.1] tracking-[-0.03em] text-white md:text-5xl lg:text-7xl mb-3 flex flex-col">
+                                    <span>Understand your</span>
 
-                                    {/* Rotating word — vertical roll */}
-                                    <span className="relative my-1 flex h-[1.1em] items-center overflow-hidden">
-                                        <AnimatePresence mode="popLayout" initial={false}>
+                                    {/* Rotating word — GPU-accelerated smooth vertical up/down roll */}
+                                    <span className="relative inline-block overflow-hidden h-[1.1em] py-0.5">
+                                        <AnimatePresence mode="wait">
                                             <motion.span
                                                 key={ROTATING[rotatingIdx]}
-                                                initial={{ y: "110%", opacity: 0, rotateX: -40 }}
-                                                animate={{ y: "0%", opacity: 1, rotateX: 0 }}
-                                                exit={{ y: "-110%", opacity: 0, rotateX: 40 }}
-                                                transition={{ type: "spring", stiffness: 140, damping: 18, mass: 0.6 }}
-                                                style={{ transformOrigin: "50% 50%" }}
-                                                className="inline-block bg-gradient-to-b from-emerald-300 to-emerald-500 bg-clip-text pr-2 text-transparent"
+                                                initial={{ y: "100%", opacity: 0 }}
+                                                animate={{ y: ["100%", "-8%", "0%"], opacity: 1 }}
+                                                exit={{ y: "-100%", opacity: 0 }}
+                                                transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                                                className="inline-block bg-gradient-to-b from-emerald-300 to-emerald-500 bg-clip-text pr-2 text-transparent will-change-transform"
                                             >
                                                 {ROTATING[rotatingIdx]}
                                             </motion.span>
                                         </AnimatePresence>
                                     </span>
 
-                                    <motion.span
-                                        initial={{ opacity: 0, y: 20 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ duration: 0.7, delay: 0.2 }}
-                                        className="block text-white/45"
-                                    >
-                                        in seconds, not spreadsheets.
-                                    </motion.span>
+                                    <span className="text-white/45">in seconds, not</span>
+                                    <span className="text-white/45">spreadsheets.</span>
                                 </h1>
 
-                                <motion.p
-                                    initial={{ opacity: 0, y: 16 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ duration: 0.7, delay: 0.35 }}
-                                    className="mt-2 max-w-xl text-lg leading-relaxed text-white/55 mb-10 hidden lg:block"
-                                >
+                                <p className="mt-2 max-w-xl text-lg leading-relaxed text-white/55 mb-10 hidden lg:block">
                                     Drop in any bank statement PDF. Our AI extracts every transaction,
                                     categorizes it, and surfaces the spending patterns you keep missing —
                                     privately, instantly, beautifully.
-                                </motion.p>
+                                </p>
 
                                 {/* Mobile/Tablet Mockup Replica (Visible only on lg:hidden) */}
-                                <motion.div
-                                    initial={{ opacity: 0, y: 30 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ duration: 0.8, ease: "easeOut", delay: 0.5 }}
-                                    className="lg:hidden mt-10 mb-8 w-full flex justify-center items-center h-[270px] mx-auto"
-                                >
+                                <div className="lg:hidden mt-10 mb-8 w-full flex justify-center items-center h-[270px] mx-auto">
                                     <div className="relative w-[135px] flex justify-center items-center">
                                         {/* Floating Weekly Report Card on Mobile */}
                                         <div style={{ position: "absolute", right: "calc(100% - 10px)", top: "-15px", zIndex: 35, transform: "scale(0.8)", transformOrigin: "top right", pointerEvents: "none", width: "max-content" }}>
@@ -482,7 +461,7 @@ export default function LandingAndLoginPage() {
                                             </div>
                                         </div>
                                     </div>
-                                </motion.div>
+                                </div>
 
                                 <div className="flex flex-row items-center justify-center lg:justify-start gap-2 w-full max-w-[260px] mx-auto lg:max-w-none lg:mx-0">
                                     <button
@@ -680,20 +659,14 @@ export default function LandingAndLoginPage() {
                     {/* --- Header & Cards Group Wrapper --- */}
                     <div className="space-y-8 lg:space-y-12">
                         {/* --- Section header --- */}
-                        <motion.div
-                            initial={{ opacity: 0, y: 30, scale: 0.95 }}
-                            whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                            viewport={{ once: true, margin: "-50px" }}
-                            transition={{ duration: 0.7, ease: "easeOut" }}
-                            className="text-center max-w-2xl mx-auto"
-                        >
+                        <div className="text-center max-w-2xl mx-auto">
                             <h2 className="text-3xl lg:text-4xl font-extrabold text-white tracking-tight mb-4">
                                 Your complete <span className="text-emerald-400">financial</span> command center
                             </h2>
                             <p className="text-zinc-400 text-base leading-relaxed">
                                 One app to track spending, set budgets, analyse patterns, and achieve every financial goal you set.
                             </p>
-                        </motion.div>
+                        </div>
 
                         {/* --- 3 Highlight cards (Spendee top strip) --- */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 sm:gap-4 max-w-5xl mx-auto">
@@ -720,12 +693,8 @@ export default function LandingAndLoginPage() {
                                     glow: "rgba(245, 158, 11, 0.06)",
                                 },
                             ].map((card, index) => (
-                                <motion.div
+                                <div
                                     key={card.title}
-                                    initial={{ opacity: 0, y: 30 }}
-                                    whileInView={{ opacity: 1, y: 0 }}
-                                    viewport={{ once: true, margin: "-50px" }}
-                                    transition={{ duration: 0.6, delay: index * 0.1 }}
                                     className="group relative rounded-xl border p-3.5 sm:p-4 transition-all duration-300 hover:-translate-y-1"
                                     style={{ background: card.glow, borderColor: card.accent + "30" }}
                                 >
@@ -735,124 +704,191 @@ export default function LandingAndLoginPage() {
                                     </div>
                                     <p className="text-zinc-400 text-xs leading-relaxed">{card.desc}</p>
                                     <div className="absolute bottom-0 left-0 right-0 h-px rounded-full opacity-40" style={{ background: `linear-gradient(90deg, transparent, ${card.accent}, transparent)` }} />
-                                </motion.div>
+                                </div>
                             ))}
                         </div>
                     </div>
 
                     {/* --- Step 1: Track Everything (visual left, text right) --- */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center py-10 lg:py-14" suppressHydrationWarning>
-                        <motion.div
-                            initial={{ opacity: 0, x: -50 }}
-                            whileInView={{ opacity: 1, x: 0 }}
-                            viewport={{ once: true, margin: "-100px" }}
-                            transition={{ duration: 0.8, ease: "easeOut" }}
-                            className="relative flex items-center justify-center order-2 lg:order-1"
-                        >
+                        <div className="relative flex items-center justify-center order-2 lg:order-1">
                             <div className="relative w-full max-w-sm">
                                 <div className="relative bg-[#0d1424] border border-emerald-500/20 rounded-2xl p-5 shadow-2xl space-y-3">
                                     {/* Header */}
-                                    <div className="flex items-center justify-between pb-2 border-b border-white/5">
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 10 }}
+                                        whileInView={{ opacity: 1, y: 0 }}
+                                        viewport={{ once: true }}
+                                        transition={{ duration: 0.4 }}
+                                        className="flex items-center justify-between pb-2 border-b border-white/5"
+                                    >
                                         <div>
                                             <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider">Live Expense Breakdown</p>
-                                            <p className="text-xl font-black text-white mt-0.5">₹42,500 <span className="text-[10px] text-emerald-400 font-medium ml-1">↓ 12% vs last month</span></p>
+                                            <p className="text-xl font-black text-white mt-0.5">₹28,450 <span className="text-[10px] text-emerald-400 font-medium ml-1">↓ 18.4% vs last month</span></p>
                                         </div>
-                                        <div className="px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold">
-                                            Live Tracker
+                                        <div className="px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold">
+                                            Net: +₹63.5k
                                         </div>
-                                    </div>
+                                    </motion.div>
 
-                                    {/* SVG Graph with Expense Amount Tooltip Badges on Points */}
-                                    <div className="relative pt-1">
-                                        <svg viewBox="0 0 380 185" className="w-full h-auto overflow-visible">
-                                            <defs>
-                                                <linearGradient id="gridChartGrad" x1="0" y1="0" x2="0" y2="1">
-                                                    <stop offset="0%" stopColor="#10b981" stopOpacity="0.35" />
-                                                    <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
-                                                </linearGradient>
-                                            </defs>
+                                    {/* Income vs Expense Graph Chart */}
+                                    <motion.div
+                                        initial={{ opacity: 0, scale: 0.96 }}
+                                        whileInView={{ opacity: 1, scale: 1 }}
+                                        viewport={{ once: true }}
+                                        transition={{ duration: 0.5, delay: 0.15 }}
+                                        className="py-2.5 px-3 bg-[#080d18] border border-white/[0.08] rounded-xl my-2"
+                                    >
+                                        <div className="flex items-center justify-between mb-2">
+                                            <div className="flex items-center gap-2.5 text-[10px] font-semibold">
+                                                <span className="flex items-center gap-1 text-emerald-400">
+                                                    <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span> Income: ₹92,000
+                                                </span>
+                                                <span className="flex items-center gap-1 text-rose-400">
+                                                    <span className="w-2 h-2 rounded-full bg-rose-400 shadow-[0_0_8px_rgba(244,63,94,0.8)]"></span> Expense: ₹28,450
+                                                </span>
+                                            </div>
+                                            <span className="text-[9px] text-zinc-400 font-medium bg-white/5 px-1.5 py-0.5 rounded border border-white/5">June 2026</span>
+                                        </div>
 
-                                            {/* Horizontal Grid Lines */}
-                                            <line x1="30" y1="30" x2="360" y2="30" stroke="rgba(255,255,255,0.06)" strokeDasharray="3 3" />
-                                            <line x1="30" y1="75" x2="360" y2="75" stroke="rgba(255,255,255,0.06)" strokeDasharray="3 3" />
-                                            <line x1="30" y1="120" x2="360" y2="120" stroke="rgba(255,255,255,0.08)" />
+                                        {/* Professional Financial Grid & SVG Graph */}
+                                        <div className="relative h-20 w-full pt-1">
+                                            {/* Background Gridlines & Y-Axis Scale */}
+                                            <div className="absolute inset-0 flex flex-col justify-between pointer-events-none opacity-20 border-b border-white/10 pb-4">
+                                                <div className="w-full border-b border-dashed border-white/20 flex justify-between text-[7px] text-zinc-400 font-mono"><span>100k</span></div>
+                                                <div className="w-full border-b border-dashed border-white/20 flex justify-between text-[7px] text-zinc-400 font-mono"><span>50k</span></div>
+                                                <div className="w-full border-b border-dashed border-white/20 flex justify-between text-[7px] text-zinc-400 font-mono"><span>0k</span></div>
+                                            </div>
 
-                                            {/* Y-Axis Labels */}
-                                            <text x="0" y="34" fill="#64748b" fontSize="9" fontWeight="600">₹50k</text>
-                                            <text x="0" y="79" fill="#64748b" fontSize="9" fontWeight="600">₹25k</text>
-                                            <text x="0" y="124" fill="#64748b" fontSize="9" fontWeight="600">₹0</text>
+                                            {/* High-Performance SVG Area & Line Chart */}
+                                            <svg viewBox="0 0 300 70" className="w-full h-full overflow-visible" preserveAspectRatio="none">
+                                                <defs>
+                                                    <linearGradient id="incomeGrad" x1="0" y1="0" x2="0" y2="1">
+                                                        <stop offset="0%" stopColor="#10b981" stopOpacity="0.4" />
+                                                        <stop offset="100%" stopColor="#10b981" stopOpacity="0.0" />
+                                                    </linearGradient>
+                                                    <linearGradient id="expenseGrad" x1="0" y1="0" x2="0" y2="1">
+                                                        <stop offset="0%" stopColor="#f43f5e" stopOpacity="0.3" />
+                                                        <stop offset="100%" stopColor="#f43f5e" stopOpacity="0.0" />
+                                                    </linearGradient>
+                                                </defs>
 
-                                            {/* X-Axis Labels */}
-                                            <text x="50" y="142" fill="#64748b" fontSize="9" fontWeight="600">Mon</text>
-                                            <text x="140" y="142" fill="#64748b" fontSize="9" fontWeight="600">Wed</text>
-                                            <text x="230" y="142" fill="#64748b" fontSize="9" fontWeight="600">Fri</text>
-                                            <text x="320" y="142" fill="#64748b" fontSize="9" fontWeight="600">Sun</text>
+                                                {/* Income Curve Area & Animated Smooth Line */}
+                                                <motion.path
+                                                    initial={{ opacity: 0 }}
+                                                    whileInView={{ opacity: 1 }}
+                                                    viewport={{ once: true }}
+                                                    transition={{ duration: 0.8, delay: 0.2 }}
+                                                    d="M 0 52 C 50 50, 100 45, 150 40 C 200 35, 230 10, 300 8 L 300 65 L 0 65 Z"
+                                                    fill="url(#incomeGrad)"
+                                                />
+                                                <motion.path
+                                                    initial={{ pathLength: 0 }}
+                                                    whileInView={{ pathLength: 1 }}
+                                                    viewport={{ once: true }}
+                                                    transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
+                                                    d="M 0 52 C 50 50, 100 45, 150 40 C 200 35, 230 10, 300 8"
+                                                    fill="none"
+                                                    stroke="#10b981"
+                                                    strokeWidth="2.5"
+                                                    strokeLinecap="round"
+                                                />
 
-                                            {/* Filled Area Under Curve */}
-                                            <path d="M 30,120 L 60,100 L 150,65 L 240,80 L 330,35 L 330,120 Z" fill="url(#gridChartGrad)" />
+                                                {/* Expense Curve Area & Animated Smooth Line */}
+                                                <motion.path
+                                                    initial={{ opacity: 0 }}
+                                                    whileInView={{ opacity: 1 }}
+                                                    viewport={{ once: true }}
+                                                    transition={{ duration: 0.8, delay: 0.35 }}
+                                                    d="M 0 60 C 50 56, 100 52, 150 48 C 200 44, 250 40, 300 38 L 300 65 L 0 65 Z"
+                                                    fill="url(#expenseGrad)"
+                                                />
+                                                <motion.path
+                                                    initial={{ pathLength: 0 }}
+                                                    whileInView={{ pathLength: 1 }}
+                                                    viewport={{ once: true }}
+                                                    transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1], delay: 0.35 }}
+                                                    d="M 0 60 C 50 56, 100 52, 150 48 C 200 44, 250 40, 300 38"
+                                                    fill="none"
+                                                    stroke="#f43f5e"
+                                                    strokeWidth="2"
+                                                    strokeDasharray="4 2"
+                                                    strokeLinecap="round"
+                                                />
 
-                                            {/* Main Curve Line */}
-                                            <path d="M 30,120 L 60,100 L 150,65 L 240,80 L 330,35" fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                                                {/* Node Dots on Key Dates */}
+                                                <circle cx="150" cy="40" r="2.5" fill="#10b981" />
+                                                <circle cx="300" cy="8" r="3.5" fill="#10b981" className="animate-pulse" />
 
-                                            {/* --- Data Points & Expense Amount Badges --- */}
-                                            
-                                            {/* Point 1: Mon - Swiggy ₹450 */}
-                                            <g>
-                                                <rect x="28" y="72" width="65" height="18" rx="5" fill="#0f172a" stroke="rgba(16,185,129,0.35)" strokeWidth="1" />
-                                                <text x="60" y="84" fill="#34d399" fontSize="8.5" fontWeight="700" textAnchor="middle">Swiggy ₹450</text>
-                                                <circle cx="60" cy="100" r="4" fill="#10b981" stroke="#064e3b" strokeWidth="2" />
-                                            </g>
+                                                <circle cx="150" cy="48" r="2.5" fill="#f43f5e" />
+                                                <circle cx="300" cy="38" r="3" fill="#f43f5e" />
+                                            </svg>
 
-                                            {/* Point 2: Wed - Shopping ₹4.2k */}
-                                            <g>
-                                                <rect x="110" y="37" width="80" height="18" rx="5" fill="#0f172a" stroke="rgba(16,185,129,0.35)" strokeWidth="1" />
-                                                <text x="150" y="49" fill="#34d399" fontSize="8.5" fontWeight="700" textAnchor="middle">Shopping ₹4.2k</text>
-                                                <circle cx="150" cy="65" r="4" fill="#10b981" stroke="#064e3b" strokeWidth="2" />
-                                            </g>
-
-                                            {/* Point 3: Fri - Fuel ₹1.8k */}
-                                            <g>
-                                                <rect x="208" y="52" width="64" height="18" rx="5" fill="#0f172a" stroke="rgba(16,185,129,0.35)" strokeWidth="1" />
-                                                <text x="240" y="64" fill="#34d399" fontSize="8.5" fontWeight="700" textAnchor="middle">Fuel ₹1.8k</text>
-                                                <circle cx="240" cy="80" r="4" fill="#10b981" stroke="#064e3b" strokeWidth="2" />
-                                            </g>
-
-                                            {/* Point 4: Sun - Salary +₹65k */}
-                                            <g>
-                                                <rect x="290" y="8" width="74" height="18" rx="5" fill="#064e3b" stroke="#10b981" strokeWidth="1" />
-                                                <text x="327" y="20" fill="#a7f3d0" fontSize="8.5" fontWeight="800" textAnchor="middle">Salary +₹65k</text>
-                                                <circle cx="330" cy="35" r="5" fill="#34d399" stroke="#064e3b" strokeWidth="2" />
-                                            </g>
-                                        </svg>
-                                    </div>
+                                            {/* X-Axis Timeline Labels */}
+                                            <div className="flex justify-between items-center text-[8px] font-semibold text-zinc-500 pt-0.5">
+                                                <span>Week 1</span>
+                                                <span>Week 2</span>
+                                                <span>Week 3</span>
+                                                <span>Week 4</span>
+                                            </div>
+                                        </div>
+                                    </motion.div>
 
                                     {/* Recent Transactions List inside card */}
                                     <div className="pt-2 border-t border-white/5 space-y-2">
-                                        <div className="flex items-center justify-between text-[11px]">
+                                        <motion.div
+                                            initial={{ opacity: 0, x: -10 }}
+                                            whileInView={{ opacity: 1, x: 0 }}
+                                            viewport={{ once: true }}
+                                            transition={{ duration: 0.35, delay: 0.4 }}
+                                            className="flex items-center justify-between text-[11px]"
+                                        >
                                             <div className="flex items-center gap-2">
-                                                <span className="w-5 h-5 rounded-md bg-emerald-500/10 flex items-center justify-center text-[10px]">🛒</span>
-                                                <span className="text-zinc-200 font-medium">Zepto Groceries</span>
+                                                <span className="w-5 h-5 rounded-md bg-emerald-500/10 flex items-center justify-center text-[10px]">💳</span>
+                                                <div>
+                                                    <span className="text-zinc-200 font-medium block leading-none">Client Invoice Credit</span>
+                                                    <span className="text-[9px] text-zinc-500">June 14 • Income</span>
+                                                </div>
                                             </div>
-                                            <span className="text-zinc-400 font-semibold">-₹450</span>
-                                        </div>
-                                        <div className="flex items-center justify-between text-[11px]">
+                                            <span className="text-emerald-400 font-bold">+₹92,000</span>
+                                        </motion.div>
+                                        <motion.div
+                                            initial={{ opacity: 0, x: -10 }}
+                                            whileInView={{ opacity: 1, x: 0 }}
+                                            viewport={{ once: true }}
+                                            transition={{ duration: 0.35, delay: 0.5 }}
+                                            className="flex items-center justify-between text-[11px]"
+                                        >
                                             <div className="flex items-center gap-2">
-                                                <span className="w-5 h-5 rounded-md bg-emerald-500/10 flex items-center justify-center text-[10px]">💼</span>
-                                                <span className="text-zinc-200 font-medium">Monthly Salary</span>
+                                                <span className="w-5 h-5 rounded-md bg-white/5 flex items-center justify-center text-[10px]">🛒</span>
+                                                <div>
+                                                    <span className="text-zinc-200 font-medium block leading-none">Zepto Grocery Express</span>
+                                                    <span className="text-[9px] text-zinc-500">June 12 • Groceries</span>
+                                                </div>
                                             </div>
-                                            <span className="text-emerald-400 font-semibold">+₹65,000</span>
-                                        </div>
+                                            <span className="text-zinc-300 font-semibold">-₹1,240</span>
+                                        </motion.div>
+                                        <motion.div
+                                            initial={{ opacity: 0, x: -10 }}
+                                            whileInView={{ opacity: 1, x: 0 }}
+                                            viewport={{ once: true }}
+                                            transition={{ duration: 0.35, delay: 0.6 }}
+                                            className="flex items-center justify-between text-[11px]"
+                                        >
+                                            <div className="flex items-center gap-2">
+                                                <span className="w-5 h-5 rounded-md bg-white/5 flex items-center justify-center text-[10px]">☕</span>
+                                                <div>
+                                                    <span className="text-zinc-200 font-medium block leading-none">Starbucks Coffee</span>
+                                                    <span className="text-[9px] text-zinc-500">June 10 • Dining</span>
+                                                </div>
+                                            </div>
+                                            <span className="text-zinc-300 font-semibold">-₹380</span>
+                                        </motion.div>
                                     </div>
                                 </div>
                             </div>
-                        </motion.div>
-                        <motion.div
-                            initial={{ opacity: 0, x: 50 }}
-                            whileInView={{ opacity: 1, x: 0 }}
-                            viewport={{ once: true, margin: "-100px" }}
-                            transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
-                            className="space-y-5 order-1 lg:order-2"
-                        >
+                        </div>
+                        <div className="space-y-5 order-1 lg:order-2">
                             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-500/20 bg-emerald-500/5">
                                 <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider">Step 01 — Track</span>
                             </div>
@@ -870,68 +906,99 @@ export default function LandingAndLoginPage() {
                                     </li>
                                 ))}
                             </ul>
-                        </motion.div>
+                        </div>
                     </div>
 
                     {/* --- Step 2: Budget Smarter (visual left, text right — aligned with Step 1 and 3) --- */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center py-10 lg:py-14" suppressHydrationWarning>
                         {/* LEFT — visual card */}
-                        <motion.div
-                            initial={{ opacity: 0, x: -50 }}
-                            whileInView={{ opacity: 1, x: 0 }}
-                            viewport={{ once: true, margin: "-100px" }}
-                            transition={{ duration: 0.8, ease: "easeOut" }}
-                            className="relative flex items-center justify-center order-2 lg:order-1"
-                        >
+                        <div className="relative flex items-center justify-center order-2 lg:order-1">
                             <div className="relative w-full max-w-sm">
-                                <div className="relative bg-[#0d1424] border border-violet-500/20 rounded-2xl p-5 shadow-2xl">
-                                    <div className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-4">Budget Status — June</div>
-                                    {[
-                                        { cat: "Shopping", used: 7239, total: 9000, color: "#818cf8" },
-                                        { cat: "Food & Drink", used: 3410, total: 5000, color: "#10b981" },
-                                        { cat: "Transport", used: 1200, total: 2000, color: "#f59e0b" },
-                                        { cat: "Entertainment", used: 890, total: 1500, color: "#ec4899" },
-                                    ].map(({ cat, used, total, color }, index) => {
-                                        const pct = Math.round((used / total) * 100);
-                                        return (
-                                            <motion.div
-                                                key={cat}
-                                                className="mb-4 p-1 rounded-lg transition-colors hover:bg-white/[0.02]"
-                                                whileHover={{ x: 5 }}
-                                                transition={{ type: "spring", stiffness: 350, damping: 25 }}
-                                            >
-                                                <div className="flex justify-between items-baseline mb-1.5">
-                                                    <span className="text-xs font-semibold text-zinc-300">{cat}</span>
-                                                    <span className="text-[10px] text-zinc-400">₹{used.toLocaleString()} / ₹{total.toLocaleString()}</span>
-                                                </div>
-                                                <div className="h-2 bg-white/5 rounded-full overflow-hidden">
-                                                    <motion.div
-                                                        className="h-full rounded-full"
-                                                        initial={{ width: 0 }}
-                                                        whileInView={{ width: `${pct}%` }}
-                                                        viewport={{ once: true }}
-                                                        transition={{ duration: 1.2, ease: "easeOut", delay: index * 0.1 }}
-                                                        style={{ background: pct > 80 ? "#ef4444" : color }}
-                                                    />
-                                                </div>
-                                                <div className="text-[9px] mt-1" style={{ color: pct > 80 ? "#ef4444" : "#52525b" }}>
-                                                    {pct}% used {pct > 80 ? "⚠️ Near limit" : ""}
-                                                </div>
-                                            </motion.div>
-                                        );
-                                    })}
+                                <div className="relative bg-[#0d1424] border border-violet-500/20 rounded-2xl p-5 shadow-2xl space-y-4">
+                                    <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                                        <div className="text-xs font-bold text-zinc-300 uppercase tracking-wider">Budget Status — June</div>
+                                        <span className="text-[10px] text-violet-400 font-semibold bg-violet-500/10 border border-violet-500/20 px-2 py-0.5 rounded-full">Active Limits</span>
+                                    </div>
+
+                                    <div className="space-y-3.5">
+                                        {/* Budget 1: Shopping */}
+                                        <div>
+                                            <div className="flex items-center justify-between text-xs mb-1.5">
+                                                <span className="text-zinc-300 font-medium flex items-center gap-1.5">🛍️ Shopping &amp; Apparel</span>
+                                                <span className="text-zinc-400 font-semibold text-[11px]">₹7,200 <span className="text-zinc-500">/ ₹9,000</span></span>
+                                            </div>
+                                            <div className="h-2 bg-white/5 rounded-full overflow-hidden p-0.5 border border-white/5">
+                                                <motion.div
+                                                    initial={{ width: "0%" }}
+                                                    whileInView={{ width: "80%" }}
+                                                    viewport={{ once: true }}
+                                                    transition={{ duration: 1, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
+                                                    className="h-full rounded-full shadow-[0_0_12px_rgba(129,140,248,0.6)]"
+                                                    style={{ background: "linear-gradient(90deg, #6366f1, #818cf8)" }}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Budget 2: Food & Dining */}
+                                        <div>
+                                            <div className="flex items-center justify-between text-xs mb-1.5">
+                                                <span className="text-zinc-300 font-medium flex items-center gap-1.5">🍕 Food &amp; Dining</span>
+                                                <span className="text-zinc-400 font-semibold text-[11px]">₹3,400 <span className="text-zinc-500">/ ₹5,000</span></span>
+                                            </div>
+                                            <div className="h-2 bg-white/5 rounded-full overflow-hidden p-0.5 border border-white/5">
+                                                <motion.div
+                                                    initial={{ width: "0%" }}
+                                                    whileInView={{ width: "68%" }}
+                                                    viewport={{ once: true }}
+                                                    transition={{ duration: 1, ease: [0.16, 1, 0.3, 1], delay: 0.25 }}
+                                                    className="h-full rounded-full shadow-[0_0_12px_rgba(16,185,129,0.6)]"
+                                                    style={{ background: "linear-gradient(90deg, #059669, #10b981)" }}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Budget 3: Entertainment & Tech */}
+                                        <div>
+                                            <div className="flex items-center justify-between text-xs mb-1.5">
+                                                <span className="text-zinc-300 font-medium flex items-center gap-1.5">🎬 Entertainment &amp; Tech</span>
+                                                <span className="text-zinc-400 font-semibold text-[11px]">₹4,500 <span className="text-zinc-500">/ ₹6,000</span></span>
+                                            </div>
+                                            <div className="h-2 bg-white/5 rounded-full overflow-hidden p-0.5 border border-white/5">
+                                                <motion.div
+                                                    initial={{ width: "0%" }}
+                                                    whileInView={{ width: "75%" }}
+                                                    viewport={{ once: true }}
+                                                    transition={{ duration: 1, ease: [0.16, 1, 0.3, 1], delay: 0.4 }}
+                                                    className="h-full rounded-full shadow-[0_0_12px_rgba(245,158,11,0.6)]"
+                                                    style={{ background: "linear-gradient(90deg, #d97706, #f59e0b)" }}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Budget 4: Bills & Subscriptions */}
+                                        <div>
+                                            <div className="flex items-center justify-between text-xs mb-1.5">
+                                                <span className="text-zinc-300 font-medium flex items-center gap-1.5">⚡ Bills &amp; Subscriptions</span>
+                                                <span className="text-zinc-400 font-semibold text-[11px]">₹2,100 <span className="text-zinc-500">/ ₹2,500</span></span>
+                                            </div>
+                                            <div className="h-2 bg-white/5 rounded-full overflow-hidden p-0.5 border border-white/5">
+                                                <motion.div
+                                                    initial={{ width: "0%" }}
+                                                    whileInView={{ width: "84%" }}
+                                                    viewport={{ once: true }}
+                                                    transition={{ duration: 1, ease: [0.16, 1, 0.3, 1], delay: 0.55 }}
+                                                    className="h-full rounded-full shadow-[0_0_12px_rgba(6,182,212,0.6)]"
+                                                    style={{ background: "linear-gradient(90deg, #0891b2, #06b6d4)" }}
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                        </motion.div>
+                        </div>
 
                         {/* RIGHT — text content */}
-                        <motion.div
-                            initial={{ opacity: 0, x: 50 }}
-                            whileInView={{ opacity: 1, x: 0 }}
-                            viewport={{ once: true, margin: "-100px" }}
-                            transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
-                            className="space-y-5 order-1 lg:order-2"
-                        >
+                        <div className="space-y-5 order-1 lg:order-2">
                             <div className="inline-flex items-center gap-2 px-2 py-1 rounded-full border border-violet-500/20 bg-violet-500/5">
                                 <span className="text-xs font-bold text-violet-400 uppercase tracking-wider">Step 02 — Budget</span>
                             </div>
@@ -949,21 +1016,14 @@ export default function LandingAndLoginPage() {
                                     </li>
                                 ))}
                             </ul>
-                        </motion.div>
+                        </div>
                     </div>
 
                     {/* --- Step 3: Chat with FinanceNeo AI (visual left, text right) --- */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center py-10 lg:py-14" suppressHydrationWarning>
                         {/* LEFT — animated chat UI */}
-                        <motion.div
-                            initial={{ opacity: 0, x: -50 }}
-                            whileInView={{ opacity: 1, x: 0 }}
-                            viewport={{ once: true, margin: "-100px" }}
-                            transition={{ duration: 0.8, ease: "easeOut" }}
-                            className="relative flex items-center justify-center order-2 lg:order-1"
-                        >
+                        <div className="relative flex items-center justify-center order-2 lg:order-1">
                             <div className="relative w-full max-w-sm">
-                                {/* Chat window */}
                                 <div className="relative bg-[#0a0f1e] border border-emerald-500/20 rounded-2xl overflow-hidden shadow-2xl" style={{ minHeight: 380 }}>
                                     {/* Header */}
                                     <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06] bg-[#0d1424]">
@@ -971,81 +1031,84 @@ export default function LandingAndLoginPage() {
                                             <div className="w-8 h-8 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-sm">🤖</div>
                                             <div>
                                                 <div className="text-sm font-bold text-white leading-none">Chat with FinanceNeo</div>
-
                                             </div>
                                         </div>
                                         <div className="w-6 h-6 rounded-full bg-white/5 flex items-center justify-center text-zinc-400 text-xs">✕</div>
                                     </div>
 
-                                    {/* Messages — looping infinite chat cycle (16s per loop) */}
-                                    <div className="p-4 overflow-y-auto chat-scroll flex flex-col" style={{ height: 290 }} tabIndex={0}>
-                                        {/* AI msg 1 */}
-                                        <div className="flex items-end gap-2" style={{ animation: "chatMsg1 16s ease infinite" }}>
-                                            <div className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-xs flex-shrink-0">🤖</div>
-                                            <div className="bg-[#131d30] border border-white/[0.06] rounded-2xl rounded-bl-sm px-3.5 py-2.5 max-w-[80%]">
-                                                <p className="text-xs text-zinc-200 leading-relaxed">Hey! I&apos;m FinanceNeo AI 👋 Ask me anything about your money.</p>
+                                    {/* Conversation message stream */}
+                                    <div className="p-3.5 space-y-2.5 overflow-y-auto max-h-[325px] scrollbar-none flex flex-col justify-start">
+                                        {/* 1. AI Greeting */}
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 10 }}
+                                            whileInView={{ opacity: 1, y: 0 }}
+                                            viewport={{ once: true }}
+                                            transition={{ duration: 0.35 }}
+                                            className="flex items-end gap-2"
+                                        >
+                                            <div className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-[10px] flex-shrink-0">🤖</div>
+                                            <div className="bg-[#131d30] border border-white/[0.08] rounded-2xl rounded-bl-sm px-3 py-2 max-w-[85%] shadow-sm">
+                                                <p className="text-[11px] text-zinc-200 leading-relaxed">Hey! I&apos;m FinanceNeo AI 👋 Ask me anything about your money.</p>
                                             </div>
-                                        </div>
+                                        </motion.div>
 
-                                        {/* User msg 1 */}
-                                        <div className="flex items-end gap-2 justify-end mt-3" style={{ animation: "chatMsg2 16s ease infinite" }}>
-                                            <div className="bg-emerald-600/25 border border-emerald-500/25 rounded-2xl rounded-br-sm px-3.5 py-2.5 max-w-[78%]">
-                                                <p className="text-xs text-emerald-100 leading-relaxed">Where did most of my money go this month?</p>
+                                        {/* 2. User Question 1 */}
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 10 }}
+                                            whileInView={{ opacity: 1, y: 0 }}
+                                            viewport={{ once: true }}
+                                            transition={{ duration: 0.35, delay: 0.15 }}
+                                            className="flex justify-end"
+                                        >
+                                            <div className="bg-emerald-500/20 border border-emerald-500/30 text-emerald-100 rounded-2xl rounded-br-sm px-3 py-2 max-w-[82%] shadow-sm">
+                                                <p className="text-[11px] font-medium leading-relaxed">How much did I spend on dining out this month?</p>
                                             </div>
-                                            <div className="w-6 h-6 rounded-full bg-zinc-700 flex items-center justify-center text-xs flex-shrink-0">👤</div>
-                                        </div>
+                                        </motion.div>
 
-                                        {/* Typing 1 */}
-                                        <div className="overflow-hidden" style={{ animation: "typing1 16s ease infinite" }}>
-                                            <div className="flex items-end gap-2 mt-3">
-                                                <div className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-xs flex-shrink-0">🤖</div>
-                                                <div className="bg-[#131d30] border border-white/[0.06] rounded-2xl rounded-bl-sm px-4 py-3">
-                                                    <div className="flex gap-1 items-center h-4">
-                                                        <span className="block w-1.5 h-1.5 rounded-full bg-emerald-400" style={{ animation: "typingDot 1.4s infinite ease-in-out", animationDelay: "0s" }} />
-                                                        <span className="block w-1.5 h-1.5 rounded-full bg-emerald-400" style={{ animation: "typingDot 1.4s infinite ease-in-out", animationDelay: "0.2s" }} />
-                                                        <span className="block w-1.5 h-1.5 rounded-full bg-emerald-400" style={{ animation: "typingDot 1.4s infinite ease-in-out", animationDelay: "0.4s" }} />
-                                                    </div>
-                                                </div>
+                                        {/* 3. AI Answer 1 */}
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 10 }}
+                                            whileInView={{ opacity: 1, y: 0 }}
+                                            viewport={{ once: true }}
+                                            transition={{ duration: 0.35, delay: 0.3 }}
+                                            className="flex items-end gap-2"
+                                        >
+                                            <div className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-[10px] flex-shrink-0">🤖</div>
+                                            <div className="bg-[#131d30] border border-white/[0.08] rounded-2xl rounded-bl-sm px-3 py-2 max-w-[85%] shadow-sm">
+                                                <p className="text-[11px] text-zinc-200 leading-relaxed">
+                                                    You&apos;ve spent <span className="font-bold text-white">₹3,400</span> on food &amp; dining — <span className="text-emerald-400 font-semibold">18% lower</span> than last month! 🚀 You have <span className="font-bold text-emerald-400">₹1,600</span> left in your budget.
+                                                </p>
                                             </div>
-                                        </div>
+                                        </motion.div>
 
-                                        {/* AI reply */}
-                                        <div className="flex items-end gap-2 mt-3" style={{ animation: "chatMsg3 16s ease infinite" }}>
-                                            <div className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-xs flex-shrink-0">🤖</div>
-                                            <div className="bg-[#131d30] border border-white/[0.06] rounded-2xl rounded-bl-sm px-3.5 py-2.5 max-w-[80%]">
-                                                <p className="text-xs text-zinc-200 leading-relaxed">🍔 <span className="text-emerald-400 font-semibold">Food &amp; Dining</span> — 34% (₹8,200). That&apos;s your highest spending category!</p>
+                                        {/* 4. User Question 2 */}
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 10 }}
+                                            whileInView={{ opacity: 1, y: 0 }}
+                                            viewport={{ once: true }}
+                                            transition={{ duration: 0.35, delay: 0.45 }}
+                                            className="flex justify-end"
+                                        >
+                                            <div className="bg-emerald-500/20 border border-emerald-500/30 text-emerald-100 rounded-2xl rounded-br-sm px-3 py-2 max-w-[82%] shadow-sm">
+                                                <p className="text-[11px] font-medium leading-relaxed">Am I on track for my ₹15k savings goal?</p>
                                             </div>
-                                        </div>
+                                        </motion.div>
 
-                                        {/* User reply 2 */}
-                                        <div className="flex items-end gap-2 justify-end mt-3" style={{ animation: "chatMsg4 16s ease infinite" }}>
-                                            <div className="bg-emerald-600/25 border border-emerald-500/25 rounded-2xl rounded-br-sm px-3.5 py-2.5 max-w-[78%]">
-                                                <p className="text-xs text-emerald-100 leading-relaxed">How can I cut back on this spending? 🤔</p>
+                                        {/* 5. AI Answer 2 */}
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 10 }}
+                                            whileInView={{ opacity: 1, y: 0 }}
+                                            viewport={{ once: true }}
+                                            transition={{ duration: 0.35, delay: 0.6 }}
+                                            className="flex items-end gap-2"
+                                        >
+                                            <div className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-[10px] flex-shrink-0">🤖</div>
+                                            <div className="bg-[#131d30] border border-white/[0.08] rounded-2xl rounded-bl-sm px-3 py-2 max-w-[85%] shadow-sm">
+                                                <p className="text-[11px] text-zinc-200 leading-relaxed">
+                                                    Yes! At your current pace, you&apos;ll hit <span className="font-bold text-emerald-400">₹16,800</span> in savings by June 30th 🎉
+                                                </p>
                                             </div>
-                                            <div className="w-6 h-6 rounded-full bg-zinc-700 flex items-center justify-center text-xs flex-shrink-0">👤</div>
-                                        </div>
-
-                                        {/* Typing 2 */}
-                                        <div className="overflow-hidden" style={{ animation: "typing2 16s ease infinite" }}>
-                                            <div className="flex items-end gap-2 mt-3">
-                                                <div className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-xs flex-shrink-0">🤖</div>
-                                                <div className="bg-[#131d30] border border-white/[0.06] rounded-2xl rounded-bl-sm px-4 py-3">
-                                                    <div className="flex gap-1 items-center h-4">
-                                                        <span className="block w-1.5 h-1.5 rounded-full bg-emerald-400" style={{ animation: "typingDot 1.4s infinite ease-in-out", animationDelay: "0s" }} />
-                                                        <span className="block w-1.5 h-1.5 rounded-full bg-emerald-400" style={{ animation: "typingDot 1.4s infinite ease-in-out", animationDelay: "0.2s" }} />
-                                                        <span className="block w-1.5 h-1.5 rounded-full bg-emerald-400" style={{ animation: "typingDot 1.4s infinite ease-in-out", animationDelay: "0.4s" }} />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* AI confirms */}
-                                        <div className="flex items-end gap-2 mt-3" style={{ animation: "chatMsg5 16s ease infinite" }}>
-                                            <div className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-xs flex-shrink-0">🤖</div>
-                                            <div className="bg-[#131d30] border border-white/[0.06] rounded-2xl rounded-bl-sm px-3.5 py-2.5 max-w-[80%]">
-                                                <p className="text-xs text-zinc-200 leading-relaxed">💡 You spent ₹5,400 on weekend delivery. Cooking on weekends could save ~₹3,500/mo!</p>
-                                            </div>
-                                        </div>
+                                        </motion.div>
                                     </div>
 
                                     {/* Input bar */}
@@ -1057,75 +1120,10 @@ export default function LandingAndLoginPage() {
                                     </div>
                                 </div>
                             </div>
-
-                            <style>{`
-                                @keyframes chatMsg1 {
-                                    0%, 2% { opacity: 0; transform: translateY(6px); }
-                                    5%, 90% { opacity: 1; transform: translateY(0); }
-                                    93%, 100% { opacity: 0; transform: translateY(-4px); }
-                                }
-                                @keyframes chatMsg2 {
-                                    0%, 10% { opacity: 0; transform: translateY(6px); }
-                                    13%, 90% { opacity: 1; transform: translateY(0); }
-                                    93%, 100% { opacity: 0; transform: translateY(-4px); }
-                                }
-                                @keyframes typing1 {
-                                    0%, 17% { max-height: 0; opacity: 0; }
-                                    18% { max-height: 60px; opacity: 0; transform: translateY(6px); }
-                                    20%, 27% { max-height: 60px; opacity: 1; transform: translateY(0); }
-                                    29% { max-height: 60px; opacity: 0; transform: translateY(-4px); }
-                                    30%, 100% { max-height: 0; opacity: 0; }
-                                }
-                                @keyframes chatMsg3 {
-                                    0%, 29% { opacity: 0; transform: translateY(6px); }
-                                    32%, 90% { opacity: 1; transform: translateY(0); }
-                                    93%, 100% { opacity: 0; transform: translateY(-4px); }
-                                }
-                                @keyframes chatMsg4 {
-                                    0%, 48% { opacity: 0; transform: translateY(6px); }
-                                    51%, 90% { opacity: 1; transform: translateY(0); }
-                                    93%, 100% { opacity: 0; transform: translateY(-4px); }
-                                }
-                                @keyframes typing2 {
-                                    0%, 55% { max-height: 0; opacity: 0; }
-                                    56% { max-height: 60px; opacity: 0; transform: translateY(6px); }
-                                    58%, 65% { max-height: 60px; opacity: 1; transform: translateY(0); }
-                                    67% { max-height: 60px; opacity: 0; transform: translateY(-4px); }
-                                    68%, 100% { max-height: 0; opacity: 0; }
-                                }
-                                @keyframes chatMsg5 {
-                                    0%, 67% { opacity: 0; transform: translateY(6px); }
-                                    70%, 90% { opacity: 1; transform: translateY(0); }
-                                    93%, 100% { opacity: 0; transform: translateY(-4px); }
-                                }
-                                @keyframes typingDot {
-                                    0%, 80%, 100% { transform: scale(1); opacity: 0.4; }
-                                    40%           { transform: scale(1.4); opacity: 1; }
-                                }
-                                .chat-scroll::-webkit-scrollbar {
-                                    width: 4px;
-                                }
-                                .chat-scroll::-webkit-scrollbar-track {
-                                    background: rgba(0, 0, 0, 0.1);
-                                }
-                                .chat-scroll::-webkit-scrollbar-thumb {
-                                    background: rgba(255, 255, 255, 0.1);
-                                    border-radius: 4px;
-                                }
-                                .chat-scroll::-webkit-scrollbar-thumb:hover {
-                                    background: rgba(255, 255, 255, 0.2);
-                                }
-                            `}</style>
-                        </motion.div>
+                        </div>
 
                         {/* RIGHT — copy */}
-                        <motion.div
-                            initial={{ opacity: 0, x: 50 }}
-                            whileInView={{ opacity: 1, x: 0 }}
-                            viewport={{ once: true, margin: "-100px" }}
-                            transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
-                            className="space-y-5 order-1 lg:order-2"
-                        >
+                        <div className="space-y-5 order-1 lg:order-2">
                             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-500/20 bg-emerald-500/5">
                                 <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider">Step 03 — Ask</span>
                             </div>
@@ -1149,21 +1147,15 @@ export default function LandingAndLoginPage() {
                                 ))}
                             </ul>
                             <p className="text-xs text-zinc-400 mt-2">Powered by your live transaction data — always accurate, always yours.</p>
-                        </motion.div>
+                        </div>
                     </div>
 
                     {/* --- 6-feature capability grid --- */}
                     <div className="pt-16 lg:pt-20">
-                        <motion.div
-                            initial={{ opacity: 0, y: 30, scale: 0.95 }}
-                            whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                            viewport={{ once: true, margin: "-50px" }}
-                            transition={{ duration: 0.7, ease: "easeOut" }}
-                            className="text-center mb-12"
-                        >
+                        <div className="text-center mb-12">
                             <h3 className="text-2xl lg:text-3xl font-extrabold text-white mb-3">Built for people who take money seriously</h3>
                             <p className="text-zinc-400 max-w-xl mx-auto text-sm">Every feature is designed to remove friction so you can focus on what matters — building wealth.</p>
-                        </motion.div>
+                        </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                             {[
                                 { icon: "📊", title: "Live Analytics", desc: "Beautiful charts that turn raw numbers into actionable stories about your financial life.", color: "#10b981" },
@@ -1173,12 +1165,8 @@ export default function LandingAndLoginPage() {
                                 { icon: "🔒", title: "Private by Design", desc: "Zero-knowledge architecture. Your financial data is encrypted before it leaves your device.", color: "#06b6d4" },
                                 { icon: "🤖", title: "AI Finance Advisor", desc: "Ask anything about your finances in plain language and get instant, personalised answers.", color: "#a78bfa" },
                             ].map((feat, index) => (
-                                <motion.div
+                                <div
                                     key={feat.title}
-                                    initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                                    whileInView={{ opacity: 1, scale: 1, y: 0 }}
-                                    viewport={{ once: true, margin: "-50px" }}
-                                    transition={{ duration: 0.5, delay: index * 0.05 }}
                                     className="group flex gap-4 bg-white/[0.02] hover:bg-white/[0.04] border border-white/[0.06] hover:border-white/10 rounded-2xl p-5 transition-all duration-300"
                                 >
                                     <div className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center text-xl" style={{ background: feat.color + "18", border: `1px solid ${feat.color}30` }}>
@@ -1188,7 +1176,7 @@ export default function LandingAndLoginPage() {
                                         <h4 className="text-sm font-bold text-white mb-1">{feat.title}</h4>
                                         <p className="text-xs text-zinc-400 leading-relaxed">{feat.desc}</p>
                                     </div>
-                                </motion.div>
+                                </div>
                             ))}
                         </div>
                     </div>

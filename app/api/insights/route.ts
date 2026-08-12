@@ -1,4 +1,5 @@
 import { auth } from "@/auth";
+import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { GoogleGenerativeAI } from "@google/generative-ai";
@@ -216,8 +217,15 @@ function safeParseInsights(raw: string): any[] | null {
 
 export async function GET(req: Request) {
     try {
-        const session = await auth();
-        const userId = session?.user?.id;
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        let userId = user?.id;
+
+        if (!userId) {
+            const session = await auth();
+            userId = session?.user?.id;
+        }
+
         if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
         // Parse date params
@@ -225,24 +233,33 @@ export async function GET(req: Request) {
         const fromParam = url.searchParams.get("from");
         const toParam = url.searchParams.get("to");
         const rangeParam = url.searchParams.get("range") || "month";
+        const forceRefresh = url.searchParams.get("force") === "true" || url.searchParams.get("refresh") === "true";
 
         const hour = new Date().toISOString().slice(0, 13);
-        const cacheKey = `insights:${userId}:${fromParam || 'none'}:${toParam || 'none'}:${hour}`;
+        const cacheKey = `insights:${userId}:${rangeParam}:${fromParam || 'none'}:${toParam || 'none'}:${hour}`;
 
-        const cached = insightsCache.get(cacheKey);
-        if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
-            return NextResponse.json(cached.data, {
-                headers: {
-                    "Cache-Control": "private, max-age=3600, stale-while-revalidate=7200",
-                }
-            });
+        if (!forceRefresh) {
+            const cached = insightsCache.get(cacheKey);
+            if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+                return NextResponse.json(cached.data, {
+                    headers: {
+                        "Cache-Control": "no-cache, no-store, must-revalidate",
+                    }
+                });
+            }
+        } else {
+            insightsCache.delete(cacheKey);
         }
 
         let dateFilter: any = {};
         let periodStart: string;
         let periodEnd: string;
 
-        if (fromParam && toParam) {
+        if (rangeParam === "all") {
+            dateFilter = {};
+            periodStart = "2020-01-01";
+            periodEnd = new Date().toISOString().slice(0, 10);
+        } else if (fromParam && toParam && fromParam.trim() !== "" && toParam.trim() !== "") {
             const start = new Date(fromParam);
             const end = new Date(toParam);
             end.setHours(23, 59, 59, 999);
@@ -269,6 +286,19 @@ export async function GET(req: Request) {
                 select: { category: true, amount: true }
             }),
         ]);
+
+        if (allTxs.length === 0) {
+            const periodLabel = rangeParam === "all" ? "All Time" : rangeParam === "month" ? "This Month" : "Selected Period";
+            return NextResponse.json({
+                insights: [{
+                    type: "info",
+                    title: `NO TRANSACTIONS (${periodLabel.toUpperCase()})`,
+                    message: `You have 0 transactions recorded for ${periodLabel}. Select another period or add new entries to view AI insights.`,
+                    severity: "positive",
+                    icon: "calendar",
+                }]
+            });
+        }
 
         const totalIncome = allTxs.filter(t => t.amount > 0).reduce((s, t) => s + t.amount, 0);
         const totalSpent = allTxs.filter(t => t.amount < 0).reduce((s, t) => s + Math.abs(t.amount), 0);

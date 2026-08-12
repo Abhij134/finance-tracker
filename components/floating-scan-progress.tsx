@@ -157,7 +157,7 @@ export function FloatingScanProgress() {
                                     ? "text-red-500"
                                     : "text-blue-500"
                                 }`}>
-                                {progress}%
+                                {Math.round(progress || 0)}%
                             </span>
                         </div>
                     </div>

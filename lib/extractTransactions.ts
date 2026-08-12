@@ -205,6 +205,20 @@ export async function extractFromPDF(
 
         const batchEnd = Math.min(batchStart + BATCH_SIZE, totalChunks);
         const batch = chunks.slice(batchStart, batchEnd);
+        const startPercent = 15 + Math.round((batchStart / totalChunks) * 80);
+        const targetPercent = 15 + Math.round((batchEnd / totalChunks) * 80);
+
+        let currentBatchPercent = startPercent;
+        const pdfTicker = setInterval(() => {
+            if (signal?.aborted || currentBatchPercent >= targetPercent - 1) return;
+            currentBatchPercent += 2;
+            onProgress?.({
+                percent: Math.min(currentBatchPercent, targetPercent - 1),
+                message: `Analyzing PDF page content with Gemini AI (${Math.min(currentBatchPercent, targetPercent - 1)}%)...`,
+                currentPage: Math.round((batchStart / totalChunks) * totalPages) + 1,
+                totalPages,
+            });
+        }, 200);
 
         const batchResults = await Promise.all(
             batch.map(async (chunk, idx) => {
@@ -219,6 +233,7 @@ export async function extractFromPDF(
                 }
             })
         );
+        clearInterval(pdfTicker);
 
         // Merge batch results, deduplicating
         const batchTxs: any[] = [];
@@ -283,27 +298,54 @@ export async function extractFromImage(
 ): Promise<any[]> {
     if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
 
-    onProgress?.({ percent: 20, message: "Scanning image with Gemini Vision...", currentPage: 0, totalPages: 1 });
+    onProgress?.({ percent: 12, message: "Scanning image with Gemini Vision...", currentPage: 0, totalPages: 1 });
 
     const imageData = base64Image.includes(",") ? base64Image.split(",")[1] : base64Image;
     const mimeMatch = base64Image.match(/data:([^;]+);base64/);
     const mimeType = (mimeMatch?.[1] ?? "image/jpeg") as any;
 
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
-    const result = await model.generateContent([
-        { inlineData: { data: imageData, mimeType } },
-        TRANSACTION_PROMPT,
-    ]);
+    // Smooth real-time progress ticker while waiting for Gemini API response
+    let currentPercent = 12;
+    const tickerInterval = setInterval(() => {
+        if (signal?.aborted || currentPercent >= 92) return;
+        currentPercent += Math.floor(Math.random() * 4) + 3; // increment smoothly by 3-6% every 250ms
+        if (currentPercent > 92) currentPercent = 92;
 
-    onProgress?.({ percent: 85, message: "Processing results...", currentPage: 1, totalPages: 1 });
+        let msg = "Gemini Vision AI analyzing receipt...";
+        if (currentPercent > 30 && currentPercent <= 55) msg = "Detecting line items, prices & dates...";
+        else if (currentPercent > 55 && currentPercent <= 78) msg = "Matching merchant names & UPI handles...";
+        else if (currentPercent > 78) msg = "Categorizing transactions & verifying amounts...";
 
-    const raw = result.response.text();
-    const transactions = safeParseJSON(raw);
-    const categorized = categorizeAll(transactions).map((tx: any) => ({
-        ...tx,
-        description: cleanDescription(tx.description ?? ""),
-    }));
+        onProgress?.({
+            percent: currentPercent,
+            message: msg,
+            currentPage: 1,
+            totalPages: 1,
+        });
+    }, 250);
 
-    onProgress?.({ percent: 100, message: `Found ${categorized.length} transactions`, currentPage: 1, totalPages: 1, transactions: categorized });
-    return categorized;
+    try {
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
+        const result = await model.generateContent([
+            { inlineData: { data: imageData, mimeType } },
+            TRANSACTION_PROMPT,
+        ]);
+
+        clearInterval(tickerInterval);
+
+        onProgress?.({ percent: 95, message: "Processing extracted items...", currentPage: 1, totalPages: 1 });
+
+        const raw = result.response.text();
+        const transactions = safeParseJSON(raw);
+        const categorized = categorizeAll(transactions).map((tx: any) => ({
+            ...tx,
+            description: cleanDescription(tx.description ?? ""),
+        }));
+
+        onProgress?.({ percent: 100, message: `Found ${categorized.length} transactions`, currentPage: 1, totalPages: 1, transactions: categorized });
+        return categorized;
+    } catch (err) {
+        clearInterval(tickerInterval);
+        throw err;
+    }
 }
