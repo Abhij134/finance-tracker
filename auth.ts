@@ -1,8 +1,14 @@
 import { createClient } from '@/utils/supabase/server'
 
 export const auth = async () => {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  
-  return { user };
+  try {
+    const supabase = await createClient();
+    let user = null;
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
+    return { user };
+  } catch (e) {
+    console.error("Auth error:", e);
+    return { user: null };
+  }
 };

@@ -231,8 +231,14 @@ export async function handleSignOut() {
 }
 
 export async function getUserProfile() {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    let user = null;
+    try {
+        const supabase = await createClient();
+        const { data } = await supabase.auth.getUser();
+        user = data.user;
+    } catch (e) {
+        console.error('getUserProfile Auth error:', e);
+    }
 
     if (!user) {
         return { success: false, error: "Not authenticated" };

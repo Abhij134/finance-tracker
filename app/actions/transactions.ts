@@ -316,9 +316,15 @@ export async function addBulkTransactions(transactions: any[]) {
 }
 
 export async function getTransactions(options: { limit?: number; offset?: number; page?: number; startDate?: Date } = {}) {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    const userId = user?.id;
+    let userId = null;
+    try {
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        userId = user?.id;
+    } catch (e) {
+        console.error('getTransactions Auth error:', e);
+    }
+
     if (!userId) {
         return {
             transactions: [],

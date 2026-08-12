@@ -5,9 +5,14 @@ import { revalidatePath } from "next/cache";
 import prisma from "@/lib/prisma";
 
 export async function getBudgets() {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    const userId = user?.id;
+    let userId = null;
+    try {
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        userId = user?.id;
+    } catch (e) {
+        console.error('getBudgets Auth error:', e);
+    }
 
     if (!userId) return [];
 
