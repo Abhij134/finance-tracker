@@ -23,6 +23,7 @@ export function Navbar({ userName, userEmail, userBirthdate, userImage }: { user
 
   const handleSignOut = async () => {
     const { handleSignOut: signOutAction } = await import("@/app/actions/auth");
+    localStorage.removeItem("finance-neo-chat-user");
     await signOutAction();
     router.push("/login");
   };

@@ -36,6 +36,16 @@ export async function setBudget(category: string, amount: number) {
     if (!userId) throw new Error("Unauthorized");
 
     try {
+        await prisma.user.upsert({
+            where: { id: userId },
+            update: {},
+            create: {
+                id: userId,
+                email: user.email || `${userId}@user.local`,
+                name: user.user_metadata?.full_name || user.user_metadata?.name || 'User',
+            }
+        });
+
         const upsertedBudget = await prisma.budget.upsert({
             where: {
                 userId_category: {

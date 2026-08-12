@@ -1,0 +1,1 @@
+const { streamText } = require('ai'); const groq = require('@ai-sdk/openai').createOpenAI({ apiKey: 'dummy', baseURL: 'https://api.openai.com/v1' }); async function run() { try { const d = await streamText({ model: groq('gpt-3.5-turbo'), messages: [{ role: 'user', content: 'test' }] }); console.log(Object.keys(d)); } catch(e) { console.log(e.message); } } run();

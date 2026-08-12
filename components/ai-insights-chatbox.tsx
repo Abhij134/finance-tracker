@@ -285,7 +285,7 @@ export function AiInsightsChatbox() {
                                             <div className="text-[14px] leading-relaxed whitespace-pre-wrap">
                                                 <ReactMarkdown
                                                     components={{
-                                                        p: ({ node, ...props }) => <p className="mb-2 last:mb-0" {...props} />,
+                                                        p: ({ node, ...props }) => <div className="mb-2 last:mb-0" {...props} />,
                                                         ul: ({ node, ...props }) => <ul className="list-disc pl-4 mb-2 space-y-0.5 marker:text-emerald-400" {...props} />,
                                                         ol: ({ node, ...props }) => <ol className="list-decimal pl-4 mb-2 space-y-0.5 marker:text-emerald-400 font-semibold" {...props} />,
                                                         li: ({ node, ...props }) => <li className="pl-1 font-normal" {...props} />,

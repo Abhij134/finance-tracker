@@ -10,11 +10,11 @@ const withSerwist = withSerwistInit({
 });
 
 const nextConfig: NextConfig = {
-  reactCompiler: true,
+  reactCompiler: false,
   compress: true,
   poweredByHeader: false,
   experimental: {
-    optimizePackageImports: ['lucide-react', 'framer-motion', 'recharts', 'date-fns', 'sonner'],
+    optimizePackageImports: ['framer-motion', 'recharts', 'date-fns', 'sonner'],
     serverActions: {
       bodySizeLimit: '5mb',
     },
@@ -47,8 +47,9 @@ const nextConfig: NextConfig = {
     ];
   },
   serverExternalPackages: ['pdfkit', 'unpdf'],
-  // THE FIX: Explicitly tells Next.js 16 it is okay to mix Turbopack and Webpack plugins
-  turbopack: {},
+  // NOTE: turbopack: {} was removed — cannot mix Turbopack config with a Webpack build.
+  // The error "(Webpack)" in your UnrecognizedActionError confirms Webpack is the active bundler.
+  // Having turbopack: {} alongside webpack: () causes action ID hash mismatches in Next.js 16.
   webpack: (config: any, { isServer }: { isServer: boolean }) => {
     if (isServer) {
       config.externals = [

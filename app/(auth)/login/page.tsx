@@ -750,7 +750,6 @@ export default function LandingAndLoginPage() {
                             className="relative flex items-center justify-center order-2 lg:order-1"
                         >
                             <div className="relative w-full max-w-sm">
-                                <div className="absolute -inset-6 bg-emerald-500/10 rounded-3xl blur-2xl pointer-events-none" />
                                 <div className="relative bg-[#0d1424] border border-emerald-500/20 rounded-2xl p-5 shadow-2xl space-y-3">
                                     {/* Header */}
                                     <div className="flex items-center justify-between pb-2 border-b border-white/5">
@@ -885,7 +884,6 @@ export default function LandingAndLoginPage() {
                             className="relative flex items-center justify-center order-2 lg:order-1"
                         >
                             <div className="relative w-full max-w-sm">
-                                <div className="absolute -inset-6 bg-violet-500/10 rounded-3xl blur-2xl pointer-events-none" />
                                 <div className="relative bg-[#0d1424] border border-violet-500/20 rounded-2xl p-5 shadow-2xl">
                                     <div className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-4">Budget Status — June</div>
                                     {[
@@ -965,7 +963,6 @@ export default function LandingAndLoginPage() {
                             className="relative flex items-center justify-center order-2 lg:order-1"
                         >
                             <div className="relative w-full max-w-sm">
-                                <div className="absolute -inset-6 bg-emerald-500/10 rounded-3xl blur-2xl pointer-events-none" />
                                 {/* Chat window */}
                                 <div className="relative bg-[#0a0f1e] border border-emerald-500/20 rounded-2xl overflow-hidden shadow-2xl" style={{ minHeight: 380 }}>
                                     {/* Header */}
@@ -1016,14 +1013,14 @@ export default function LandingAndLoginPage() {
                                         <div className="flex items-end gap-2 mt-3" style={{ animation: "chatMsg3 16s ease infinite" }}>
                                             <div className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-xs flex-shrink-0">🤖</div>
                                             <div className="bg-[#131d30] border border-white/[0.06] rounded-2xl rounded-bl-sm px-3.5 py-2.5 max-w-[80%]">
-                                                <p className="text-xs text-zinc-200 leading-relaxed">🍔 <span className="text-emerald-400 font-semibold">Food &amp; Dining</span> — 34% (₹8,200). Want a budget cap?</p>
+                                                <p className="text-xs text-zinc-200 leading-relaxed">🍔 <span className="text-emerald-400 font-semibold">Food &amp; Dining</span> — 34% (₹8,200). That&apos;s your highest spending category!</p>
                                             </div>
                                         </div>
 
                                         {/* User reply 2 */}
                                         <div className="flex items-end gap-2 justify-end mt-3" style={{ animation: "chatMsg4 16s ease infinite" }}>
                                             <div className="bg-emerald-600/25 border border-emerald-500/25 rounded-2xl rounded-br-sm px-3.5 py-2.5 max-w-[78%]">
-                                                <p className="text-xs text-emerald-100 leading-relaxed">Yes! Set ₹6,000 limit 🙏</p>
+                                                <p className="text-xs text-emerald-100 leading-relaxed">How can I cut back on this spending? 🤔</p>
                                             </div>
                                             <div className="w-6 h-6 rounded-full bg-zinc-700 flex items-center justify-center text-xs flex-shrink-0">👤</div>
                                         </div>
@@ -1046,7 +1043,7 @@ export default function LandingAndLoginPage() {
                                         <div className="flex items-end gap-2 mt-3" style={{ animation: "chatMsg5 16s ease infinite" }}>
                                             <div className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-xs flex-shrink-0">🤖</div>
                                             <div className="bg-[#131d30] border border-white/[0.06] rounded-2xl rounded-bl-sm px-3.5 py-2.5 max-w-[80%]">
-                                                <p className="text-xs text-zinc-200 leading-relaxed">✅ Done! I&apos;ll alert you at ₹5,400. Anything else?</p>
+                                                <p className="text-xs text-zinc-200 leading-relaxed">💡 You spent ₹5,400 on weekend delivery. Cooking on weekends could save ~₹3,500/mo!</p>
                                             </div>
                                         </div>
                                     </div>
@@ -1142,7 +1139,7 @@ export default function LandingAndLoginPage() {
                                 {[
                                     "\"Where did my money go this month?\"",
                                     "\"Am I on track to hit my savings goal?\"",
-                                    "\"Set a ₹6,000 food budget for next month\"",
+                                    "\"How can I cut down my food delivery expenses?\"",
                                     "\"Show me my top 3 unnecessary expenses\"",
                                 ].map(item => (
                                     <li key={item} className="flex items-center gap-3 text-sm text-zinc-300">
